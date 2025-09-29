@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         status: 'ERROR',
         message: 'Error de conexión a la base de datos',
         timestamp: new Date().toISOString(),
-        error: error.message
+        error: error instanceof Error ? error.message : 'Error desconocido'
       },
       { status: 500 }
     );
