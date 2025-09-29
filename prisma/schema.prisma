@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  USER
+  ADMIN
+  OWNER
+  SUPERADMIN  // Para acceso OCR y funciones avanzadas
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  password       String
+  restaurantId   String   @unique
+  restaurantName String
+  phone          String?
+  address        String?
+  plan           String?  @default("basic")
+  role           Role     @default(ADMIN)
+  avatar         String?
+  isActive       Boolean  @default(true)
+  lastLogin      DateTime?
+  
+  // WhatsApp configuration
+  whatsappPhone       String?
+  whatsappToken       String?
+  whatsappPhoneId     String?
+  whatsappEnabled     Boolean @default(false)
+  
+  // Relations
+  menus          Menu[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Menu {
+  id             String   @id @default(cuid())
+  restaurantId   String   @unique
+  restaurantName String
+  description    String?
+  
+  // Logo
+  logoUrl        String?
+  logoPublicId   String?
+  
+  // Theme configuration
+  primaryColor     String @default("#2563eb")
+  secondaryColor   String @default("#64748b")
+  backgroundColor  String @default("#ffffff")
+  textColor        String @default("#1f2937")
+  fontFamily       String @default("Inter")
+  
+  // Contact information
+  contactPhone     String?
+  contactEmail     String?
+  contactAddress   String?
+  contactWebsite   String?
+  socialInstagram  String?
+  socialFacebook   String?
+  socialTwitter    String?
+  
+  // Settings
+  showPrices       Boolean @default(true)
+  showImages       Boolean @default(true)
+  showDescriptions Boolean @default(true)
+  showNutritional  Boolean @default(false)
+  allowOrdering    Boolean @default(false)
+  currency         String  @default("$")
+  language         String  @default("es")
+  
+  isActive       Boolean  @default(true)
+  
+  // Relations
+  owner          User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId        String
+  categories     Category[]
+  items          MenuItem[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("menus")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  position    Int      @default(0)
+  isActive    Boolean  @default(true)
+  
+  // Image
+  imageUrl    String?
+  imagePublicId String?
+  
+  // Relations
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId      String
+  items       MenuItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  price           Float
+  originalPrice   Float?
+  position        Int      @default(0)
+  
+  // Images (VALOR AGREGADO COMERCIAL)
+  imageUrl        String?  // URL principal
+  imagePublicId   String?  // Para Cloudinary
+  galleryImages   String?  // JSON array de URLs adicionales
+  hasImage        Boolean  @default(false) // Para filtros rápidos
+  
+  // Status and features (simplificado)
+  isAvailable     Boolean  @default(true)
+  isPopular       Boolean  @default(false)
+  isPromo         Boolean  @default(false) // Para PROMOS destacadas
+  spicyLevel      Int      @default(0) // 0-3 scale
+  
+  // Commercial info (lo que realmente importa)
+  preparationTime Int?     // in minutes
+  tags            String?  // "PROMO,POPULAR,NUEVO" etc
+  
+  // Relations
+  menu            Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId          String
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId      String
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("menu_items")
+}
