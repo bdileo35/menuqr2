@@ -299,11 +299,14 @@ export default function CartaMenuPage() {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement.innerHTML = `
-                              <div class="w-full h-full flex items-center justify-center bg-blue-200">
-                                <span class="text-lg">🎯</span>
-                              </div>
-                            `;
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="w-full h-full flex items-center justify-center bg-blue-200">
+                                  <span class="text-lg">🎯</span>
+                                </div>
+                              `;
+                            }
                           }}
                         />
                       </div>
@@ -359,11 +362,14 @@ export default function CartaMenuPage() {
                             onError={(e) => {
                               // Fallback si no carga la imagen
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement.innerHTML = `
-                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                  <span class="text-xs">🍽️</span>
-                                </div>
-                              `;
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                    <span class="text-xs">🍽️</span>
+                                  </div>
+                                `;
+                              }
                             }}
                           />
                         </div>
