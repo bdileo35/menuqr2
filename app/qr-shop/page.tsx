@@ -5,6 +5,54 @@ import { useState } from "react";
 export default function QRShopPage() {
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [isDarkMode] = useState(true); // Modo oscuro por defecto
+  const [loading, setLoading] = useState(false);
+
+  // COMENTADO: Funcionalidad de MercadoPago temporalmente deshabilitada
+  const handleComprar = async (productId: string) => {
+    // setLoading(true);
+    
+    // Redirigir al flujo FUNCIONAL real (con sello "En Desarrollo")
+    if (productId === 'menuqr') {
+      router.push('/setup-comercio');
+    } else {
+      alert('Producto en desarrollo - ' + productId);
+    }
+    
+    /* COMENTADO - MERCADOPAGO
+    try {
+      const response = await fetch('/api/shop/crear-preferencia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: `${productId}-basic`,
+          plan: 'monthly',
+          userEmail: 'cliente@menuqr.com' // Por ahora fijo
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        alert('Error: ' + data.error);
+        return;
+      }
+
+      console.log('🛒 Redirigiendo a MercadoPago:', data.initPoint);
+      
+      // Redireccionar a MercadoPago
+      window.location.href = data.initPoint;
+
+    } catch (error) {
+      console.error('Error creando preferencia:', error);
+      alert('Error procesando la compra. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+    */
+  };
 
   const products = [
     {
@@ -26,7 +74,7 @@ export default function QRShopPage() {
       description: 'Digitaliza tu carta física automáticamente y crea menús digitales profesionales',
       features: ['Scanner OCR automático', 'Menús digitales responsivos', 'Pedidos por WhatsApp', 'Panel de gestión'],
       color: 'from-emerald-600 to-emerald-700',
-      demo: '/menu/esquina-pompeya',
+      demo: '/generador',
       icon: '🍽️'
     },
     {
@@ -44,7 +92,7 @@ export default function QRShopPage() {
 
   const bundles = [
     {
-      name: 'QR-Suite Completa',
+      name: 'QR Shop Completo',
       price: '$49.99/mes',
       originalPrice: '$59.97/mes',
       savings: 'Ahorra $9.98/mes',
@@ -62,14 +110,14 @@ export default function QRShopPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-900">
       
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 text-white">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-16 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            🚀 <span className="text-blue-300">QR-Suite</span>
+            🚀 <span className="text-blue-300">QR Shop</span>
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
             La suite completa de soluciones QR para tu negocio
@@ -84,7 +132,7 @@ export default function QRShopPage() {
         
         {/* Productos individuales */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-slate-800 text-center mb-12">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
             Elige tu solución QR
           </h2>
           
@@ -92,7 +140,7 @@ export default function QRShopPage() {
             {products.map((product) => (
               <div 
                 key={product.id}
-                className="card-qring hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                className="bg-gray-800 border border-gray-700 rounded-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1"
               >
                 {/* Header del producto */}
                 <div className={`bg-gradient-to-r ${product.color} text-white p-6 text-center`}>
@@ -104,12 +152,12 @@ export default function QRShopPage() {
                 
                 {/* Contenido */}
                 <div className="p-6">
-                  <p className="text-slate-600 mb-4">{product.description}</p>
+                  <p className="text-gray-300 mb-4">{product.description}</p>
                   
                   <ul className="space-y-2 mb-6">
                     {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-center text-sm">
-                        <span className="text-blue-600 mr-2">✓</span>
+                      <li key={index} className="flex items-center text-sm text-gray-300">
+                        <span className="text-green-400 mr-2">✓</span>
                         {feature}
                       </li>
                     ))}
@@ -117,16 +165,23 @@ export default function QRShopPage() {
                   
                   <div className="space-y-2">
                     <button
-                      onClick={() => router.push(product.demo)}
-                      className="btn-qring-primary w-full"
+                      onClick={() => {
+                        if (product.id === 'menuqr') {
+                          router.push('/demo-flow/page1');
+                        } else {
+                          router.push(product.demo);
+                        }
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200"
                     >
-                      🎯 Ver Demo
+                      {product.id === 'menuqr' ? '� Ver Demo Completo' : '�🎯 Ver Demo'}
                     </button>
                     <button
-                      onClick={() => setSelectedProduct(product.id)}
-                      className="btn-qring-outline w-full"
+                      onClick={() => handleComprar(product.id)}
+                      disabled={loading}
+                      className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200"
                     >
-                      💳 Comprar
+                      {loading ? '⏳ Procesando...' : '💳 Comprar'}
                     </button>
                   </div>
                 </div>
@@ -135,60 +190,7 @@ export default function QRShopPage() {
           </div>
         </div>
 
-        {/* Paquetes/Bundles */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-slate-800 text-center mb-4">
-            Paquetes con descuento
-          </h2>
-          <p className="text-slate-600 text-center mb-12">
-            Combina productos y ahorra más
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {bundles.map((bundle, index) => (
-              <div 
-                key={index}
-                className={`card-qring relative ${bundle.popular ? 'ring-2 ring-blue-500' : ''}`}
-              >
-                {bundle.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      🔥 Más Popular
-                    </div>
-                  </div>
-                )}
-                
-                <div className="p-6 text-center">
-                  <h3 className="text-2xl font-bold text-slate-800 mb-2">{bundle.name}</h3>
-                  
-                  <div className="mb-4">
-                    <div className="text-3xl font-bold text-blue-600">{bundle.price}</div>
-                    <div className="text-sm text-slate-500 line-through">{bundle.originalPrice}</div>
-                    <div className="text-sm text-emerald-600 font-medium">{bundle.savings}</div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <p className="text-sm text-slate-600 mb-2">Incluye:</p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      {bundle.products.map((product) => (
-                        <span key={product} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-                          {product}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => setSelectedProduct(bundle.name)}
-                    className={bundle.popular ? 'btn-qring-primary w-full' : 'btn-qring-outline w-full'}
-                  >
-                    🛒 Comprar Paquete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         {/* CTA Final */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white">
@@ -204,7 +206,7 @@ export default function QRShopPage() {
               💬 Consultar por WhatsApp
             </button>
             <button
-              onClick={() => window.open('mailto:info@qr-suite.com', '_blank')}
+              onClick={() => window.open('mailto:info@qrshop.com', '_blank')}
               className="bg-white text-blue-600 hover:bg-blue-50 font-medium py-3 px-6 rounded-lg transition-all duration-200"
             >
               📧 Enviar Email

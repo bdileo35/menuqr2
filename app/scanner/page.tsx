@@ -1,6 +1,7 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import DevBanner from "../components/DevBanner";
 
 interface ExtractedMenuItem {
   name: string;
@@ -36,6 +37,15 @@ export default function ScannerPage() {
   const [progress, setProgress] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showDemoImages, setShowDemoImages] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
+
+  useEffect(() => {
+    // Detectar si venimos del demo
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true') {
+      setIsDemo(true);
+    }
+  }, []);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -104,9 +114,9 @@ export default function ScannerPage() {
     
     setProgress(baseProgress + stepProgress * 0.9);
     
-    // Generar datos diferentes según la imagen (simular múltiples cartas)
+    // Generar datos completos del menú de Esquina Pompeya (74 productos en 4 páginas)
     const mockDataSets: ExtractedCategory[][] = [
-      // Dataset 1 - Página principal del menú
+      // Página 1 - Platos del Día y Promos
       [
         {
           name: "PLATOS DEL DIA",
@@ -117,44 +127,107 @@ export default function ScannerPage() {
             { name: "Pechuga rellena c/ f. españolas", price: "$12000", confidence: 0.90 },
             { name: "Mejillones c/ fetuccinis", price: "$14000", confidence: 0.87 },
             { name: "Vacío a la parrilla c/fritas", price: "$15000", confidence: 0.94 },
-            { name: "Peceto al verdeo c/ Puré", price: "$15000", confidence: 0.91 }
+            { name: "Peceto al verdeo c/ Puré", price: "$15000", confidence: 0.91 },
+            { name: "Arroz integral con vegetales", price: "$11000", confidence: 0.89 },
+            { name: "Tallarines a la crema c/ pollo", price: "$12000", confidence: 0.93 },
+            { name: "Salmón grillado c/ pure", price: "$18000", confidence: 0.88 }
           ]
         },
         {
           name: "PROMOS DE LA SEMANA", 
           items: [
             { name: "PROMO 1: Milanesa c/Papas + Postre + Bebida", price: "$12000", confidence: 0.89 },
-            { name: "PROMO 2: Salpicón de Ave + Postre + Bebida", price: "$12000", confidence: 0.86 }
+            { name: "PROMO 2: Salpicón de Ave + Postre + Bebida", price: "$12000", confidence: 0.86 },
+            { name: "PROMO 3: Hamburguesa + Papas + Bebida", price: "$10000", confidence: 0.91 },
+            { name: "PROMO 4: Pizza + Faina + Bebida", price: "$14000", confidence: 0.87 },
+            { name: "PROMO 5: Parrillada + Ensalada + Postre", price: "$25000", confidence: 0.93 }
           ]
         }
       ],
-      // Dataset 2 - Página de empanadas y minutas
+      // Página 2 - Cocina y Tortillas
       [
         {
-          name: "EMPANADAS",
+          name: "COCINA",
           items: [
-            { name: "Carne - Pollo - J y Q", price: "$600", description: "Docena", confidence: 0.93 },
-            { name: "Atún, Chía", price: "$800", description: "Docena", confidence: 0.91 }
+            { name: "Arepa de Pollo", price: "$7500", confidence: 0.93 },
+            { name: "Arepa de Carne", price: "$8000", confidence: 0.91 },
+            { name: "Arepa de Queso", price: "$6500", confidence: 0.89 },
+            { name: "Arepa Mixta", price: "$9000", confidence: 0.87 },
+            { name: "Casuela de Mariscos", price: "$16000", confidence: 0.95 },
+            { name: "Pollo al Curry", price: "$13000", confidence: 0.92 },
+            { name: "Lomo Saltado", price: "$15000", confidence: 0.88 },
+            { name: "Churrasco c/ Chimichurri", price: "$17000", confidence: 0.90 },
+            { name: "Rabas a la Romana", price: "$12000", confidence: 0.86 },
+            { name: "Cazuela de Cordero", price: "$19000", confidence: 0.94 }
           ]
         },
         {
-          name: "MINUTAS",
+          name: "TORTILLAS",
           items: [
-            { name: "Hamburguesa completa", price: "$7000", confidence: 0.88 },
-            { name: "Sándwich de milanesa", price: "$6500", confidence: 0.90 },
-            { name: "Tostado jamón y queso", price: "$4000", confidence: 0.94 }
+            { name: "Tortilla Española", price: "$8500", confidence: 0.91 },
+            { name: "Tortilla de Papa", price: "$7500", confidence: 0.89 },
+            { name: "Tortilla de Jamón y Queso", price: "$9000", confidence: 0.93 },
+            { name: "Tortilla de Verduras", price: "$8000", confidence: 0.87 },
+            { name: "Tortilla de Atún", price: "$9500", confidence: 0.85 }
           ]
         }
       ],
-      // Dataset 3 - Página de parrilla y carnes
+      // Página 3 - Omelets y Sándwiches
       [
         {
-          name: "PARRILLA",
+          name: "OMELETS",
           items: [
-            { name: "Bife de chorizo", price: "$18000", confidence: 0.92 },
-            { name: "Entraña completa", price: "$16000", confidence: 0.89 },
-            { name: "Costillar de cerdo", price: "$14000", confidence: 0.87 },
-            { name: "Chorizo casero", price: "$8000", confidence: 0.95 }
+            { name: "Omelet de Jamón y Queso", price: "$7000", confidence: 0.92 },
+            { name: "Omelet de Verduras", price: "$6500", confidence: 0.90 },
+            { name: "Omelet de Champiñones", price: "$7500", confidence: 0.88 },
+            { name: "Omelet de Finas Hierbas", price: "$7200", confidence: 0.86 },
+            { name: "Omelet de Atún", price: "$8000", confidence: 0.94 }
+          ]
+        },
+        {
+          name: "SANDWICHES",
+          items: [
+            { name: "Sándwich de Milanesa", price: "$6500", confidence: 0.93 },
+            { name: "Sándwich de Bondiola", price: "$8500", confidence: 0.91 },
+            { name: "Sándwich de Pollo Grillado", price: "$7500", confidence: 0.89 },
+            { name: "Sándwich Vegetariano", price: "$6000", confidence: 0.87 },
+            { name: "Sándwich de Lomito", price: "$9500", confidence: 0.95 },
+            { name: "Club Sándwich", price: "$8000", confidence: 0.92 },
+            { name: "Sándwich de Atún", price: "$7000", confidence: 0.88 },
+            { name: "Sándwich Croque Monsieur", price: "$8500", confidence: 0.90 },
+            { name: "Sándwich de Salmón", price: "$11000", confidence: 0.86 },
+            { name: "Panini de Vegetales", price: "$7200", confidence: 0.84 }
+          ]
+        }
+      ],
+      // Página 4 - Entradas y Empanadas
+      [
+        {
+          name: "ENTRADAS",
+          items: [
+            { name: "Tabla de Fiambres", price: "$14000", confidence: 0.93 },
+            { name: "Provoleta a la Parrilla", price: "$6500", confidence: 0.91 },
+            { name: "Mozzarella Caprese", price: "$7500", confidence: 0.89 },
+            { name: "Hummus c/ Pan Pita", price: "$5500", confidence: 0.87 },
+            { name: "Bruschettas Mixtas", price: "$6000", confidence: 0.95 },
+            { name: "Ceviche de Pescado", price: "$9500", confidence: 0.92 },
+            { name: "Carpaccio de Carne", price: "$11000", confidence: 0.88 },
+            { name: "Tabla de Quesos", price: "$12000", confidence: 0.90 },
+            { name: "Palta Rellena", price: "$8000", confidence: 0.86 },
+            { name: "Croquetas de Jamón", price: "$7000", confidence: 0.94 }
+          ]
+        },
+        {
+          name: "EMPANADAS",
+          items: [
+            { name: "Empanadas de Carne", price: "$600", description: "c/u", confidence: 0.95 },
+            { name: "Empanadas de Pollo", price: "$600", description: "c/u", confidence: 0.93 },
+            { name: "Empanadas de Jamón y Queso", price: "$600", description: "c/u", confidence: 0.91 },
+            { name: "Empanadas de Verdura", price: "$550", description: "c/u", confidence: 0.89 },
+            { name: "Empanadas de Atún", price: "$700", description: "c/u", confidence: 0.87 },
+            { name: "Empanadas de Choclo", price: "$550", description: "c/u", confidence: 0.85 },
+            { name: "Empanadas Caprese", price: "$650", description: "c/u", confidence: 0.92 },
+            { name: "Empanadas Árabes", price: "$700", description: "c/u", confidence: 0.90 }
           ]
         }
       ]
@@ -268,54 +341,105 @@ export default function ScannerPage() {
     }, 500);
   };
 
-  // Datos simulados más realistas basados en las imágenes demo
+  // Datos completos basados en el menú real de Esquina Pompeya del MD
   const simulateOCRFromDemo = async (imageIndex: number): Promise<ExtractedCategory[]> => {
     const realMenuData = [
-      // Página 1 - Platos principales
+      // Página 1 - Platos del Día y Promos
       [
         {
-          name: "PLATOS PRINCIPALES",
+          name: "PLATOS DEL DÍA",
           items: [
-            { name: "Milanesa Napolitana", price: "$8500", description: "Con papas fritas", confidence: 0.94 },
-            { name: "Bife de Chorizo", price: "$12000", description: "Con guarnición", confidence: 0.92 },
-            { name: "Pollo Grillado", price: "$7500", description: "Con ensalada", confidence: 0.89 },
-            { name: "Suprema Maryland", price: "$9000", description: "Con pure de papa", confidence: 0.91 }
+            { name: "Rinioncitos al jerez c/ puré", price: "$9000", description: "Riñones al jerez con puré cremoso", confidence: 0.95 },
+            { name: "Croquetas de carne c/ ensalada", price: "$9000", description: "Croquetas artesanales con ensalada fresca", confidence: 0.94 },
+            { name: "Chupín de merluza c/ papa natural", price: "$10000", description: "Chupín de merluza con papas naturales", confidence: 0.92 },
+            { name: "Pechuga rellena c/ f. españolas", price: "$12000", description: "Pechuga rellena con papas españolas", confidence: 0.93 },
+            { name: "Mejillones c/ fettuccinis", price: "$12000", description: "Mejillones frescos con fettuccinis", confidence: 0.91 },
+            { name: "Vacío a la parrilla c/ fritas", price: "$14000", description: "Vacío a la parrilla con papas fritas", confidence: 0.96 },
+            { name: "Peceto al verdeo c/ puré", price: "$15000", description: "Peceto al verdeo con puré", confidence: 0.94 },
+            { name: "Correntinos caseros a la Vangoli", price: "$13000", description: "Correntinos caseros estilo Vangoli", confidence: 0.93 }
+          ]
+        },
+        {
+          name: "PROMOS DE LA SEMANA",
+          items: [
+            { name: "Promo 1", price: "$12000", description: "Entraña c/ arroz + postre + bebida", confidence: 0.95 },
+            { name: "Promo 2", price: "$12000", description: "Salpicón de ave + postre + bebida", confidence: 0.94 }
           ]
         }
       ],
-      // Página 2 - Empanadas y entradas  
+      // Página 2 - Tortillas y Omelets
       [
         {
-          name: "EMPANADAS",
+          name: "TORTILLAS",
           items: [
-            { name: "Carne Cortada a Cuchillo", price: "$600", description: "Por unidad", confidence: 0.95 },
-            { name: "Pollo", price: "$600", description: "Por unidad", confidence: 0.93 },
-            { name: "Jamón y Queso", price: "$650", description: "Por unidad", confidence: 0.92 },
-            { name: "Humita", price: "$700", description: "Por unidad", confidence: 0.90 }
+            { name: "Papas", price: "$8000", description: "Tortilla de papas clásica", confidence: 0.96 },
+            { name: "Papas c/ cebolla", price: "$9000", description: "Tortilla de papas con cebolla", confidence: 0.95 },
+            { name: "Española", price: "$10000", description: "Tortilla española tradicional", confidence: 0.94 },
+            { name: "Verdura", price: "$8000", description: "Tortilla de verduras frescas", confidence: 0.93 },
+            { name: "Papas fritas porción", price: "$6000", description: "Porción de papas fritas", confidence: 0.95 },
+            { name: "Puré porción", price: "$6000", description: "Porción de puré", confidence: 0.94 },
+            { name: "P. de papas fritas", price: "$6000", description: "Porción papas fritas", confidence: 0.95 },
+            { name: "P. de puré de papas/calabaza", price: "$6000", description: "Porción puré papas o calabaza", confidence: 0.94 }
+          ]
+        },
+        {
+          name: "OMELETS",
+          items: [
+            { name: "Omelet c/ jamón", price: "$7000", description: "Omelet con jamón", confidence: 0.96 },
+            { name: "Omelet c/ jamón y queso", price: "$8000", description: "Omelet jamón y queso", confidence: 0.95 },
+            { name: "Omelet c/ jamón, queso y tomate", price: "$9000", description: "Omelet completo", confidence: 0.94 },
+            { name: "Omelet de verdura", price: "$7000", description: "Omelet de verduras", confidence: 0.93 }
           ]
         }
       ],
-      // Página 3 - Bebidas
+      // Página 3 - Cocina
       [
         {
-          name: "BEBIDAS",
+          name: "COCINA",
           items: [
-            { name: "Gaseosa Línea Coca", price: "$2500", description: "500ml", confidence: 0.94 },
-            { name: "Agua Mineral", price: "$1500", description: "500ml", confidence: 0.96 },
-            { name: "Cerveza Quilmes", price: "$3000", description: "473ml", confidence: 0.93 },
-            { name: "Vino Tinto", price: "$4500", description: "Copa", confidence: 0.89 }
+            { name: "1/4 Pollo al horno c/ papas", price: "$9000", description: "Cuarto de pollo al horno con papas", confidence: 0.95 },
+            { name: "1/4 Pollo provenzal c/ fritas", price: "$10000", description: "Pollo provenzal con papas fritas", confidence: 0.94 },
+            { name: "Matambre al verdeo c/ fritas", price: "$12000", description: "Matambre al verdeo con fritas", confidence: 0.93 },
+            { name: "Matambre a la pizza c/ fritas", price: "$12000", description: "Matambre a la pizza con fritas", confidence: 0.92 },
+            { name: "Bondiola al ajillo c/ fritas", price: "$12000", description: "Bondiola al ajillo con fritas", confidence: 0.94 },
+            { name: "Bondiola al verdeo c/ papas", price: "$12000", description: "Bondiola al verdeo con papas", confidence: 0.93 },
+            { name: "Costillitas (2) a la riojana", price: "$18000", description: "2 costillitas a la riojana", confidence: 0.91 },
+            { name: "Vacío al horno c/ papas", price: "$14000", description: "Vacío al horno con papas", confidence: 0.95 },
+            { name: "Vacío a la parrilla c/ guarnición", price: "$15000", description: "Vacío a la parrilla con ensalada", confidence: 0.96 },
+            { name: "Peceto horneado al vino c/ f. españolas", price: "$15000", description: "Peceto al vino con papas españolas", confidence: 0.94 }
           ]
         }
       ],
-      // Página 4 - Postres
+      // Página 4 - Sándwiches y Entradas  
       [
         {
-          name: "POSTRES", 
+          name: "SÁNDWICHES FRÍOS",
           items: [
-            { name: "Flan Casero", price: "$3500", description: "Con dulce de leche", confidence: 0.92 },
-            { name: "Tiramisu", price: "$4000", description: "Porción individual", confidence: 0.90 },
-            { name: "Helado", price: "$3000", description: "2 bochas", confidence: 0.94 },
-            { name: "Brownie", price: "$3800", description: "Con helado", confidence: 0.88 }
+            { name: "Francés jamón y queso", price: "$6000", description: "Pan francés con jamón y queso", confidence: 0.96 },
+            { name: "Francés salame y queso", price: "$6000", description: "Pan francés con salame y queso", confidence: 0.95 },
+            { name: "Francés jamón crudo y queso", price: "$7000", description: "Pan francés con jamón crudo", confidence: 0.94 },
+            { name: "Sandwich de matambre casero", price: "$7000", description: "Matambre casero en pan", confidence: 0.93 }
+          ]
+        },
+        {
+          name: "SÁNDWICHES CALIENTES",
+          items: [
+            { name: "Sw. milanesa simple", price: "$5000", description: "Sándwich de milanesa simple", confidence: 0.96 },
+            { name: "Sw. milanesa LyT", price: "$6000", description: "Milanesa con lechuga y tomate", confidence: 0.95 },
+            { name: "Sw. milanesa completo", price: "$7000", description: "Milanesa completa", confidence: 0.94 },
+            { name: "Sw. lomito solo simple", price: "$8000", description: "Lomito simple", confidence: 0.93 },
+            { name: "Sw. lomito completo", price: "$10000", description: "Lomito completo", confidence: 0.92 },
+            { name: "Sw. bondiola completo", price: "$10000", description: "Bondiola completa", confidence: 0.91 }
+          ]
+        },
+        {
+          name: "ENTRADAS",
+          items: [
+            { name: "Picada para 1", price: "$10000", description: "Picada individual", confidence: 0.95 },
+            { name: "Picada para 2", price: "$19000", description: "Picada para dos personas", confidence: 0.94 },
+            { name: "Matambre casero c/ rusa", price: "$10000", description: "Matambre con ensalada rusa", confidence: 0.93 },
+            { name: "Empanadas Carne/Pollo/JyQ", price: "$1600", description: "Empanadas c/u", confidence: 0.96 },
+            { name: "Empanadas Atún", price: "$1800", description: "Empanadas de atún c/u", confidence: 0.95 }
           ]
         }
       ]
@@ -328,12 +452,20 @@ export default function ScannerPage() {
     if (!processedMenu?.categories.length) return;
     
     try {
-      // Aquí enviaríamos los datos procesados al backend para crear el menú
+      // Guardar datos procesados
       console.log('Saving processed menu data:', processedMenu);
       
-      // Simular guardado exitoso
-      alert('¡Menú digitalizado correctamente! Redirigiendo al panel de control...');
-      router.push('/admin/dashboard');
+      // Guardar en localStorage para el demo
+      localStorage.setItem('demo-processed-menu', JSON.stringify(processedMenu));
+      
+      // Redirección según contexto
+      if (isDemo) {
+        alert('¡Menú procesado correctamente! Continuando al editor...');
+        router.push('/demo/editor');
+      } else {
+        alert('¡Menú digitalizado correctamente! Continuando al editor...');
+        router.push('/editor');
+      }
       
     } catch (error) {
       console.error('Error saving menu:', error);
@@ -342,36 +474,83 @@ export default function ScannerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* Header - Estilo QRing */}
-        <div className="text-center mb-8">
-          <button
-            onClick={() => router.back()}
-            className="absolute left-4 top-4 text-slate-600 hover:text-blue-600 transition-colors duration-200 font-medium"
-          >
-            ← Volver
-          </button>
-          
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">
-            📷 Scanner OCR de Cartas
-          </h1>
-          <p className="text-slate-600">
-            Digitaliza tu carta física automáticamente con inteligencia artificial
-          </p>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <DevBanner />
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.back()}
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <span>←</span>
+                <span>Volver</span>
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold">📷 MenuQR</h1>
+                <p className="text-gray-400 text-sm">
+                  Paso 2 de 4 - Tu carta/menú digital QR
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-sm">
+                🌙
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Barra de Progreso */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="mb-2">
+            <div className="flex justify-between text-sm text-gray-400 mb-1">
+              <span>Progreso del Setup</span>
+              <span>50% completado</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300" style={{width: '50%'}}></div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">✓</div>
+              <span className="text-sm text-blue-400">1. Datos</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+              <span className="text-sm text-white font-medium">2. Scanner</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-gray-600 text-gray-300 rounded-full flex items-center justify-center text-xs">3</div>
+              <span className="text-sm text-gray-400">3. Editor</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-gray-600 text-gray-300 rounded-full flex items-center justify-center text-xs">4</div>
+              <span className="text-sm text-gray-400">4. Carta</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
 
         <div className="grid md:grid-cols-2 gap-8">
           
-          {/* Panel de carga - Estilo QRing */}
-          <div className="card-qring p-6">
-            <h2 className="text-xl font-semibold text-slate-800 mb-4">
+          {/* Panel de carga */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">
               📸 Subir Imagen de la Carta
             </h2>
             
             <div 
-              className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all duration-200"
+              className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-gray-700 transition-all duration-200"
               onClick={() => fileInputRef.current?.click()}
             >
               {selectedImages.length > 0 ? (
@@ -387,7 +566,7 @@ export default function ScannerPage() {
                     ))}
                   </div>
                   {selectedImages.length > 4 && (
-                    <p className="text-sm text-slate-600 mb-2">
+                    <p className="text-sm text-gray-300 mb-2">
                       +{selectedImages.length - 4} imágenes más...
                     </p>
                   )}
@@ -397,9 +576,9 @@ export default function ScannerPage() {
                 </div>
               ) : (
                 <div>
-                  <div className="text-6xl text-slate-400 mb-4">📷</div>
-                  <p className="text-slate-600 mb-2">Haz clic para seleccionar imágenes</p>
-                  <p className="text-sm text-slate-500">PNG, JPG hasta 10MB • Múltiples archivos permitidos</p>
+                  <div className="text-6xl text-gray-400 mb-4">📷</div>
+                  <p className="text-gray-300 mb-2">Haz clic para seleccionar imágenes</p>
+                  <p className="text-sm text-gray-400">PNG, JPG hasta 10MB • Múltiples archivos permitidos</p>
                 </div>
               )}
             </div>
@@ -414,7 +593,7 @@ export default function ScannerPage() {
             />
 
             {/* Botón Demo para presentación */}
-            <div className="mt-4 pt-4 border-t border-slate-200">
+            <div className="mt-4 pt-4 border-t border-gray-600">
               <button
                 onClick={loadDemoImages}
                 disabled={isProcessing}
@@ -422,7 +601,7 @@ export default function ScannerPage() {
               >
                 🚀 Cargar Demo con Fotos Reales
               </button>
-              <p className="text-xs text-slate-500 mt-1 text-center">
+              <p className="text-xs text-gray-400 mt-1 text-center">
                 Perfecto para presentaciones • Datos reales de restaurante
               </p>
             </div>
@@ -430,13 +609,13 @@ export default function ScannerPage() {
             {/* Barra de progreso */}
             {isProcessing && (
               <div className="mt-4">
-                <div className="flex justify-between text-sm text-slate-600 mb-1">
+                <div className="flex justify-between text-sm text-gray-300 mb-1">
                   <span>
                     Procesando imagen {currentImageIndex + 1} de {selectedImages.length}...
                   </span>
                   <span>{Math.round(progress)}%</span>
                 </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
+                <div className="w-full bg-gray-700 rounded-full h-2">
                   <div 
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
@@ -445,10 +624,10 @@ export default function ScannerPage() {
               </div>
             )}
 
-            {/* Instrucciones - Estilo QRing */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-2">💡 Tips para mejores resultados:</h3>
-              <ul className="text-sm text-blue-700 space-y-1">
+            {/* Instrucciones */}
+            <div className="mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-700">
+              <h3 className="font-semibold text-blue-300 mb-2">💡 Tips para mejores resultados:</h3>
+              <ul className="text-sm text-blue-200 space-y-1">
                 <li>• Usa buena iluminación</li>
                 <li>• Mantén la carta plana y recta</li>
                 <li>• Evita reflejos y sombras</li>
@@ -457,33 +636,33 @@ export default function ScannerPage() {
             </div>
           </div>
 
-          {/* Panel de resultados - Estilo QRing */}
-          <div className="card-qring p-6">
-            <h2 className="text-xl font-semibold text-slate-800 mb-4">
+          {/* Panel de resultados */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">
               🤖 Datos Extraídos por IA
             </h2>
             
             {extractedData.length > 0 ? (
               <div className="space-y-4">
                 {extractedData.map((category, categoryIndex) => (
-                  <div key={categoryIndex} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-                    <h3 className="font-bold text-lg text-slate-800 mb-3 border-b border-slate-300 pb-2">
+                  <div key={categoryIndex} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
+                    <h3 className="font-bold text-lg text-white mb-3 border-b border-gray-600 pb-2">
                       {category.name}
                     </h3>
                     
                     <div className="space-y-2">
                       {category.items.map((item, itemIndex) => (
-                        <div key={itemIndex} className="flex justify-between items-start p-3 bg-white rounded border border-slate-100 shadow-sm">
+                        <div key={itemIndex} className="flex justify-between items-start p-3 bg-gray-800 rounded border border-gray-600">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-800">{item.name}</div>
+                            <div className="font-medium text-white">{item.name}</div>
                             {item.description && (
-                              <div className="text-sm text-slate-600">{item.description}</div>
+                              <div className="text-sm text-gray-300">{item.description}</div>
                             )}
-                            <div className="text-xs text-emerald-600 font-medium">
+                            <div className="text-xs text-green-400 font-medium">
                               Confianza: {(item.confidence * 100).toFixed(0)}%
                             </div>
                           </div>
-                          <div className="font-bold text-blue-600 ml-4">
+                          <div className="font-bold text-blue-400 ml-4">
                             {item.price}
                           </div>
                         </div>
@@ -501,7 +680,7 @@ export default function ScannerPage() {
                     >
                       🧠 Procesar con IA - Eliminar Duplicados
                     </button>
-                    <p className="text-sm text-slate-600 mt-2">
+                    <p className="text-sm text-gray-300 mt-2">
                       Optimiza automáticamente tu menú eliminando repeticiones y organizando categorías
                     </p>
                   </div>
@@ -509,26 +688,26 @@ export default function ScannerPage() {
 
                 {/* Resumen Inteligente */}
                 {processedMenu && (
-                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                    <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center">
+                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-700">
+                    <h3 className="text-lg font-bold text-white mb-3 flex items-center">
                       🧠 Procesamiento Inteligente Completado
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <div className="text-2xl font-bold text-green-600">{processedMenu.summary.totalItems}</div>
-                        <div className="text-xs text-slate-600">Elementos finales</div>
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-green-400">{processedMenu.summary.totalItems}</div>
+                        <div className="text-xs text-gray-300">Elementos finales</div>
                       </div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <div className="text-2xl font-bold text-red-600">{processedMenu.summary.duplicatesRemoved}</div>
-                        <div className="text-xs text-slate-600">Duplicados eliminados</div>
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-red-400">{processedMenu.summary.duplicatesRemoved}</div>
+                        <div className="text-xs text-gray-300">Duplicados eliminados</div>
                       </div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <div className="text-2xl font-bold text-blue-600">{processedMenu.summary.categoriesFound}</div>
-                        <div className="text-xs text-slate-600">Categorías detectadas</div>
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-blue-400">{processedMenu.summary.categoriesFound}</div>
+                        <div className="text-xs text-gray-300">Categorías detectadas</div>
                       </div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <div className="text-2xl font-bold text-purple-600">{processedMenu.summary.processingTime}</div>
-                        <div className="text-xs text-slate-600">Tiempo procesamiento</div>
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-purple-400">{processedMenu.summary.processingTime}</div>
+                        <div className="text-xs text-gray-300">Tiempo procesamiento</div>
                       </div>
                     </div>
                     <div className="mt-4 text-center">
@@ -542,12 +721,12 @@ export default function ScannerPage() {
                   </div>
                 )}
                 
-                {/* Botones de acción - Estilo QRing */}
+                {/* Botones de acción */}
                 <div className="flex space-x-3 pt-4">
                   <button
                     onClick={handleSaveMenu}
                     disabled={!processedMenu && extractedData.length === 0}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
                   >
                     ✅ Guardar Menú {processedMenu ? 'Optimizado' : 'Digital'}
                   </button>
@@ -558,14 +737,14 @@ export default function ScannerPage() {
                       setSelectedImages([]);
                       setShowDemoImages(false);
                     }}
-                    className="btn-qring-secondary"
+                    className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200"
                   >
                     🔄 Reiniciar
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-center text-slate-500 py-8">
+              <div className="text-center text-gray-400 py-8">
                 <div className="text-4xl mb-4">🤖</div>
                 <p className="font-medium">Los datos extraídos aparecerán aquí</p>
                 <p className="text-sm">Sube una imagen para comenzar el análisis OCR</p>
@@ -574,30 +753,46 @@ export default function ScannerPage() {
           </div>
         </div>
 
-        {/* Información adicional - Estilo QRing */}
-        <div className="mt-8 card-qring p-6">
-          <h2 className="text-xl font-semibold text-slate-800 mb-4">
+        {/* Información adicional */}
+        <div className="mt-8 bg-gray-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">
             🚀 ¿Cómo funciona el Scanner OCR?
           </h2>
           
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="text-center p-4 bg-blue-900/30 rounded-lg border border-blue-700">
               <div className="text-3xl mb-2">📷</div>
-              <h3 className="font-semibold text-blue-800 mb-2">1. Captura</h3>
-              <p className="text-sm text-blue-700">Sube la foto de tu carta física</p>
+              <h3 className="font-semibold text-blue-300 mb-2">1. Captura</h3>
+              <p className="text-sm text-blue-200">Sube la foto de tu carta física</p>
             </div>
             
-            <div className="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+            <div className="text-center p-4 bg-green-900/30 rounded-lg border border-green-700">
               <div className="text-3xl mb-2">🤖</div>
-              <h3 className="font-semibold text-emerald-800 mb-2">2. Procesamiento IA</h3>
-              <p className="text-sm text-emerald-700">OCR extrae texto y precios automáticamente</p>
+              <h3 className="font-semibold text-green-300 mb-2">2. Procesamiento IA</h3>
+              <p className="text-sm text-green-200">OCR extrae texto y precios automáticamente</p>
             </div>
             
-            <div className="text-center p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="text-center p-4 bg-gray-700 rounded-lg border border-gray-600">
               <div className="text-3xl mb-2">💾</div>
-              <h3 className="font-semibold text-slate-800 mb-2">3. Menú Digital</h3>
-              <p className="text-sm text-slate-700">Se genera tu menú digital listo para usar</p>
+              <h3 className="font-semibold text-gray-300 mb-2">3. Menú Digital</h3>
+              <p className="text-sm text-gray-300">Se genera tu menú digital listo para usar</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar - Footer fijo */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex space-x-2 mb-2">
+            <div className="flex-1 h-2 bg-green-500 rounded"></div>
+            <div className="flex-1 h-2 bg-blue-500 rounded"></div>
+            <div className="flex-1 h-2 bg-gray-600 rounded"></div>
+            <div className="flex-1 h-2 bg-gray-600 rounded"></div>
+            <div className="flex-1 h-2 bg-gray-600 rounded"></div>
+          </div>
+          <div className="text-center text-sm text-gray-400">
+            Setup → Scanner → Editor → Personalización → QR
           </div>
         </div>
       </div>
