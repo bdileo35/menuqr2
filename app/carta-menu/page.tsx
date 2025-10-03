@@ -31,114 +31,70 @@ export default function CartaMenuPage() {
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
 
   useEffect(() => {
-    console.log('🔍 Cargando datos del restaurante desde localStorage...');
-    
-    // Cargar datos del localStorage (del wizard completo)
-    const savedMenu = localStorage.getItem('editor-menu-data');
-    const setupData = localStorage.getItem('setup-comercio-data');
-    
-    console.log('📦 Editor data:', savedMenu);
-    console.log('⚙️ Setup data:', setupData);
+    const loadMenuFromAPI = async () => {
+      console.log('🔍 Cargando menú desde la base de datos...');
+      
+      try {
+        // Llamar a la API para obtener el menú de Esquina Pompeya
+        const response = await fetch('/api/menu/esquina-pompeya');
+        const data = await response.json();
+        
+        if (data.success && data.menu) {
+          console.log('✅ Menú cargado desde API:', data.menu);
+          
+          // Formatear datos para el componente
+          const restaurantInfo: RestaurantData = {
+            restaurantName: data.menu.restaurantName,
+            address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
+            phone: data.menu.contactPhone || '+54 11 1234-5678',
+            categories: data.menu.categories.map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              items: cat.items.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                price: `$${item.price}`,
+                description: item.description
+              }))
+            }))
+          };
+          
+          setMenuData(restaurantInfo);
+          console.log('📋 Total categorías:', restaurantInfo.categories.length);
+          console.log('📋 Total productos:', restaurantInfo.categories.reduce((total, cat) => total + cat.items.length, 0));
+        } else {
+          throw new Error('No se pudo cargar el menú');
+        }
+      } catch (error) {
+        console.error('❌ Error cargando menú desde API:', error);
+        
+        // Fallback: intentar localStorage como backup
+        const savedMenu = localStorage.getItem('editor-menu-data');
+        const setupData = localStorage.getItem('setup-comercio-data');
+        
+        if (savedMenu && setupData) {
+          const menuData = JSON.parse(savedMenu);
+          const setup = JSON.parse(setupData);
+          
+          const restaurantInfo: RestaurantData = {
+            restaurantName: setup.nombreComercio || 'Mi Restaurante',
+            address: setup.direccion || 'Dirección no especificada',
+            phone: setup.telefono || 'Teléfono no especificado', 
+            categories: menuData.categories || menuData || []
+          };
+          
+          setMenuData(restaurantInfo);
+          console.log('⚠️ Usando datos de localStorage como fallback');
+        } else {
+          console.error('❌ No hay datos disponibles');
+          setMenuData(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    let restaurantInfo: RestaurantData;
-
-    if (savedMenu && setupData) {
-      // Usar datos reales del wizard
-      const menuData = JSON.parse(savedMenu);
-      const setup = JSON.parse(setupData);
-      
-      restaurantInfo = {
-        restaurantName: setup.nombreComercio || setup.restaurantName || 'Mi Restaurante',
-        address: setup.direccion || setup.address || 'Dirección no especificada',
-        phone: setup.telefono || setup.phone || 'Teléfono no especificado', 
-        categories: menuData.categories || menuData || []
-      };
-      
-      console.log('✅ Usando datos reales del wizard:', restaurantInfo);
-    } else {
-      // Datos de ejemplo genéricos (sin mencionar Esquina Pompeya)
-      restaurantInfo = {
-        restaurantName: 'Mi Restaurante Demo',
-        address: 'Av. Principal 123, Ciudad',
-        phone: '+54 11 1234-5678',
-        categories: [
-          {
-            id: 'platos-del-dia',
-            name: 'PLATOS DEL DIA',
-            items: [
-              { id: '1', name: 'Milanesas al horno c/ Puré', price: '$9000' },
-              { id: '2', name: 'Croquetas de carne c/ensalada', price: '$8000' },
-              { id: '3', name: 'Chuleta de merluza c/rusa gatura', price: '$10000' },
-              { id: '4', name: 'Pechuga rellena c/ f. españolas', price: '$12000' },
-              { id: '5', name: 'Mejillones c/ fetuccinis', price: '$14000' },
-              { id: '6', name: 'Vacio a la parrilla c/fritas', price: '$15000' },
-              { id: '7', name: 'Peceto al verdeo c/ Puré', price: '$15000' },
-              { id: '8', name: 'Arroz integral con vegetales', price: '$11000' }
-            ]
-          },
-          {
-            id: 'promociones',  
-            name: 'PROMOCIONES DE LA SEMANA',
-            items: [
-              { id: 'p1', name: 'PROMO 1: Milanesa Completa', price: '$12000', description: 'Milanesa + Papas + Bebida' },
-              { id: 'p2', name: 'PROMO 2: Salpicón de Ave', price: '$12000', description: 'Ensalada + Bebida + Postre' },
-              { id: 'p3', name: 'PROMO 3: Parrilla Especial', price: '$15000', description: 'Carne + Guarnición + Postre' }
-            ]
-          },
-          {
-            id: 'cocina',
-            name: 'COCINA',
-            items: [
-              { id: 'c1', name: '1/4 Pollo al horno c/ papas', price: '$9000' },
-              { id: 'c2', name: '1/4 Pollo provenzal c/ fritas', price: '$10000' },
-              { id: 'c3', name: 'Suprema a la napolitana', price: '$12000' },
-              { id: 'c4', name: 'Suprema rellena c/ jamón y queso', price: '$13000' },
-              { id: 'c5', name: 'Lomo a la pimienta', price: '$16000' },
-              { id: 'c6', name: 'Bife de chorizo c/ fritas', price: '$15000' }
-            ]
-          },
-          {
-            id: 'tortillas',
-            name: 'TORTILLAS',
-            items: [
-              { id: 't1', name: 'Tortilla española', price: '$8000' },
-              { id: 't2', name: 'Tortilla de papa', price: '$7000' },
-              { id: 't3', name: 'Tortilla mixta', price: '$9000' }
-            ]
-          },
-          {
-            id: 'sandwiches',
-            name: 'SÁNDWICHES',
-            items: [
-              { id: 's1', name: 'Sw. tostado simple', price: '$4000' },
-              { id: 's2', name: 'Sw. tostado completo', price: '$5000' },
-              { id: 's3', name: 'Sw. milanesa simple', price: '$6000' },
-              { id: 's4', name: 'Sw. milanesa completo', price: '$7500' },
-              { id: 's5', name: 'Sw. lomito completo', price: '$10000' },
-              { id: 's6', name: 'Sw. bondiola completo', price: '$10000' }
-            ]
-          },
-          {
-            id: 'empanadas',
-            name: 'NUESTRAS EMPANADAS',
-            items: [
-              { id: 'emp1', name: 'Carne - Pollo - J y Q', price: '$600', description: 'c/u' },
-              { id: 'emp2', name: 'Atún, Chía', price: '$800', description: 'c/u' }
-            ]
-          }
-        ]
-      };
-      
-      console.log('⚠️ Usando datos de ejemplo genéricos');
-    }
-
-    setTimeout(() => {
-      setMenuData(restaurantInfo);
-      setLoading(false);
-      
-      console.log('📋 Total categorías:', restaurantInfo.categories.length);
-      console.log('📋 Total productos:', restaurantInfo.categories.reduce((total, cat) => total + cat.items.length, 0));
-    }, 500);
+    loadMenuFromAPI();
   }, []);
 
   if (loading) {
@@ -177,20 +133,20 @@ export default function CartaMenuPage() {
       
       <DevBanner />
       
-      {/* Header con info del restaurante - MÁS ALTO */}
+      {/* Header con info del restaurante - COMPACTO */}
       <div className={`border-b sticky top-0 z-50 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* HEADER CON 2 CARDS: LOGO + INFO RESTAURANTE - MÁS ALTO */}
-          <div className="grid grid-cols-2 gap-2 items-center py-2">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          {/* HEADER CON 2 CARDS: LOGO + INFO RESTAURANTE */}
+          <div className="grid grid-cols-2 gap-2 items-center">
             
-            {/* CARD IZQUIERDA: LOGO - MÁS GRANDE */}
-            <div className="flex justify-center">
+            {/* CARD IZQUIERDA: LOGO - FULL WIDTH */}
+            <div className="flex justify-center items-center h-full">
               <img 
                 src="/demo-images/Logo.jpg" 
                 alt="Logo Esquina Pompeya"
-                className="h-26 w-36 rounded-lg object-cover"
+                className="w-full h-auto rounded-lg object-contain"
               />
             </div>
 
@@ -208,17 +164,41 @@ export default function CartaMenuPage() {
                 RESTOBAR & PARRILLA
               </p>
               
-              <p className={`text-xs mb-1 transition-colors duration-300 ${
-                isDarkMode ? 'text-blue-400' : 'text-blue-600'
-              }`}>
+              {/* Dirección - Link a Google Maps */}
+              <a 
+                href="https://www.google.com/maps/search/?api=1&query=Av.+Fernández+de+la+Cruz+1100,+Buenos+Aires"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-xs mb-1 block hover:underline transition-colors duration-300 ${
+                  isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
+                }`}
+              >
                 📍 Av. Fernández de la Cruz 1100
-              </p>
+              </a>
               
-              <p className={`text-xs transition-colors duration-300 ${
-                isDarkMode ? 'text-green-400' : 'text-green-600'
-              }`}>
+              {/* Teléfono/WhatsApp - Link directo */}
+              <a 
+                href="https://wa.me/5491123456789"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-xs mb-1 block hover:underline transition-colors duration-300 ${
+                  isDarkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700'
+                }`}
+              >
                 📱 +54 11 1234-5678
-              </p>
+              </a>
+
+              {/* Mercado Pago - Alias */}
+              <a 
+                href="https://www.mercadopago.com.ar/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-xs block hover:underline transition-colors duration-300 ${
+                  isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'
+                }`}
+              >
+                💳 esquina.pompeya.mp
+              </a>
 
               {/* Toggle modo oscuro/claro - esquina superior derecha */}
               <button

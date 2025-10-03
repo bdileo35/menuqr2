@@ -17,6 +17,21 @@ enum Role {
   SUPERADMIN  // Para acceso OCR y funciones avanzadas
 }
 
+enum OrderMode {
+  SALON       // Pedido en mesa (presencial)
+  DELIVERY    // Pedido para envío a domicilio
+  TAKEAWAY    // Retiro en local (futuro)
+}
+
+enum OrderStatus {
+  PENDING     // Cliente armando pedido
+  CONFIRMED   // Cliente confirmó, esperando cocina
+  PREPARING   // En cocina
+  READY       // Listo para servir/enviar
+  DELIVERED   // Entregado/Servido
+  CANCELLED   // Cancelado
+}
+
 model User {
   id             String   @id @default(cuid())
   name           String
@@ -82,6 +97,12 @@ model Menu {
   currency         String  @default("$")
   language         String  @default("es")
   
+  // Delivery configuration
+  deliveryEnabled  Boolean @default(false)
+  deliveryFee      Float   @default(0)
+  deliveryRadius   Float?  // km (opcional)
+  deliveryMinOrder Float?  // Mínimo para delivery (opcional)
+  
   isActive       Boolean  @default(true)
   
   // Relations
@@ -89,6 +110,7 @@ model Menu {
   ownerId        String
   categories     Category[]
   items          MenuItem[]
+  orders         Order[]
   
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -147,9 +169,76 @@ model MenuItem {
   menuId          String
   category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId      String
+  orderItems      OrderItem[]
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("menu_items")
+}
+
+model Order {
+  id              String       @id @default(cuid())
+  orderNumber     Int          // Número correlativo por día (ej: 1, 2, 3...)
+  
+  // CONTEXTO
+  mode            OrderMode    // SALON o DELIVERY
+  status          OrderStatus  @default(PENDING)
+  
+  // IDENTIFICACIÓN CLIENTE/MESA
+  tableNumber     String?      // Solo si mode=SALON ("Mesa 12")
+  customerName    String?      // Obligatorio si mode=DELIVERY
+  customerPhone   String?      // Obligatorio si mode=DELIVERY
+  customerAddress String?      // Obligatorio si mode=DELIVERY
+  deliveryNotes   String?      // "Timbre 3B", "Casa azul", etc.
+  
+  // DATOS DEL RESTAURANTE
+  restaurantId    String       // A qué comercio pertenece
+  menu            Menu         @relation(fields: [menuId], references: [id])
+  menuId          String
+  
+  // ITEMS DEL PEDIDO
+  items           OrderItem[]  // Relación con items
+  
+  // TOTALES
+  subtotal        Float        // Suma de items
+  deliveryFee     Float        @default(0) // Solo si mode=DELIVERY
+  total           Float        // subtotal + deliveryFee
+  
+  // METADATA
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  confirmedAt     DateTime?    // Cuando cliente apretó "Confirmar"
+  completedAt     DateTime?    // Cuando se marcó DELIVERED
+  
+  // WHATSAPP (opcional)
+  whatsappSent    Boolean      @default(false)
+  whatsappMessage String?      // Mensaje generado automáticamente
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  
+  // RELACIÓN CON PEDIDO
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  
+  // DATOS DEL PRODUCTO (snapshot al momento del pedido)
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId  String
+  itemName    String   // Guardamos nombre por si cambia el menú
+  itemPrice   Float    // Guardamos precio al momento del pedido
+  
+  // CANTIDAD Y TOTAL
+  quantity    Int      @default(1)
+  subtotal    Float    // quantity * itemPrice
+  
+  // PERSONALIZACIONES (opcional futuro)
+  notes       String?  // "Sin cebolla", "Bien cocido", etc.
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("order_items")
 }
