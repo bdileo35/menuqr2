@@ -132,11 +132,6 @@ async function seedEsquinaPompeya() {
         contactAddress: 'Av. Fernández de la Cruz 1100',
         logoUrl: '/demo-images/Logo.jpg',
         
-        // Configuración de delivery
-        deliveryEnabled: true,
-        deliveryFee: 1500,
-        deliveryMinOrder: 8000,
-        
         // Settings
         allowOrdering: true,
         showPrices: true,
