@@ -253,7 +253,7 @@ async function main() {
 
   // 4. Agrupar platos por categoría
   console.log('📦 Organizando categorías...');
-  const categoriesMap = new Map<string, typeof menuData>();
+  const categoriesMap = new Map<string, Array<{ categoria: string; plato: string; precio: number; }>>();
   
   menuData.forEach(item => {
     if (!categoriesMap.has(item.categoria)) {
