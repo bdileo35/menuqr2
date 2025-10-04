@@ -66,9 +66,9 @@ export async function GET(
       socialInstagram: menu.socialInstagram,
       
       // Configuración de delivery
-      deliveryEnabled: menu.deliveryEnabled,
-      deliveryFee: menu.deliveryFee,
-      deliveryMinOrder: menu.deliveryMinOrder,
+      deliveryEnabled: menu.deliveryEnabled ?? false,      // ← Agregá ?? false
+      deliveryFee: menu.deliveryFee ?? 0,                  // ← Agregá ?? 0
+      deliveryMinOrder: menu.deliveryMinOrder ?? 0,        // ← Agregá ?? 0
       
       // Owner info
       owner: menu.owner,
