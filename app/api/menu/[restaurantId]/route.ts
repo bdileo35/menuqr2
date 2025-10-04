@@ -65,10 +65,10 @@ export async function GET(
       contactEmail: menu.contactEmail,
       socialInstagram: menu.socialInstagram,
       
-      // Configuración de delivery
-      deliveryEnabled: menu.deliveryEnabled ?? false,      // ← Agregá ?? false
-      deliveryFee: menu.deliveryFee ?? 0,                  // ← Agregá ?? 0
-      deliveryMinOrder: menu.deliveryMinOrder ?? 0,        // ← Agregá ?? 0
+      // Configuración de delivery (valores por defecto hasta que se agreguen al schema)
+      deliveryEnabled: false,
+      deliveryFee: 0,
+      deliveryMinOrder: 0,
       
       // Owner info
       owner: menu.owner,

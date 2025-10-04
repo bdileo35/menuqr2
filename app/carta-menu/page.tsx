@@ -29,6 +29,8 @@ export default function CartaMenuPage() {
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     const loadMenuFromAPI = async () => {
@@ -97,6 +99,17 @@ export default function CartaMenuPage() {
     loadMenuFromAPI();
   }, []);
 
+  // Función para filtrar platos por término de búsqueda
+  const filterItems = (items: MenuItem[]) => {
+    if (!searchTerm.trim()) return items;
+    
+    const term = searchTerm.toLowerCase();
+    return items.filter(item => 
+      item.name.toLowerCase().includes(term) ||
+      (item.description && item.description.toLowerCase().includes(term))
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -146,23 +159,12 @@ export default function CartaMenuPage() {
               <img 
                 src="/demo-images/Logo.jpg" 
                 alt="Logo Esquina Pompeya"
-                className="w-full h-auto rounded-lg object-contain"
+                className="w-52 h-auto rounded-lg object-contain"
               />
             </div>
 
             {/* CARD DERECHA: INFO RESTAURANTE */}
             <div className="text-center">
-              <h1 className={`text-lg font-bold mb-1 transition-colors duration-300 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Esquina Pompeya
-              </h1>
-              
-              <p className={`text-xs mb-1 transition-colors duration-300 ${
-                isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
-              }`}>
-                RESTOBAR & PARRILLA
-              </p>
               
               {/* Dirección - Link a Google Maps */}
               <a 
@@ -178,14 +180,14 @@ export default function CartaMenuPage() {
               
               {/* Teléfono/WhatsApp - Link directo */}
               <a 
-                href="https://wa.me/5491123456789"
+                href="https://wa.me/5491128579746"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs mb-1 block hover:underline transition-colors duration-300 ${
                   isDarkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700'
                 }`}
               >
-                📱 +54 11 1234-5678
+                📱 +54 11 2857-9746
               </a>
 
               {/* Mercado Pago - Alias */}
@@ -197,24 +199,144 @@ export default function CartaMenuPage() {
                   isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'
                 }`}
               >
-                💳 esquina.pompeya.mp
+                💳 esquina.pompeya
               </a>
 
-              {/* Toggle modo oscuro/claro - esquina superior derecha */}
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`absolute top-2 right-2 p-1.5 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                }`}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
+              {/* Botones de acción debajo de la info */}
+              <div className="flex gap-2 mt-4 justify-center flex-wrap">
+                {/* WhatsApp */}
+                <a
+                  href="https://wa.me/5491128579746"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                    isDarkMode 
+                      ? 'bg-green-600 hover:bg-green-500 text-white' 
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
+                  title="Contactar por WhatsApp"
+                >
+                  💬
+                </a>
+
+                {/* MercadoPago */}
+                <a
+                  href="https://www.mercadopago.com.ar/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                    isDarkMode 
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}
+                  title="Pagar con MercadoPago"
+                >
+                  💰
+                </a>
+
+                {/* Dirección */}
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Av.+Fernández+de+la+Cruz+1100,+Buenos+Aires"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                    isDarkMode 
+                      ? 'bg-red-600 hover:bg-red-500 text-white' 
+                      : 'bg-red-500 hover:bg-red-600 text-white'
+                  }`}
+                  title="Ver en Google Maps"
+                >
+                  🗺️
+                </a>
+
+                {/* Buscador */}
+                <button
+                  onClick={() => setShowSearch(!showSearch)}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                    showSearch
+                      ? 'bg-purple-600 text-white' 
+                      : isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 text-purple-400' 
+                        : 'bg-gray-200 hover:bg-gray-300 text-purple-600'
+                  }`}
+                  title="Buscar platos"
+                >
+                  🔎
+                </button>
+                
+                {/* Toggle modo oscuro/claro */}
+                <button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  }`}
+                  title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                >
+                  {isDarkMode ? '☀️' : '🌑'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Input de búsqueda (aparece al hacer clic en 🔍) */}
+      {showSearch && (
+        <div className={`border-b transition-colors duration-300 ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar platos por nombre..."
+                  className={`w-full px-4 py-2 pr-24 rounded-lg transition-colors duration-300 ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
+                      : 'bg-gray-100 border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
+                  }`}
+                  autoFocus
+                />
+                
+                {/* Contador de resultados dentro del input */}
+                {searchTerm && menuData && (
+                  <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium transition-colors duration-300 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {(() => {
+                      const totalResults = menuData.categories.reduce((total, cat) => 
+                        total + filterItems(cat.items).length, 0
+                      );
+                      return totalResults > 0 
+                        ? `${totalResults} plato${totalResults !== 1 ? 's' : ''}`
+                        : '0 platos';
+                    })()}
+                  </div>
+                )}
+              </div>
+              
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setShowSearch(false);
+                }}
+                className={`px-3 py-2 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-600 hover:bg-gray-500 text-gray-300' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contenido del Menú */}
       <div className="max-w-4xl mx-auto px-4 py-4">
@@ -234,9 +356,31 @@ export default function CartaMenuPage() {
               Ir al Editor →
             </button>
           </div>
+        ) : searchTerm && menuData.categories.filter(category => filterItems(category.items).length > 0).length === 0 ? (
+          // Mensaje cuando no hay resultados de búsqueda
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h2 className={`text-xl mb-4 transition-colors duration-300 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>No se encontraron platos</h2>
+            <p className={`mb-6 transition-colors duration-300 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>Intenta con otro término de búsqueda</p>
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setShowSearch(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              Limpiar búsqueda
+            </button>
+          </div>
         ) : (
-          // Categorías del Menú
-          menuData.categories.map((category, index) => (
+          // Categorías del Menú (filtrar categorías vacías cuando hay búsqueda)
+          menuData.categories
+            .filter(category => !searchTerm || filterItems(category.items).length > 0)
+            .map((category, index) => (
             <div key={category.id || index} className={`mb-4 rounded-lg border transition-colors duration-300 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             }`}>
@@ -258,7 +402,7 @@ export default function CartaMenuPage() {
                   ? 'grid grid-cols-3 gap-2' 
                   : 'space-y-1.5'
               }`}>
-                {category.items.map((item, itemIndex) => (
+                {filterItems(category.items).map((item, itemIndex) => (
                   
                   // DISEÑO ESPECIAL PARA PROMOS - MERGED COMO PLATOS
                   category.name.toUpperCase().includes('PROMO') ? (
