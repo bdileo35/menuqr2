@@ -5,6 +5,9 @@ import * as path from 'path';
 
 const prisma = new PrismaClient();
 
+// SCRIPT COMENTADO - Los datos ya están en la base de datos
+/*
+
 // Datos del menú desde la tabla MD
 const menuData = [
   { categoria: "Platos del Día", plato: "Riñoncitos al jerez c/ puré", precio: 9000 },
@@ -313,10 +316,11 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Error ejecutando seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+*/
+
+// Script comentado
+console.log('Script comentado - Los datos ya están en la base');
+
+export default function seedEsquinaPompeyaFull() {
+  console.log('Script comentado - Los datos ya están en la base');
+};

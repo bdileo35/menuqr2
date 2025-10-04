@@ -3,6 +3,9 @@ import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+// SCRIPT COMENTADO - Los datos ya están en la base de datos
+/*
+
 // DATOS REALES: Menu_Esquina_Pompeya.md
 const MENU_DATA = {
   'Platos del Día': [
@@ -195,16 +198,13 @@ async function seedEsquinaPompeya() {
   }
 }
 
+*/
+
 // Ejecutar solo si se llama directamente
 if (require.main === module) {
-  seedEsquinaPompeya()
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
+  console.log('Script comentado - Los datos ya están en la base');
 }
 
-export default seedEsquinaPompeya;
+export default function seedEsquinaPompeya() {
+  console.log('Script comentado - Los datos ya están en la base');
+};

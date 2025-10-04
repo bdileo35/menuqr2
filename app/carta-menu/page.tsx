@@ -199,7 +199,7 @@ export default function CartaMenuPage() {
                   isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'
                 }`}
               >
-                💳 esquina.pompeya
+                💳 esquina.pompeya.
               </a>
 
               {/* Botones de acción debajo de la info */}
