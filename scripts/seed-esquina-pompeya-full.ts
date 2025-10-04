@@ -245,8 +245,6 @@ async function main() {
       showPrices: true,
       showImages: true,
       showDescriptions: true,
-      deliveryEnabled: true,
-      deliveryFee: 1500,
       currency: '$',
       language: 'es',
     },
