@@ -286,3 +286,4 @@ No necesitas leer otros archivos de documentación (están consolidados ahí).
 
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)](https://vercel.com)
 [![Prisma](https://img.shields.io/badge/DB-Prisma-2D3748)](https://prisma.io)
+# Force deploy 10/05/2025 23:31:44
