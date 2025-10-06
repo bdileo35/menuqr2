@@ -489,60 +489,80 @@ export default function CartaMenuPage() {
                       }`}
                       onClick={() => item.isAvailable !== false && setModalItem(item)}
                     >
-                        {/* Imagen integrada al borde izquierdo */}
-                        <div className={`w-10 h-10 rounded-l-lg overflow-hidden flex-shrink-0 border-2 border-r-0 ${
-                          isDarkMode ? 'border-gray-600' : 'border-gray-200'
-                        }`}>
-                          <img 
-                            src={(() => {
-                              const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
-                              return platosImages[itemIndex % platosImages.length];
-                            })()}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback si no carga la imagen
-                              e.currentTarget.style.display = 'none';
-                              const parent = e.currentTarget.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `
-                                  <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                    <span class="text-xs">🍽️</span>
-                                  </div>
-                                `;
-                              }
-                            }}
-                          />
-                        </div>
-                        
-                        {/* Contenido continuando el borde */}
-                        <div className={`flex-1 flex items-center justify-between px-2 py-2 rounded-r-lg border-2 border-l-0 transition-colors duration-300 h-10 ${
-                          isDarkMode 
+                      {/* Imagen integrada al borde izquierdo */}
+                      <div className={`w-10 h-10 rounded-l-lg overflow-hidden flex-shrink-0 border-2 border-r-0 ${
+                        item.isAvailable === false 
+                          ? 'border-gray-400' 
+                          : isDarkMode ? 'border-gray-600' : 'border-gray-200'
+                      }`}>
+                        <img 
+                          src={(() => {
+                            const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
+                            return platosImages[itemIndex % platosImages.length];
+                          })()}
+                          alt={item.name}
+                          className={`w-full h-full object-cover ${
+                            item.isAvailable === false ? 'grayscale' : ''
+                          }`}
+                          onError={(e) => {
+                            // Fallback si no carga la imagen
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <span class="text-xs">🍽️</span>
+                                </div>
+                              `;
+                            }
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Contenido continuando el borde */}
+                      <div className={`flex-1 flex items-center justify-between px-2 py-2 rounded-r-lg border-2 border-l-0 transition-colors duration-300 h-10 ${
+                        item.isAvailable === false 
+                          ? 'border-gray-400 bg-gray-500/20' 
+                          : isDarkMode 
                             ? 'border-gray-600 bg-gray-700/50' 
                             : 'border-gray-200 bg-gray-50'
-                        }`}>
-                          
-                          {/* Texto del plato */}
-                          <div className="flex-1">
-                            <h3 className={`font-medium text-sm leading-tight transition-colors duration-300 ${
-                              isDarkMode ? 'text-white' : 'text-gray-900'
-                            }`}>
-                              {category.name.toUpperCase().includes('PLATOS DEL DÍA') && (
-                                <span className="text-yellow-400 mr-1">⭐</span>
-                              )}
-                              {item.name}
-                            </h3>
-                          </div>
+                      }`}>
+                        
+                        {/* Texto del plato */}
+                        <div className="flex-1">
+                          <h3 className={`font-medium text-sm leading-tight transition-colors duration-300 ${
+                            item.isAvailable === false 
+                              ? 'text-gray-400' 
+                              : isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {category.name.toUpperCase().includes('PLATOS DEL DÍA') && (
+                              <span className="text-yellow-400 mr-1">⭐</span>
+                            )}
+                            {item.name}
+                          </h3>
+                        </div>
 
+                        {/* Estado + Precio */}
+                        <div className="flex items-center gap-1">
+                          {/* Texto AGOTADO */}
+                          {item.isAvailable === false && (
+                            <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-red-200 text-gray-600 border border-red-300">
+                              AGOTADO
+                            </div>
+                          )}
+                          
                           {/* Precio */}
                           <div className={`text-xs font-bold px-1.5 py-0.5 rounded border-2 transition-colors duration-300 ${
-                            isDarkMode 
-                              ? 'text-blue-300 bg-gray-800 border-blue-500' 
-                              : 'text-blue-700 bg-blue-50 border-blue-300'
+                            item.isAvailable === false 
+                              ? 'text-gray-400 bg-gray-600 border-gray-400' 
+                              : isDarkMode 
+                                ? 'text-blue-300 bg-gray-800 border-blue-500' 
+                                : 'text-blue-700 bg-blue-50 border-blue-300'
                           }`}>
                             {item.price}
                           </div>
                         </div>
+                      </div>
                     </div>
                   )
                 ))}
@@ -572,7 +592,26 @@ export default function CartaMenuPage() {
             }`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Imagen grande del plato */}
+            {/* LÍNEA 1: Nombre y X para cerrar */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-xl font-bold transition-colors duration-300 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {modalItem.name}
+              </h2>
+              <button 
+                onClick={() => setModalItem(null)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* LÍNEA 2: Foto */}
             <div className="w-full h-48 rounded-lg overflow-hidden mb-4">
               <img 
                 src={(() => {
@@ -584,41 +623,51 @@ export default function CartaMenuPage() {
               />
             </div>
             
-            {/* Info del plato */}
-            <h2 className={`text-xl font-bold mb-2 transition-colors duration-300 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              {modalItem.name}
-            </h2>
-            
+            {/* LÍNEA 3: Descripción expandible */}
             {modalItem.description && (
-              <p className={`text-sm mb-4 transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                {modalItem.description}
-              </p>
+              <div className="mb-4">
+                <p className={`text-sm transition-colors duration-300 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  {modalItem.description}
+                </p>
+              </div>
             )}
             
-            {/* Precio destacado */}
-            <div className={`text-2xl font-bold text-center p-3 rounded-lg transition-colors duration-300 ${
-              isDarkMode 
-                ? 'text-blue-300 bg-blue-900 border-2 border-blue-500' 
-                : 'text-blue-700 bg-blue-100 border-2 border-blue-400'
-            }`}>
-              {modalItem.price}
-            </div>
-            
-            {/* Botón cerrar */}
-            <button 
-              onClick={() => setModalItem(null)}
-              className={`w-full mt-4 py-2 rounded-lg transition-colors ${
+            {/* LÍNEA 4: Control "- x +" y Precio */}
+            <div className="flex items-center justify-between">
+              {/* Control de cantidad */}
+              <div className="flex items-center gap-3">
+                <button className={`w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}>
+                  -
+                </button>
+                <span className={`text-lg font-bold transition-colors duration-300 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  1
+                </span>
+                <button className={`w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}>
+                  +
+                </button>
+              </div>
+              
+              {/* Precio destacado */}
+              <div className={`text-xl font-bold px-4 py-2 rounded-lg transition-colors duration-300 ${
                 isDarkMode 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              Cerrar
-            </button>
+                  ? 'text-blue-300 bg-blue-900 border-2 border-blue-500' 
+                  : 'text-blue-700 bg-blue-100 border-2 border-blue-400'
+              }`}>
+                {modalItem.price}
+              </div>
+            </div>
           </div>
         </div>
       )}
