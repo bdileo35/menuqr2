@@ -25,9 +25,6 @@ export async function GET(
           },
           include: {
             items: {
-              where: {
-                isAvailable: true
-              },
               orderBy: {
                 position: 'asc'
               }

@@ -107,3 +107,35 @@ body {
 .font-bold {
   font-weight: 700;
 }
+
+/* Scrollbars personalizadas para el editor */
+.custom-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #4B5563 #1F2937;
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1F2937;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4B5563;
+  border-radius: 4px;
+  border: 1px solid #1F2937;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: #1F2937;
+}

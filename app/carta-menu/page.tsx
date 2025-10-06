@@ -8,6 +8,7 @@ interface MenuItem {
   name: string;
   price: string;
   description?: string;
+  isAvailable?: boolean;
 }
 
 interface MenuCategory {
@@ -44,6 +45,15 @@ export default function CartaMenuPage() {
         if (data.success && data.menu) {
           console.log('✅ Menú cargado desde API:', data.menu);
           
+          // Debug: verificar categoría "Platos del Día"
+          const platosDelDia = data.menu.categories.find((cat: any) => cat.name.includes('Platos del Día'));
+          if (platosDelDia) {
+            console.log('🍽️ Platos del Día encontrados:', platosDelDia.items.length);
+            platosDelDia.items.forEach((item: any, index: number) => {
+              console.log(`${index + 1}. ${item.name} - Disponible: ${item.isAvailable}`);
+            });
+          }
+          
           // Formatear datos para el componente
           const restaurantInfo: RestaurantData = {
             restaurantName: data.menu.restaurantName,
@@ -56,7 +66,8 @@ export default function CartaMenuPage() {
                 id: item.id,
                 name: item.name,
                 price: `$${item.price}`,
-                description: item.description
+                description: item.description,
+                isAvailable: item.isAvailable
               }))
             }))
           };
@@ -168,7 +179,7 @@ export default function CartaMenuPage() {
               
               {/* Dirección - Link a Google Maps */}
               <a 
-                href="https://www.google.com/maps/search/?api=1&query=Av.+Fernández+de+la+Cruz+1100,+Buenos+Aires"
+                href="https://www.google.com/maps/place/Esquina+Pompeya+Restaurant+Bar/@-34.6450496,-58.4278376,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccba4769aea81:0x1cd0a2bfe4efd8bb!8m2!3d-34.645054!4d-58.4252627!16s%2Fg%2F11ggbt5v1g?entry=ttu&g_ep=EgoyMDI1MTAwMS4wIKXMDSoASAFQAw%3D%3D"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs mb-1 block hover:underline transition-colors duration-300 ${
@@ -192,14 +203,14 @@ export default function CartaMenuPage() {
 
               {/* Mercado Pago - Alias */}
               <a 
-                href="https://www.mercadopago.com.ar/"
+                href="https://www.mercadopago.com.ar/transferencias?alias=esquina.pompeya."
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs block hover:underline transition-colors duration-300 ${
                   isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'
                 }`}
               >
-                💳 esquina.pompeya.
+                💳 esquina.pompeya. 
               </a>
 
               {/* Botones de acción debajo de la info */}
@@ -221,7 +232,7 @@ export default function CartaMenuPage() {
 
                 {/* MercadoPago */}
                 <a
-                  href="https://www.mercadopago.com.ar/"
+                  href="https://www.mercadopago.com.ar/transferencias?alias=esquina.pompeya"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
@@ -236,7 +247,7 @@ export default function CartaMenuPage() {
 
                 {/* Dirección */}
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=Av.+Fernández+de+la+Cruz+1100,+Buenos+Aires"
+                  href="https://www.google.com/maps/place/Esquina+Pompeya+Restaurant+Bar/@-34.6450496,-58.4278376,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccba4769aea81:0x1cd0a2bfe4efd8bb!8m2!3d-34.645054!4d-58.4252627!16s%2Fg%2F11ggbt5v1g?entry=ttu&g_ep=EgoyMDI1MTAwMS4wIKXMDSoASAFQAw%3D%3D"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
@@ -399,7 +410,7 @@ export default function CartaMenuPage() {
               {/* Items de la Categoría */}
               <div className={`p-3 ${
                 category.name.toUpperCase().includes('PROMO') 
-                  ? 'grid grid-cols-3 gap-2' 
+                  ? 'flex flex-wrap justify-evenly gap-2' 
                   : 'space-y-1.5'
               }`}>
                 {filterItems(category.items).map((item, itemIndex) => (
@@ -408,7 +419,9 @@ export default function CartaMenuPage() {
                   category.name.toUpperCase().includes('PROMO') ? (
                     <div 
                       key={item.id || itemIndex}
-                      className="flex flex-col hover:opacity-90 transition-opacity duration-300"
+                      className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer"
+                      onDoubleClick={() => setModalItem(item)}
+                      title="Doble click para ver detalles"
                     >
                       {/* Imagen merged con borde superior */}
                       <div className={`h-24 rounded-t-lg overflow-hidden border-2 border-b-0 ${
@@ -469,8 +482,12 @@ export default function CartaMenuPage() {
                     // PLATO CON IMAGEN Y CONTENIDO MERGED - CLICKEABLE
                     <div 
                       key={item.id || itemIndex}
-                      className="flex items-stretch hover:opacity-90 transition-opacity duration-300 cursor-pointer"
-                      onClick={() => setModalItem(item)}
+                      className={`flex items-stretch transition-opacity duration-300 h-12 ${
+                        item.isAvailable === false 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : 'hover:opacity-90 cursor-pointer'
+                      }`}
+                      onClick={() => item.isAvailable !== false && setModalItem(item)}
                     >
                         {/* Imagen integrada al borde izquierdo */}
                         <div className={`w-10 h-10 rounded-l-lg overflow-hidden flex-shrink-0 border-2 border-r-0 ${
@@ -499,7 +516,7 @@ export default function CartaMenuPage() {
                         </div>
                         
                         {/* Contenido continuando el borde */}
-                        <div className={`flex-1 flex items-center justify-between px-2 py-2 rounded-r-lg border-2 border-l-0 transition-colors duration-300 ${
+                        <div className={`flex-1 flex items-center justify-between px-2 py-2 rounded-r-lg border-2 border-l-0 transition-colors duration-300 h-10 ${
                           isDarkMode 
                             ? 'border-gray-600 bg-gray-700/50' 
                             : 'border-gray-200 bg-gray-50'
@@ -507,10 +524,13 @@ export default function CartaMenuPage() {
                           
                           {/* Texto del plato */}
                           <div className="flex-1">
-                            <h3 className={`font-medium text-xs leading-tight transition-colors duration-300 ${
+                            <h3 className={`font-medium text-sm leading-tight transition-colors duration-300 ${
                               isDarkMode ? 'text-white' : 'text-gray-900'
                             }`}>
-                              <span className="text-yellow-400 mr-1">⭐</span>{item.name}
+                              {category.name.toUpperCase().includes('PLATOS DEL DÍA') && (
+                                <span className="text-yellow-400 mr-1">⭐</span>
+                              )}
+                              {item.name}
                             </h3>
                           </div>
 
@@ -568,7 +588,7 @@ export default function CartaMenuPage() {
             <h2 className={`text-xl font-bold mb-2 transition-colors duration-300 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              <span className="text-yellow-400 mr-2">⭐</span>{modalItem.name}
+              {modalItem.name}
             </h2>
             
             {modalItem.description && (

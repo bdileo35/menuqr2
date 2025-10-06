@@ -124,7 +124,8 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { itemId, name, price, description } = body;
+    const { id, name, price, description, isAvailable } = body;
+    const itemId = id || body.itemId;
 
     if (!itemId) {
       return NextResponse.json(
@@ -133,14 +134,19 @@ export async function PUT(
       );
     }
 
+    console.log('🔍 API PUT - Updating item:', itemId, 'with data:', { name, price, description, isAvailable });
+    
     const updatedItem = await prisma.menuItem.update({
       where: { id: itemId },
       data: {
         ...(name && { name }),
         ...(price && { price: parseFloat(price.toString().replace(/[^0-9.]/g, '')) }),
-        ...(description !== undefined && { description })
+        ...(description !== undefined && { description }),
+        ...(isAvailable !== undefined && { isAvailable })
       }
     });
+
+    console.log('✅ API PUT - Item updated in DB:', updatedItem.id, 'isAvailable:', updatedItem.isAvailable);
 
     return NextResponse.json({
       success: true,

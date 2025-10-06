@@ -60,7 +60,8 @@ export default function Editor() {
             price: `$${item.price}`,
             description: item.description || '',
             category: cat.id,
-            image: item.imageUrl || undefined
+            image: item.imageUrl || undefined,
+            isAvailable: item.isAvailable
           }))
         }));
         
@@ -229,13 +230,17 @@ export default function Editor() {
       ) : (
         <>
       {/* Layout: Categorías (30%) + Productos (70%) */}
-      <div className="flex h-[calc(100vh-60px)]">
+      <div className="flex h-[calc(100vh-60px)] justify-center mt-4">
+        <div className="flex w-[85%] max-w-5xl">
         
         {/* SIDEBAR IZQUIERDA - Categorías + Stats */}
-        <div className="w-[30%] bg-gray-800 border-r border-gray-700 overflow-y-auto">
+        <div className="w-[30%] overflow-y-auto px-4 py-1 custom-scrollbar">
+          
+          {/* CARD CONTENEDORA PARA CATEGORÍAS */}
+          <div className="bg-gray-700/50 rounded-xl border-2 border-gray-600 px-4 py-1">
           
           {/* Header Compacto: Stats + Todas + Nueva */}
-          <div className="p-4 border-b border-gray-700">
+          <div className="mb-4">
             <div className="flex items-center justify-between gap-2">
               
               {/* Stats - Click para ver TODAS */}
@@ -318,7 +323,7 @@ export default function Editor() {
           </div>
 
           {/* Lista de Categorías */}
-          <div className="p-4 pt-2">
+          <div className="pt-2">
             <div className="space-y-1.5">
                 {categories
                   .filter(cat => 
@@ -352,13 +357,18 @@ export default function Editor() {
               </div>
             </div>
           </div>
+          
+          </div> {/* Cierre de la CARD CONTENEDORA PARA CATEGORÍAS */}
 
           {/* PANEL DERECHO - Lista de productos (70%) */}
-          <div className="flex-1 bg-gray-900 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-4 py-1 custom-scrollbar">
+            
+          {/* CARD CONTENEDORA PARA PLATOS */}
+          <div className="bg-gray-700/50 rounded-xl border-2 border-gray-600 px-4 py-1 h-full">
             {currentCategory && (
               <div>
                 {/* Header compacto: Platos + Buscar + Nuevo */}
-                <div className="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-10">
+                <div className="mb-4">
                   <div className="flex items-center justify-between gap-2">
                     
                     {/* Platos count */}
@@ -427,7 +437,7 @@ export default function Editor() {
                 </div>
 
                 {/* Lista de productos */}
-                <div className="p-6">{currentCategory.items.length > 0 ? (
+                <div className="pt-2">{currentCategory.items.length > 0 ? (
                     <div className="space-y-3">
                       {currentCategory.items
                         .filter(item => {
@@ -466,8 +476,64 @@ export default function Editor() {
                               <h4 className="font-semibold text-white truncate">{item.name}</h4>
                             </div>
                             
-                            <div className="px-4 flex-shrink-0">
+                            <div className="px-4 flex items-center gap-3 flex-shrink-0">
                               <div className="text-blue-400 font-bold text-lg">{item.price}</div>
+                              <label className="cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={item.isAvailable !== false}
+                                  onChange={async (e) => {
+                                    console.log('Checkbox clicked!', e.target.checked);
+                                    const newAvailability = e.target.checked;
+                                    
+                                    try {
+                                      console.log('Updating availability for item:', item.id, 'to:', newAvailability);
+                                      
+                                      const response = await fetch('/api/menu/esquina-pompeya/items', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          id: item.id,
+                                          name: item.name,
+                                          price: parseFloat(item.price.replace(/[^\d.]/g, '')),
+                                          description: item.description || null,
+                                          isAvailable: newAvailability
+                                        })
+                                      });
+                                      
+                                      console.log('API response status:', response.status);
+                                      const data = await response.json();
+                                      console.log('API response data:', data);
+                                      
+                                      if (!data.success) {
+                                        throw new Error(data.error || 'Error al actualizar');
+                                      }
+                                      
+                                      // Actualizar localmente solo si la API fue exitosa
+                                      setCategories(prev => prev.map(cat => 
+                                        cat.id === selectedCategory 
+                                          ? {
+                                              ...cat,
+                                              items: cat.items.map(i => 
+                                                i.id === item.id 
+                                                  ? { ...i, isAvailable: newAvailability }
+                                                  : i
+                                              )
+                                            }
+                                          : cat
+                                      ));
+                                      
+                                      console.log('✅ Disponibilidad actualizada exitosamente');
+                                      
+                                    } catch (error) {
+                                      console.error('❌ Error actualizando disponibilidad:', error);
+                                      alert('❌ Error al actualizar disponibilidad: ' + error.message);
+                                    }
+                                  }}
+                                  className="w-6 h-6 rounded border-2 border-gray-400 bg-transparent checked:bg-green-500 checked:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                                  title={item.isAvailable !== false ? 'Disponible' : 'Sin Stock'}
+                                />
+                              </label>
                             </div>
                           </div>
                         </div>
@@ -489,8 +555,12 @@ export default function Editor() {
                 </div>
               </div>
             )}
+            
+          </div> {/* Cierre de la CARD CONTENEDORA PARA PLATOS */}
+          
           </div>
         </div>
+        </div> {/* Cierre del contenedor centrado */}
         </>
       )}
 
