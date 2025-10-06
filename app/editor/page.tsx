@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DevBanner from '../components/DevBanner';
+// import DevBanner from '../components/DevBanner'; // Moved to _unused
 
 interface MenuItem {
   id: string;
@@ -10,6 +10,7 @@ interface MenuItem {
   description?: string;
   image?: string;
   category: string;
+  isAvailable?: boolean;
 }
 
 interface Category {
@@ -190,7 +191,7 @@ export default function Editor() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <DevBanner />
+      {/* <DevBanner /> */} {/* Moved to _unused */}
       
       {/* Header - Compacto */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700 shadow-lg">
@@ -527,7 +528,7 @@ export default function Editor() {
                                       
                                     } catch (error) {
                                       console.error('❌ Error actualizando disponibilidad:', error);
-                                      alert('❌ Error al actualizar disponibilidad: ' + error.message);
+                                      alert('❌ Error al actualizar disponibilidad: ' + (error instanceof Error ? error.message : 'Error desconocido'));
                                     }
                                   }}
                                   className="w-6 h-6 rounded border-2 border-gray-400 bg-transparent checked:bg-green-500 checked:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800"

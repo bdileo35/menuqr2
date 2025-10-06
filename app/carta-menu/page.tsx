@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import DevBanner from '../components/DevBanner';
+// import DevBanner from '../components/DevBanner'; // Moved to _unused
 
 interface MenuItem {
   id?: string;
@@ -155,7 +155,7 @@ export default function CartaMenuPage() {
       isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
     }`}>
       
-      <DevBanner />
+      {/* <DevBanner /> */} {/* Moved to _unused */}
       
       {/* Header con info del restaurante - COMPACTO */}
       <div className={`border-b sticky top-0 z-50 transition-colors duration-300 ${
