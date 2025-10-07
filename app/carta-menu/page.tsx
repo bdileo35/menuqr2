@@ -76,7 +76,33 @@ export default function CartaMenuPage() {
           console.log('📋 Total categorías:', restaurantInfo.categories.length);
           console.log('📋 Total productos:', restaurantInfo.categories.reduce((total, cat) => total + cat.items.length, 0));
         } else {
-          throw new Error('No se pudo cargar el menú');
+          // Fallback: datos estáticos para demo
+          console.log('⚠️ Usando datos estáticos para demo');
+          const demoData: RestaurantData = {
+            restaurantName: "Esquina Pompeya",
+            address: "Av. Fernández de la Cruz 1100",
+            phone: "+54 11 2857-9746",
+            categories: [
+              {
+                name: "PLATOS DEL DÍA",
+                items: [
+                  { name: "Milanesas al horno c/ Puré", price: "$9000", description: "Milanesas caseras con puré de papa", isAvailable: true },
+                  { name: "Croquetas de carne c/ensalada", price: "$8000", description: "Croquetas artesanales con ensalada fresca", isAvailable: true },
+                  { name: "Chuleta de merluza c/rusa", price: "$10000", description: "Merluza a la plancha con papas", isAvailable: false },
+                  { name: "Pechuga rellena c/ f. españolas", price: "$12000", description: "Pechuga rellena con papas españolas", isAvailable: true },
+                ]
+              },
+              {
+                name: "PROMOCIONES DE LA SEMANA",
+                items: [
+                  { name: "Milanesa Completa", price: "$12000", description: "Milanesa + Papas + Bebida" },
+                  { name: "Salpicón de Ave", price: "$12000", description: "Ensalada + Bebida + Postre" },
+                  { name: "Parrilla Especial", price: "$15000", description: "Carne + Guarnición + Postre" },
+                ]
+              }
+            ]
+          };
+          setMenuData(demoData);
         }
       } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
