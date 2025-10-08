@@ -64,52 +64,52 @@ async function main() {
       {
         name: 'PROMOCIONES DE LA SEMANA',
         items: [
-          { name: 'Milanesa Completa', price: 12000, description: 'Milanesa + Papas + Bebida', isPromo: true },
-          { name: 'Salpicón de Ave', price: 12000, description: 'Ensalada + Bebida + Postre', isPromo: true },
-          { name: 'Parrilla Especial', price: 15000, description: 'Carne + Guarnición + Postre', isPromo: true }
+          { name: 'Milanesa Completa', price: 12000, description: 'Milanesa + Papas + Bebida', isAvailable: true, isPromo: true },
+          { name: 'Salpicón de Ave', price: 12000, description: 'Ensalada + Bebida + Postre', isAvailable: true, isPromo: true },
+          { name: 'Parrilla Especial', price: 15000, description: 'Carne + Guarnición + Postre', isAvailable: true, isPromo: true }
         ]
       },
       {
         name: 'COCINA',
         items: [
-          { name: 'Arepa de Pollo', price: 7500, description: 'Arepa rellena con pollo desmenuzado', isPromo: false },
-          { name: 'Arepa de Carne', price: 8000, description: 'Arepa con carne molida', isPromo: false },
-          { name: 'Arepa de Queso', price: 6500, description: 'Arepa con queso fresco', isPromo: false },
-          { name: 'Arepa Mixta', price: 9000, description: 'Arepa con pollo y carne', isPromo: false },
-          { name: 'Casuela de Mariscos', price: 16000, description: 'Casuela con mariscos frescos', isPromo: false },
-          { name: 'Pollo al Curry', price: 13000, description: 'Pollo con curry y arroz', isPromo: false },
-          { name: 'Lomo Saltado', price: 15000, description: 'Lomo saltado con papas', isPromo: false },
-          { name: 'Churrasco c/ Chimichurri', price: 17000, description: 'Churrasco con chimichurri casero', isPromo: false },
-          { name: 'Rabas a la Romana', price: 12000, description: 'Rabas empanizadas a la romana', isPromo: false },
-          { name: 'Cazuela de Cordero', price: 19000, description: 'Cazuela de cordero con verduras', isPromo: false }
+          { name: 'Arepa de Pollo', price: 7500, description: 'Arepa rellena con pollo desmenuzado', isAvailable: true, isPromo: false },
+          { name: 'Arepa de Carne', price: 8000, description: 'Arepa con carne molida', isAvailable: true, isPromo: false },
+          { name: 'Arepa de Queso', price: 6500, description: 'Arepa con queso fresco', isAvailable: true, isPromo: false },
+          { name: 'Arepa Mixta', price: 9000, description: 'Arepa con pollo y carne', isAvailable: true, isPromo: false },
+          { name: 'Casuela de Mariscos', price: 16000, description: 'Casuela con mariscos frescos', isAvailable: true, isPromo: false },
+          { name: 'Pollo al Curry', price: 13000, description: 'Pollo con curry y arroz', isAvailable: true, isPromo: false },
+          { name: 'Lomo Saltado', price: 15000, description: 'Lomo saltado con papas', isAvailable: true, isPromo: false },
+          { name: 'Churrasco c/ Chimichurri', price: 17000, description: 'Churrasco con chimichurri casero', isAvailable: true, isPromo: false },
+          { name: 'Rabas a la Romana', price: 12000, description: 'Rabas empanizadas a la romana', isAvailable: true, isPromo: false },
+          { name: 'Cazuela de Cordero', price: 19000, description: 'Cazuela de cordero con verduras', isAvailable: true, isPromo: false }
         ]
       },
       {
         name: 'TORTILLAS',
         items: [
-          { name: 'Tortilla Española', price: 8500, description: 'Tortilla tradicional española', isPromo: false },
-          { name: 'Tortilla de Papa', price: 7500, description: 'Tortilla de papas casera', isPromo: false },
-          { name: 'Tortilla de Jamón y Queso', price: 9000, description: 'Tortilla con jamón y queso', isPromo: false },
-          { name: 'Tortilla de Verduras', price: 8000, description: 'Tortilla con verduras frescas', isPromo: false },
-          { name: 'Tortilla de Atún', price: 9500, description: 'Tortilla con atún y cebolla', isPromo: false }
+          { name: 'Tortilla Española', price: 8500, description: 'Tortilla tradicional española', isAvailable: true, isPromo: false },
+          { name: 'Tortilla de Papa', price: 7500, description: 'Tortilla de papas casera', isAvailable: true, isPromo: false },
+          { name: 'Tortilla de Jamón y Queso', price: 9000, description: 'Tortilla con jamón y queso', isAvailable: true, isPromo: false },
+          { name: 'Tortilla de Verduras', price: 8000, description: 'Tortilla con verduras frescas', isAvailable: true, isPromo: false },
+          { name: 'Tortilla de Atún', price: 9500, description: 'Tortilla con atún y cebolla', isAvailable: true, isPromo: false }
         ]
       },
       {
         name: 'ENSALADAS',
         items: [
-          { name: 'Ensalada César', price: 7000, description: 'Ensalada César con pollo', isPromo: false },
-          { name: 'Ensalada Mixta', price: 6000, description: 'Ensalada mixta fresca', isPromo: false },
-          { name: 'Ensalada de Rúcula', price: 7500, description: 'Rúcula con parmesano', isPromo: false },
-          { name: 'Ensalada Caprese', price: 8500, description: 'Tomate, mozzarella y albahaca', isPromo: false }
+          { name: 'Ensalada César', price: 7000, description: 'Ensalada César con pollo', isAvailable: true, isPromo: false },
+          { name: 'Ensalada Mixta', price: 6000, description: 'Ensalada mixta fresca', isAvailable: true, isPromo: false },
+          { name: 'Ensalada de Rúcula', price: 7500, description: 'Rúcula con parmesano', isAvailable: true, isPromo: false },
+          { name: 'Ensalada Caprese', price: 8500, description: 'Tomate, mozzarella y albahaca', isAvailable: true, isPromo: false }
         ]
       },
       {
         name: 'POSTRES',
         items: [
-          { name: 'Tiramisú', price: 4500, description: 'Tiramisú casero', isPromo: false },
-          { name: 'Flan Casero', price: 3500, description: 'Flan de vainilla casero', isPromo: false },
-          { name: 'Helado 3 Bolas', price: 4000, description: 'Helado artesanal 3 sabores', isPromo: false },
-          { name: 'Brownie con Helado', price: 5000, description: 'Brownie caliente con helado', isPromo: false }
+          { name: 'Tiramisú', price: 4500, description: 'Tiramisú casero', isAvailable: true, isPromo: false },
+          { name: 'Flan Casero', price: 3500, description: 'Flan de vainilla casero', isAvailable: true, isPromo: false },
+          { name: 'Helado 3 Bolas', price: 4000, description: 'Helado artesanal 3 sabores', isAvailable: true, isPromo: false },
+          { name: 'Brownie con Helado', price: 5000, description: 'Brownie caliente con helado', isAvailable: true, isPromo: false }
         ]
       }
     ];
@@ -123,13 +123,14 @@ async function main() {
         }
       });
 
-      for (const itemData of categoryData.items) {
+      for (let i = 0; i < categoryData.items.length; i++) {
+        const itemData = categoryData.items[i];
         await prisma.menuItem.create({
           data: {
             name: itemData.name,
             description: itemData.description,
             price: itemData.price,
-            position: categoryData.items.indexOf(itemData),
+            position: i,
             isAvailable: itemData.isAvailable ?? true,
             isPromo: itemData.isPromo ?? false,
             menuId: menu.id,
