@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -9,6 +9,21 @@ async function main() {
   await prisma.menuItem.deleteMany();
   await prisma.category.deleteMany();
   await prisma.menu.deleteMany();
+  await prisma.user.deleteMany();
+
+  // Crear el usuario propietario
+  const user = await prisma.user.create({
+    data: {
+      name: 'Esquina Pompeya',
+      email: 'admin@esquinapompeya.com',
+      password: 'hashedpassword123', // En producción usar bcrypt
+      restaurantId: 'esquina-pompeya',
+      restaurantName: 'Esquina Pompeya Restaurant Bar',
+      phone: '+54 11 2857-9746',
+      address: 'Av. Fernández de la Cruz 1100',
+      role: Role.OWNER
+    }
+  });
 
   // Crear el menú principal
   const menu = await prisma.menu.create({
@@ -16,7 +31,8 @@ async function main() {
       restaurantId: 'esquina-pompeya',
       restaurantName: 'Esquina Pompeya Restaurant Bar',
       contactAddress: 'Av. Fernández de la Cruz 1100',
-      contactPhone: '+54 11 2857-9746'
+      contactPhone: '+54 11 2857-9746',
+      ownerId: user.id
     }
   });
 
@@ -272,7 +288,8 @@ async function main() {
           position: j,
           isAvailable: itemData.isAvailable,
           isPromo: itemData.isPromo,
-          categoryId: category.id
+          categoryId: category.id,
+          menuId: menu.id
         }
       });
     }
