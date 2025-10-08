@@ -299,7 +299,7 @@ export default function CartaMenuPage() {
                   {menuData.categories.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => setSelectedCategory(category.id || '')}
                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                         selectedCategory === category.id
                           ? 'bg-blue-600 text-white shadow-sm'
@@ -361,7 +361,7 @@ export default function CartaMenuPage() {
           menuData.categories
             .filter(category => {
               // Filtrar por categoría seleccionada
-              if (selectedCategory !== 'ALL' && category.id !== selectedCategory) {
+              if (selectedCategory !== 'ALL' && (category.id || '') !== selectedCategory) {
                 return false;
               }
               // Filtrar categorías vacías cuando hay búsqueda
