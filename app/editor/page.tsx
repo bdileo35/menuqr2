@@ -47,9 +47,12 @@ export default function Editor() {
 
   const loadMenuFromAPI = async () => {
     try {
+      console.log('🔄 Iniciando carga de menú...');
       setLoading(true);
       const response = await fetch('/api/menu/esquina-pompeya/items');
       const data = await response.json();
+      
+      console.log('📡 API Response:', data);
       
       if (data.success && data.menu) {
         const formattedCategories: Category[] = data.menu.categories.map((cat: any) => ({
@@ -66,11 +69,15 @@ export default function Editor() {
           }))
         }));
         
+        console.log('✅ Categorías formateadas:', formattedCategories);
         setCategories(formattedCategories);
         setSelectedCategory(formattedCategories[0]?.id || null);
+        console.log('🎯 Categoría seleccionada:', formattedCategories[0]?.id);
+      } else {
+        console.log('❌ No hay menú en la respuesta:', data);
       }
     } catch (error) {
-      console.error('Error cargando menú:', error);
+      console.error('❌ Error cargando menú:', error);
       alert('Error al cargar el menú. Por favor recarga la página.');
     } finally {
       setLoading(false);
@@ -187,36 +194,47 @@ export default function Editor() {
         items: categories.flatMap(cat => cat.items) 
       }
     : categories.find(cat => cat.id === selectedCategory);
+  
+  // Debug: verificar categorías
+  console.log('Debug - Categories:', categories.length);
+  console.log('Debug - Selected:', selectedCategory);
+  console.log('Debug - Current:', currentCategory?.name);
   const totalItems = categories.reduce((total, cat) => total + cat.items.length, 0);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* <DevBanner /> */} {/* Moved to _unused */}
       
-      {/* Header - Compacto */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-2.5 flex justify-between items-center">
+      {/* Header - Ultra Compacto */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 py-1.5 flex justify-between items-center">
+          
+          {/* Botón Volver - Solo icono */}
           <button 
             onClick={() => router.push('/scanner')}
-            className="flex items-center gap-2 px-3 py-1.5 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-all text-sm font-medium"
+            className="p-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition-all text-gray-300 hover:text-white"
+            title="Volver"
           >
-            <span>←</span> Volver
+            <span className="text-lg">←</span>
           </button>
           
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold text-white">📝 Editor de Menú</h1>
+          {/* Título compacto */}
+          <div className="flex items-center gap-2">
+            <h1 className="text-sm font-medium text-white">📝 Editor</h1>
             {saving && (
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                <span className="animate-pulse">●</span> Guardando
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                <span className="animate-pulse">●</span>
               </span>
             )}
           </div>
 
+          {/* Botón Ver Carta - Solo icono */}
           <button 
             onClick={() => router.push('/carta-menu')}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 rounded-lg hover:bg-blue-500 transition-all text-sm font-medium shadow-lg shadow-blue-600/30"
+            className="p-2 border border-blue-500 rounded-lg hover:bg-blue-500/20 transition-all text-blue-400 hover:text-blue-300"
+            title="Vista Previa"
           >
-            <span>👁️</span> Vista Previa
+            <span className="text-lg">👁️</span>
           </button>
         </div>
       </div>
@@ -366,7 +384,7 @@ export default function Editor() {
             
           {/* CARD CONTENEDORA PARA PLATOS */}
           <div className="bg-gray-700/50 rounded-xl border-2 border-gray-600 px-4 py-1 h-full">
-            {currentCategory && (
+            {currentCategory ? (
               <div>
                 {/* Header compacto: Platos + Buscar + Nuevo */}
                 <div className="mb-4">
@@ -554,6 +572,12 @@ export default function Editor() {
                     </div>
                   )}
                 </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-3xl mb-2">❌</div>
+                <p className="text-sm">No se encontraron categorías o productos</p>
+                <p className="text-xs text-gray-600 mt-2">Verifica que la base de datos tenga datos</p>
               </div>
             )}
             

@@ -32,6 +32,8 @@ export default function CartaMenuPage() {
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showMapsModal, setShowMapsModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   useEffect(() => {
     const loadMenuFromAPI = async () => {
@@ -76,33 +78,7 @@ export default function CartaMenuPage() {
           console.log('📋 Total categorías:', restaurantInfo.categories.length);
           console.log('📋 Total productos:', restaurantInfo.categories.reduce((total, cat) => total + cat.items.length, 0));
         } else {
-          // Fallback: datos estáticos para demo
-          console.log('⚠️ Usando datos estáticos para demo');
-          const demoData: RestaurantData = {
-            restaurantName: "Esquina Pompeya",
-            address: "Av. Fernández de la Cruz 1100",
-            phone: "+54 11 2857-9746",
-            categories: [
-              {
-                name: "PLATOS DEL DÍA",
-                items: [
-                  { name: "Milanesas al horno c/ Puré", price: "$9000", description: "Milanesas caseras con puré de papa", isAvailable: true },
-                  { name: "Croquetas de carne c/ensalada", price: "$8000", description: "Croquetas artesanales con ensalada fresca", isAvailable: true },
-                  { name: "Chuleta de merluza c/rusa", price: "$10000", description: "Merluza a la plancha con papas", isAvailable: false },
-                  { name: "Pechuga rellena c/ f. españolas", price: "$12000", description: "Pechuga rellena con papas españolas", isAvailable: true },
-                ]
-              },
-              {
-                name: "PROMOCIONES DE LA SEMANA",
-                items: [
-                  { name: "Milanesa Completa", price: "$12000", description: "Milanesa + Papas + Bebida" },
-                  { name: "Salpicón de Ave", price: "$12000", description: "Ensalada + Bebida + Postre" },
-                  { name: "Parrilla Especial", price: "$15000", description: "Carne + Guarnición + Postre" },
-                ]
-              }
-            ]
-          };
-          setMenuData(demoData);
+          throw new Error('No se pudo cargar el menú');
         }
       } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
@@ -184,78 +160,30 @@ export default function CartaMenuPage() {
       {/* <DevBanner /> */} {/* Moved to _unused */}
       
       {/* Header con info del restaurante - COMPACTO */}
-      <div className={`border-b sticky top-0 z-50 transition-colors duration-300 ${
+      <div className={`border-b sticky top-0 z-50 transition-colors duration-300 relative ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          {/* HEADER CON 2 CARDS: LOGO + INFO RESTAURANTE */}
-          <div className="grid grid-cols-2 gap-2 items-center">
+        <div className="max-w-4xl mx-auto px-4 py-0 pb-0.5">
+          {/* HEADER: LOGO + BOTONES EN LÍNEA */}
+          <div className="flex items-center justify-center gap-8">
             
-            {/* CARD IZQUIERDA: LOGO - FULL WIDTH */}
-            <div className="flex justify-center items-center h-full">
+            {/* LOGO A LA IZQUIERDA */}
+            <div className="flex-shrink-0">
               <img 
-                src="/demo-images/Logo.jpg" 
+                src="/demo-images/logo.png?v=2" 
                 alt="Logo Esquina Pompeya"
-                className="w-52 h-auto rounded-lg object-contain"
+                className="w-[180px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setShowMapsModal(true)}
+                title="Ver ubicación en Google Maps"
+                onError={(e) => {
+                  console.log('Error cargando logo.png, intentando Logo.jpg');
+                  e.currentTarget.src = '/demo-images/Logo.jpg?v=2';
+                }}
               />
             </div>
 
-            {/* CARD DERECHA: INFO RESTAURANTE */}
-            <div className="text-center">
-              
-              {/* Dirección - Link a Google Maps */}
-              <a 
-                href="https://www.google.com/maps/place/Esquina+Pompeya+Restaurant+Bar/@-34.6450496,-58.4278376,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccba4769aea81:0x1cd0a2bfe4efd8bb!8m2!3d-34.645054!4d-58.4252627!16s%2Fg%2F11ggbt5v1g?entry=ttu&g_ep=EgoyMDI1MTAwMS4wIKXMDSoASAFQAw%3D%3D"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-xs mb-1 block hover:underline transition-colors duration-300 ${
-                  isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                }`}
-              >
-                📍 Av. Fernández de la Cruz 1100
-              </a>
-              
-              {/* Teléfono/WhatsApp - Link directo */}
-              <a 
-                href="https://wa.me/5491128579746"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-xs mb-1 block hover:underline transition-colors duration-300 ${
-                  isDarkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700'
-                }`}
-              >
-                📱 +54 11 2857-9746
-              </a>
-
-              {/* Mercado Pago - Alias */}
-              <a 
-                href="https://www.mercadopago.com.ar/transferencias?alias=esquina.pompeya."
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-xs block hover:underline transition-colors duration-300 ${
-                  isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'
-                }`}
-              >
-                💳 esquina.pompeya. 
-              </a>
-
-              {/* Botones de acción debajo de la info */}
-              <div className="flex gap-2 mt-4 justify-center flex-wrap">
-                {/* WhatsApp */}
-                <a
-                  href="https://wa.me/5491128579746"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
-                    isDarkMode 
-                      ? 'bg-green-600 hover:bg-green-500 text-white' 
-                      : 'bg-green-500 hover:bg-green-600 text-white'
-                  }`}
-                  title="Contactar por WhatsApp"
-                >
-                  💬
-                </a>
-
+            {/* BOTONES A LA DERECHA */}
+            <div className="flex gap-1.5 items-center">
                 {/* MercadoPago */}
                 <a
                   href="https://www.mercadopago.com.ar/transferencias?alias=esquina.pompeya"
@@ -263,117 +191,132 @@ export default function CartaMenuPage() {
                   rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                     isDarkMode 
-                      ? 'bg-blue-600 hover:bg-blue-500 text-white' 
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-blue-600'
                   }`}
                   title="Pagar con MercadoPago"
                 >
-                  💰
+                  💳
                 </a>
 
-                {/* Dirección */}
+                {/* WhatsApp */}
                 <a
-                  href="https://www.google.com/maps/place/Esquina+Pompeya+Restaurant+Bar/@-34.6450496,-58.4278376,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccba4769aea81:0x1cd0a2bfe4efd8bb!8m2!3d-34.645054!4d-58.4252627!16s%2Fg%2F11ggbt5v1g?entry=ttu&g_ep=EgoyMDI1MTAwMS4wIKXMDSoASAFQAw%3D%3D"
+                  href="https://wa.me/5491128579746"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                     isDarkMode 
-                      ? 'bg-red-600 hover:bg-red-500 text-white' 
-                      : 'bg-red-500 hover:bg-red-600 text-white'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-green-400' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-green-600'
                   }`}
-                  title="Ver en Google Maps"
+                  title="Contactar por WhatsApp"
                 >
-                  🗺️
+                  💬
                 </a>
-
-                {/* Buscador */}
-                <button
-                  onClick={() => setShowSearch(!showSearch)}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
-                    showSearch
-                      ? 'bg-purple-600 text-white' 
-                      : isDarkMode 
-                        ? 'bg-gray-700 hover:bg-gray-600 text-purple-400' 
-                        : 'bg-gray-200 hover:bg-gray-300 text-purple-600'
-                  }`}
-                  title="Buscar platos"
-                >
-                  🔎
-                </button>
                 
-                {/* Toggle modo oscuro/claro */}
-                <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
+                {/* Reseña Google Maps */}
+                <a
+                  href="https://www.google.com/maps/place/Esquina+Pompeya+Restaurant+Bar/@-34.6450496,-58.4278376,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccba4769aea81:0x1cd0a2bfe4efd8bb!8m2!3d-34.645054!4d-58.4252627!16s%2Fg%2F11ggbt5v1g?entry=ttu"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                      : 'bg-gray-200 hover:bg-gray-300 text-yellow-600'
                   }`}
-                  title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                  title="Dejar reseña en Google Maps"
                 >
-                  {isDarkMode ? '☀️' : '🌑'}
-                </button>
-              </div>
+                  ⭐
+                </a>
+
+                {/* Buscador o Input - AL FINAL */}
+                {showSearch ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar..."
+                      className={`px-3 py-2 text-sm rounded-lg transition-colors duration-300 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
+                          : 'bg-gray-100 border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
+                      }`}
+                      autoFocus
+                      style={{ width: '140px' }}
+                    />
+                    <button
+                      onClick={() => {
+                        setShowSearch(false);
+                        setSearchTerm('');
+                      }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors text-sm ${
+                        isDarkMode 
+                          ? 'bg-gray-600 hover:bg-gray-500 text-gray-300' 
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                      }`}
+                      title="Cerrar búsqueda"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowSearch(!showSearch)}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                      isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 text-purple-400' 
+                        : 'bg-gray-200 hover:bg-gray-300 text-purple-600'
+                    }`}
+                    title="Buscar platos"
+                  >
+                    🔎
+                  </button>
+                )}
             </div>
           </div>
+
+          {/* FILTROS DE CATEGORÍAS SUPERPUESTOS */}
+          {menuData && menuData.categories.length > 0 && (
+            <div className="absolute bottom-0 left-0 right-0">
+              <div className="max-w-4xl mx-auto px-4 py-1">
+                <div className="flex gap-2 overflow-x-auto custom-scrollbar">
+                  {/* Botón "Todas" */}
+                  <button
+                    onClick={() => setSelectedCategory('ALL')}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      selectedCategory === 'ALL'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : isDarkMode 
+                          ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
+                          : 'bg-gray-200/90 hover:bg-gray-300 text-gray-700 backdrop-blur-sm'
+                    }`}
+                  >
+                    Todas
+                  </button>
+                  
+                  {/* Botones de categorías */}
+                  {menuData.categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        selectedCategory === category.id
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : isDarkMode 
+                            ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
+                            : 'bg-gray-200/90 hover:bg-gray-300 text-gray-700 backdrop-blur-sm'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Input de búsqueda (aparece al hacer clic en 🔍) */}
-      {showSearch && (
-        <div className={`border-b transition-colors duration-300 ${
-          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="max-w-4xl mx-auto px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar platos por nombre..."
-                  className={`w-full px-4 py-2 pr-24 rounded-lg transition-colors duration-300 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
-                      : 'bg-gray-100 border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
-                  }`}
-                  autoFocus
-                />
-                
-                {/* Contador de resultados dentro del input */}
-                {searchTerm && menuData && (
-                  <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium transition-colors duration-300 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    {(() => {
-                      const totalResults = menuData.categories.reduce((total, cat) => 
-                        total + filterItems(cat.items).length, 0
-                      );
-                      return totalResults > 0 
-                        ? `${totalResults} plato${totalResults !== 1 ? 's' : ''}`
-                        : '0 platos';
-                    })()}
-                  </div>
-                )}
-              </div>
-              
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setShowSearch(false);
-                }}
-                className={`px-3 py-2 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-600 hover:bg-gray-500 text-gray-300' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                }`}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Contenido del Menú */}
       <div className="max-w-4xl mx-auto px-4 py-4">
@@ -414,9 +357,19 @@ export default function CartaMenuPage() {
             </button>
           </div>
         ) : (
-          // Categorías del Menú (filtrar categorías vacías cuando hay búsqueda)
+          // Categorías del Menú (filtrar por categoría seleccionada y búsqueda)
           menuData.categories
-            .filter(category => !searchTerm || filterItems(category.items).length > 0)
+            .filter(category => {
+              // Filtrar por categoría seleccionada
+              if (selectedCategory !== 'ALL' && category.id !== selectedCategory) {
+                return false;
+              }
+              // Filtrar categorías vacías cuando hay búsqueda
+              if (searchTerm && filterItems(category.items).length === 0) {
+                return false;
+              }
+              return true;
+            })
             .map((category, index) => (
             <div key={category.id || index} className={`mb-4 rounded-lg border transition-colors duration-300 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
@@ -697,6 +650,39 @@ export default function CartaMenuPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Google Maps */}
+      {showMapsModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl w-[90vw] h-[80vh] max-w-6xl max-h-[800px] relative">
+            {/* Header del modal */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-800">📍 Esquina Pompeya Restaurant Bar</h2>
+              <button
+                onClick={() => setShowMapsModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <span className="text-2xl">×</span>
+              </button>
+            </div>
+            
+            {/* Contenido del modal */}
+            <div className="p-4 h-[calc(100%-80px)]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3281.2345678901234!2d-58.4252627!3d-34.645054!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bccba4769aea81%3A0x1cd0a2bfe4efd8bb!2sEsquina%20Pompeya%20Restaurant%20Bar!5e0!3m2!1ses!2sar!4v1234567890123"
+                width="100%"
+                height="100%"
+                style={{ border: 0, borderRadius: '8px' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Ubicación de Esquina Pompeya Restaurant Bar"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
