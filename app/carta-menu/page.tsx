@@ -112,32 +112,226 @@ export default function CartaMenuPage() {
                 price: '$3,200',
                 description: 'Rabas frescas con limón y salsa tártara',
                 isAvailable: true
+              },
+              {
+                id: 'item-3',
+                name: 'Albóndigas con Puré',
+                price: '$2,800',
+                description: 'Albóndigas caseras con puré de papa cremoso',
+                isAvailable: true
+              },
+              {
+                id: 'item-4',
+                name: 'Pollo al Limón',
+                price: '$3,000',
+                description: 'Pechuga de pollo con salsa de limón y verduras',
+                isAvailable: true
+              },
+              {
+                id: 'item-5',
+                name: 'Merluza a la Romana',
+                price: '$2,900',
+                description: 'Merluza empanizada con papas fritas',
+                isAvailable: false
+              },
+              {
+                id: 'item-6',
+                name: 'Tortilla Española',
+                price: '$2,200',
+                description: 'Tortilla de papas con cebolla y huevo',
+                isAvailable: true
+              },
+              {
+                id: 'item-7',
+                name: 'Canelones de Espinaca',
+                price: '$2,700',
+                description: 'Canelones rellenos de espinaca y ricotta',
+                isAvailable: true
+              },
+              {
+                id: 'item-8',
+                name: 'Lomo a la Pimienta',
+                price: '$3,500',
+                description: 'Lomo con salsa de pimienta y papas noisette',
+                isAvailable: true
               }
             ]
           },
           {
             id: 'cat-2',
-            name: 'PARRILLA',
+            name: 'PROMOS',
             items: [
               {
-                id: 'item-3',
-                name: 'Vacio con Papas',
-                price: '$4,500',
-                description: 'Vacio a la parrilla con papas fritas',
+                id: 'item-9',
+                name: 'Combo Familiar',
+                price: '$8,500',
+                description: '2 Milanesas + 2 Papas + 2 Bebidas',
                 isAvailable: true
+              },
+              {
+                id: 'item-10',
+                name: 'Promo Pareja',
+                price: '$6,200',
+                description: '2 Platos del día + 2 Bebidas',
+                isAvailable: true
+              },
+              {
+                id: 'item-11',
+                name: 'Combo Ejecutivo',
+                price: '$4,500',
+                description: 'Plato del día + Bebida + Postre',
+                isAvailable: true
+              },
+              {
+                id: 'item-12',
+                name: 'Promo Pizza',
+                price: '$5,800',
+                description: 'Pizza Grande + 2 Bebidas',
+                isAvailable: true
+              },
+              {
+                id: 'item-13',
+                name: 'Combo Parrilla',
+                price: '$7,200',
+                description: 'Asado para 2 + Ensalada + Bebidas',
+                isAvailable: false
               }
             ]
           },
           {
             id: 'cat-3',
-            name: 'PROMOS',
+            name: 'COCINA',
             items: [
               {
-                id: 'item-4',
-                name: 'Combo Familiar',
-                price: '$8,500',
-                description: '2 Milanesas + 2 Papas + 2 Bebidas',
+                id: 'item-14',
+                name: 'Vacio con Papas',
+                price: '$4,500',
+                description: 'Vacio a la parrilla con papas fritas',
                 isAvailable: true
+              },
+              {
+                id: 'item-15',
+                name: 'Bife de Chorizo',
+                price: '$5,200',
+                description: 'Bife de chorizo a la parrilla con ensalada',
+                isAvailable: true
+              },
+              {
+                id: 'item-16',
+                name: 'Pollo a la Parrilla',
+                price: '$3,800',
+                description: 'Medio pollo a la parrilla con papas',
+                isAvailable: true
+              },
+              {
+                id: 'item-17',
+                name: 'Costillas BBQ',
+                price: '$4,800',
+                description: 'Costillas de cerdo con salsa barbacoa',
+                isAvailable: true
+              },
+              {
+                id: 'item-18',
+                name: 'Salchicha Parrillera',
+                price: '$2,500',
+                description: 'Salchicha con mostaza y pan',
+                isAvailable: true
+              },
+              {
+                id: 'item-19',
+                name: 'Matambre a la Pizza',
+                price: '$4,200',
+                description: 'Matambre relleno con jamón y queso',
+                isAvailable: true
+              },
+              {
+                id: 'item-20',
+                name: 'Provoleta',
+                price: '$2,800',
+                description: 'Provoleta a la parrilla con orégano',
+                isAvailable: true
+              }
+            ]
+          },
+          {
+            id: 'cat-4',
+            name: 'PASTAS',
+            items: [
+              {
+                id: 'item-21',
+                name: 'Spaghetti Bolognesa',
+                price: '$2,400',
+                description: 'Spaghetti con salsa bolognesa casera',
+                isAvailable: true
+              },
+              {
+                id: 'item-22',
+                name: 'Ravioles de Ricotta',
+                price: '$2,600',
+                description: 'Ravioles rellenos con salsa de tomate',
+                isAvailable: true
+              },
+              {
+                id: 'item-23',
+                name: 'Fettuccine Alfredo',
+                price: '$2,800',
+                description: 'Fettuccine con salsa cremosa de parmesano',
+                isAvailable: true
+              },
+              {
+                id: 'item-24',
+                name: 'Gnocchi de Papa',
+                price: '$2,500',
+                description: 'Gnocchi caseros con salsa a elección',
+                isAvailable: true
+              },
+              {
+                id: 'item-25',
+                name: 'Lasagna Clásica',
+                price: '$3,200',
+                description: 'Lasagna con carne, jamón y queso',
+                isAvailable: true
+              }
+            ]
+          },
+          {
+            id: 'cat-5',
+            name: 'PIZZAS',
+            items: [
+              {
+                id: 'item-26',
+                name: 'Pizza Margherita',
+                price: '$3,500',
+                description: 'Mozzarella, tomate y albahaca',
+                isAvailable: true
+              },
+              {
+                id: 'item-27',
+                name: 'Pizza Napolitana',
+                price: '$3,800',
+                description: 'Mozzarella, tomate, jamón y aceitunas',
+                isAvailable: true
+              },
+              {
+                id: 'item-28',
+                name: 'Pizza Especial',
+                price: '$4,200',
+                description: 'Jamón, morrones, huevo y aceitunas',
+                isAvailable: true
+              },
+              {
+                id: 'item-29',
+                name: 'Pizza Cuatro Quesos',
+                price: '$4,000',
+                description: 'Mozzarella, gorgonzola, parmesano y roquefort',
+                isAvailable: true
+              },
+              {
+                id: 'item-30',
+                name: 'Pizza de Rúcula',
+                price: '$4,500',
+                description: 'Mozzarella, jamón crudo y rúcula',
+                isAvailable: false
               }
             ]
           }
@@ -145,7 +339,7 @@ export default function CartaMenuPage() {
       };
       
       setMenuData(tempData);
-      console.log('✅ Datos temporales cargados');
+      console.log('✅ Datos temporales cargados - 30 platos en 5 categorías');
     };
 
         
