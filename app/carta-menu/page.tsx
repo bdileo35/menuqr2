@@ -83,9 +83,71 @@ export default function CartaMenuPage() {
       } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // Fallback: intentar localStorage como backup
-        const savedMenu = localStorage.getItem('editor-menu-data');
-        const setupData = localStorage.getItem('setup-comercio-data');
+        // Cargar datos temporales si hay error
+        loadTemporaryData();
+      }
+    };
+
+    const loadTemporaryData = () => {
+      console.log('🔄 Cargando datos temporales...');
+      const tempData: RestaurantData = {
+        restaurantName: 'Esquina Pompeya Restaurant Bar',
+        address: 'Av. Fernández de la Cruz 1100',
+        phone: '+54 11 2857-9746',
+        categories: [
+          {
+            id: 'cat-1',
+            name: 'PLATOS DEL DÍA',
+            items: [
+              {
+                id: 'item-1',
+                name: 'Milanesa Completa',
+                price: '$2,500',
+                description: 'Milanesa de carne con papas fritas, huevo y ensalada',
+                isAvailable: true
+              },
+              {
+                id: 'item-2',
+                name: 'Rabas',
+                price: '$3,200',
+                description: 'Rabas frescas con limón y salsa tártara',
+                isAvailable: true
+              }
+            ]
+          },
+          {
+            id: 'cat-2',
+            name: 'PARRILLA',
+            items: [
+              {
+                id: 'item-3',
+                name: 'Vacio con Papas',
+                price: '$4,500',
+                description: 'Vacio a la parrilla con papas fritas',
+                isAvailable: true
+              }
+            ]
+          },
+          {
+            id: 'cat-3',
+            name: 'PROMOS',
+            items: [
+              {
+                id: 'item-4',
+                name: 'Combo Familiar',
+                price: '$8,500',
+                description: '2 Milanesas + 2 Papas + 2 Bebidas',
+                isAvailable: true
+              }
+            ]
+          }
+        ]
+      };
+      
+      setMenuData(tempData);
+      console.log('✅ Datos temporales cargados');
+    };
+
         
         if (savedMenu && setupData) {
           const menuData = JSON.parse(savedMenu);
