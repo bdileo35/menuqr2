@@ -85,6 +85,8 @@ export default function CartaMenuPage() {
         
         // Cargar datos temporales si hay error
         loadTemporaryData();
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -360,8 +362,6 @@ export default function CartaMenuPage() {
           console.error('❌ No hay datos disponibles');
           setMenuData(null);
         }
-      } finally {
-        setLoading(false);
       }
     };
 
