@@ -37,6 +37,7 @@ model User {
   name           String
   email          String   @unique
   password       String
+  uniqueId       String   @unique @default(cuid()) // Para URLs públicas
   restaurantId   String   @unique
   restaurantName String
   phone          String?

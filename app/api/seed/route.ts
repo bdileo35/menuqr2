@@ -1,5 +1,6 @@
 import { PrismaClient, Role } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { generateUniqueId } from '../../lib/utils';
 
 const prisma = new PrismaClient();
 
@@ -13,12 +14,13 @@ export async function POST() {
     await prisma.menu.deleteMany();
     await prisma.user.deleteMany();
 
-    // Crear el usuario propietario
+    // Crear el usuario propietario con ID único
     const user = await prisma.user.create({
       data: {
         name: 'Esquina Pompeya',
         email: 'admin@esquinapompeya.com',
         password: 'hashedpassword123',
+        uniqueId: generateUniqueId(), // ID único para URLs públicas
         restaurantId: 'esquina-pompeya',
         restaurantName: 'Esquina Pompeya Restaurant Bar',
         phone: '+54 11 2857-9746',
@@ -303,7 +305,9 @@ export async function POST() {
       data: {
         totalCategories,
         totalItems,
-        restaurantName: menu.restaurantName
+        restaurantName: menu.restaurantName,
+        uniqueId: user.uniqueId,
+        publicUrl: `https://menuqr-nine.vercel.app/${user.uniqueId}`
       }
     });
 
