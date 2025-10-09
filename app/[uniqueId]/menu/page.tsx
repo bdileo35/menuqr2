@@ -41,6 +41,7 @@ export default function CartaMenuPage({ params }: PageProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [selectedMode, setSelectedMode] = useState<string>('ws'); // ws, mostrador, delivery
 
   useEffect(() => {
     const loadMenuFromAPI = async () => {
@@ -322,6 +323,52 @@ export default function CartaMenuPage({ params }: PageProps) {
               </div>
             </div>
           )}
+
+          {/* SELECTOR DE MODALIDADES */}
+          <div className="absolute bottom-0 left-0 right-0 mt-12">
+            <div className="max-w-4xl mx-auto px-4 py-2">
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => setSelectedMode('ws')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedMode === 'ws'
+                      ? 'bg-green-600 text-white shadow-sm'
+                      : isDarkMode 
+                        ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
+                        : 'bg-gray-200/90 hover:bg-gray-300 text-gray-700 backdrop-blur-sm'
+                  }`}
+                >
+                  📱 WhatsApp
+                </button>
+                
+                <button
+                  onClick={() => setSelectedMode('mostrador')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedMode === 'mostrador'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : isDarkMode 
+                        ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
+                        : 'bg-gray-200/90 hover:bg-gray-300 text-gray-700 backdrop-blur-sm'
+                  }`}
+                >
+                  🏪 Mostrador
+                </button>
+                
+                <button
+                  onClick={() => setSelectedMode('delivery')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedMode === 'delivery'
+                      ? 'bg-orange-600 text-white shadow-sm'
+                      : isDarkMode 
+                        ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
+                        : 'bg-gray-200/90 hover:bg-gray-300 text-gray-700 backdrop-blur-sm'
+                  }`}
+                >
+                  🚚 Delivery
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
