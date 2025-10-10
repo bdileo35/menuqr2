@@ -271,7 +271,8 @@ async function main() {
   let categoryPosition = 0;
   let totalItems = 0;
 
-  for (const [categoryName, items] of Array.from(categoriesMap.entries())) {
+ // for (const [categoryName, items] of Array.from(categoriesMap.entries())) {
+ for (const [categoryName, items] of Array.from(categoriesMap.entries())) {
     console.log(`📁 Creando categoría: ${categoryName} (${items.length} items)...`);
     
     const category = await prisma.category.create({

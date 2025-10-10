@@ -83,267 +83,9 @@ export default function CartaMenuPage() {
       } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // Cargar datos temporales si hay error
-        loadTemporaryData();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const loadTemporaryData = () => {
-      console.log('🔄 Cargando datos temporales...');
-      const tempData: RestaurantData = {
-        restaurantName: 'Esquina Pompeya Restaurant Bar',
-        address: 'Av. Fernández de la Cruz 1100',
-        phone: '+54 11 2857-9746',
-        categories: [
-          {
-            id: 'cat-1',
-            name: 'PLATOS DEL DÍA',
-            items: [
-              {
-                id: 'item-1',
-                name: 'Milanesa Completa',
-                price: '$2,500',
-                description: 'Milanesa de carne con papas fritas, huevo y ensalada',
-                isAvailable: true
-              },
-              {
-                id: 'item-2',
-                name: 'Rabas',
-                price: '$3,200',
-                description: 'Rabas frescas con limón y salsa tártara',
-                isAvailable: true
-              },
-              {
-                id: 'item-3',
-                name: 'Albóndigas con Puré',
-                price: '$2,800',
-                description: 'Albóndigas caseras con puré de papa cremoso',
-                isAvailable: true
-              },
-              {
-                id: 'item-4',
-                name: 'Pollo al Limón',
-                price: '$3,000',
-                description: 'Pechuga de pollo con salsa de limón y verduras',
-                isAvailable: true
-              },
-              {
-                id: 'item-5',
-                name: 'Merluza a la Romana',
-                price: '$2,900',
-                description: 'Merluza empanizada con papas fritas',
-                isAvailable: false
-              },
-              {
-                id: 'item-6',
-                name: 'Tortilla Española',
-                price: '$2,200',
-                description: 'Tortilla de papas con cebolla y huevo',
-                isAvailable: true
-              },
-              {
-                id: 'item-7',
-                name: 'Canelones de Espinaca',
-                price: '$2,700',
-                description: 'Canelones rellenos de espinaca y ricotta',
-                isAvailable: true
-              },
-              {
-                id: 'item-8',
-                name: 'Lomo a la Pimienta',
-                price: '$3,500',
-                description: 'Lomo con salsa de pimienta y papas noisette',
-                isAvailable: true
-              }
-            ]
-          },
-          {
-            id: 'cat-2',
-            name: 'PROMOS',
-            items: [
-              {
-                id: 'item-9',
-                name: 'Combo Familiar',
-                price: '$8,500',
-                description: '2 Milanesas + 2 Papas + 2 Bebidas',
-                isAvailable: true
-              },
-              {
-                id: 'item-10',
-                name: 'Promo Pareja',
-                price: '$6,200',
-                description: '2 Platos del día + 2 Bebidas',
-                isAvailable: true
-              },
-              {
-                id: 'item-11',
-                name: 'Combo Ejecutivo',
-                price: '$4,500',
-                description: 'Plato del día + Bebida + Postre',
-                isAvailable: true
-              },
-              {
-                id: 'item-12',
-                name: 'Promo Pizza',
-                price: '$5,800',
-                description: 'Pizza Grande + 2 Bebidas',
-                isAvailable: true
-              },
-              {
-                id: 'item-13',
-                name: 'Combo Parrilla',
-                price: '$7,200',
-                description: 'Asado para 2 + Ensalada + Bebidas',
-                isAvailable: false
-              }
-            ]
-          },
-          {
-            id: 'cat-3',
-            name: 'COCINA',
-            items: [
-              {
-                id: 'item-14',
-                name: 'Vacio con Papas',
-                price: '$4,500',
-                description: 'Vacio a la parrilla con papas fritas',
-                isAvailable: true
-              },
-              {
-                id: 'item-15',
-                name: 'Bife de Chorizo',
-                price: '$5,200',
-                description: 'Bife de chorizo a la parrilla con ensalada',
-                isAvailable: true
-              },
-              {
-                id: 'item-16',
-                name: 'Pollo a la Parrilla',
-                price: '$3,800',
-                description: 'Medio pollo a la parrilla con papas',
-                isAvailable: true
-              },
-              {
-                id: 'item-17',
-                name: 'Costillas BBQ',
-                price: '$4,800',
-                description: 'Costillas de cerdo con salsa barbacoa',
-                isAvailable: true
-              },
-              {
-                id: 'item-18',
-                name: 'Salchicha Parrillera',
-                price: '$2,500',
-                description: 'Salchicha con mostaza y pan',
-                isAvailable: true
-              },
-              {
-                id: 'item-19',
-                name: 'Matambre a la Pizza',
-                price: '$4,200',
-                description: 'Matambre relleno con jamón y queso',
-                isAvailable: true
-              },
-              {
-                id: 'item-20',
-                name: 'Provoleta',
-                price: '$2,800',
-                description: 'Provoleta a la parrilla con orégano',
-                isAvailable: true
-              }
-            ]
-          },
-          {
-            id: 'cat-4',
-            name: 'PASTAS',
-            items: [
-              {
-                id: 'item-21',
-                name: 'Spaghetti Bolognesa',
-                price: '$2,400',
-                description: 'Spaghetti con salsa bolognesa casera',
-                isAvailable: true
-              },
-              {
-                id: 'item-22',
-                name: 'Ravioles de Ricotta',
-                price: '$2,600',
-                description: 'Ravioles rellenos con salsa de tomate',
-                isAvailable: true
-              },
-              {
-                id: 'item-23',
-                name: 'Fettuccine Alfredo',
-                price: '$2,800',
-                description: 'Fettuccine con salsa cremosa de parmesano',
-                isAvailable: true
-              },
-              {
-                id: 'item-24',
-                name: 'Gnocchi de Papa',
-                price: '$2,500',
-                description: 'Gnocchi caseros con salsa a elección',
-                isAvailable: true
-              },
-              {
-                id: 'item-25',
-                name: 'Lasagna Clásica',
-                price: '$3,200',
-                description: 'Lasagna con carne, jamón y queso',
-                isAvailable: true
-              }
-            ]
-          },
-          {
-            id: 'cat-5',
-            name: 'PIZZAS',
-            items: [
-              {
-                id: 'item-26',
-                name: 'Pizza Margherita',
-                price: '$3,500',
-                description: 'Mozzarella, tomate y albahaca',
-                isAvailable: true
-              },
-              {
-                id: 'item-27',
-                name: 'Pizza Napolitana',
-                price: '$3,800',
-                description: 'Mozzarella, tomate, jamón y aceitunas',
-                isAvailable: true
-              },
-              {
-                id: 'item-28',
-                name: 'Pizza Especial',
-                price: '$4,200',
-                description: 'Jamón, morrones, huevo y aceitunas',
-                isAvailable: true
-              },
-              {
-                id: 'item-29',
-                name: 'Pizza Cuatro Quesos',
-                price: '$4,000',
-                description: 'Mozzarella, gorgonzola, parmesano y roquefort',
-                isAvailable: true
-              },
-              {
-                id: 'item-30',
-                name: 'Pizza de Rúcula',
-                price: '$4,500',
-                description: 'Mozzarella, jamón crudo y rúcula',
-                isAvailable: false
-              }
-            ]
-          }
-        ]
-      };
-      
-      setMenuData(tempData);
-      console.log('✅ Datos temporales cargados - 30 platos en 5 categorías');
-    };
-
+        // Fallback: intentar localStorage como backup
+        const savedMenu = localStorage.getItem('editor-menu-data');
+        const setupData = localStorage.getItem('setup-comercio-data');
         
         if (savedMenu && setupData) {
           const menuData = JSON.parse(savedMenu);
@@ -362,6 +104,8 @@ export default function CartaMenuPage() {
           console.error('❌ No hay datos disponibles');
           setMenuData(null);
         }
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -443,8 +187,8 @@ export default function CartaMenuPage() {
                 {/* MercadoPago */}
                 <a
                   href="https://www.mercadopago.com.ar/transferencias?alias=esquina.pompeya"
-                target="_blank"
-                rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' 
@@ -458,8 +202,8 @@ export default function CartaMenuPage() {
                 {/* WhatsApp */}
                 <a
                   href="https://wa.me/5491128579746"
-                target="_blank"
-                rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-green-400' 
@@ -473,8 +217,8 @@ export default function CartaMenuPage() {
                 {/* Reseña Google Maps */}
                 <a
                   href="https://www.google.com/maps/place/Esquina+Pompeya+Restaurant+Bar/@-34.6450496,-58.4278376,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccba4769aea81:0x1cd0a2bfe4efd8bb!8m2!3d-34.645054!4d-58.4252627!16s%2Fg%2F11ggbt5v1g?entry=ttu"
-                target="_blank"
-                rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
@@ -501,21 +245,21 @@ export default function CartaMenuPage() {
                       autoFocus
                       style={{ width: '140px' }}
                     />
-              <button
+                    <button
                       onClick={() => {
                         setShowSearch(false);
                         setSearchTerm('');
                       }}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors text-sm ${
-                  isDarkMode 
+                        isDarkMode 
                           ? 'bg-gray-600 hover:bg-gray-500 text-gray-300' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                }`}
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                      }`}
                       title="Cerrar búsqueda"
-              >
+                    >
                       ✕
-              </button>
-            </div>
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => setShowSearch(!showSearch)}
@@ -555,7 +299,11 @@ export default function CartaMenuPage() {
                   {menuData.categories.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => setSelectedCategory(category.id || '')}
+                      onClick={() => {
+                        if (category.id) {
+                          setSelectedCategory(category.id);
+                        }
+                      }}
                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                         selectedCategory === category.id
                           ? 'bg-blue-600 text-white shadow-sm'
@@ -567,7 +315,7 @@ export default function CartaMenuPage() {
                       {category.name}
                     </button>
                   ))}
-          </div>
+                </div>
               </div>
             </div>
           )}
@@ -617,7 +365,7 @@ export default function CartaMenuPage() {
           menuData.categories
             .filter(category => {
               // Filtrar por categoría seleccionada
-              if (selectedCategory !== 'ALL' && (category.id || '') !== selectedCategory) {
+              if (selectedCategory !== 'ALL' && category.id !== selectedCategory) {
                 return false;
               }
               // Filtrar categorías vacías cuando hay búsqueda
@@ -724,47 +472,47 @@ export default function CartaMenuPage() {
                       }`}
                       onClick={() => item.isAvailable !== false && setModalItem(item)}
                     >
-                        {/* Imagen integrada al borde izquierdo */}
-                        <div className={`w-10 h-10 rounded-l-lg overflow-hidden flex-shrink-0 border-2 border-r-0 ${
+                      {/* Imagen integrada al borde izquierdo */}
+                      <div className={`w-10 h-10 rounded-l-lg overflow-hidden flex-shrink-0 border-2 border-r-0 ${
                         item.isAvailable === false 
                           ? 'border-gray-400' 
                           : isDarkMode ? 'border-gray-600' : 'border-gray-200'
-                        }`}>
-                          <img 
-                            src={(() => {
-                              const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
-                              return platosImages[itemIndex % platosImages.length];
-                            })()}
-                            alt={item.name}
+                      }`}>
+                        <img 
+                          src={(() => {
+                            const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
+                            return platosImages[itemIndex % platosImages.length];
+                          })()}
+                          alt={item.name}
                           className={`w-full h-full object-cover ${
                             item.isAvailable === false ? 'grayscale' : ''
                           }`}
-                            onError={(e) => {
-                              // Fallback si no carga la imagen
-                              e.currentTarget.style.display = 'none';
-                              const parent = e.currentTarget.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `
-                                  <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                    <span class="text-xs">🍽️</span>
-                                  </div>
-                                `;
-                              }
-                            }}
-                          />
-                        </div>
-                        
-                        {/* Contenido continuando el borde */}
+                          onError={(e) => {
+                            // Fallback si no carga la imagen
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <span class="text-xs">🍽️</span>
+                                </div>
+                              `;
+                            }
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Contenido continuando el borde */}
                       <div className={`flex-1 flex items-center justify-between px-2 py-2 rounded-r-lg border-2 border-l-0 transition-colors duration-300 h-10 ${
                         item.isAvailable === false 
                           ? 'border-gray-400 bg-gray-500/20' 
                           : isDarkMode 
                             ? 'border-gray-600 bg-gray-700/50' 
                             : 'border-gray-200 bg-gray-50'
-                        }`}>
-                          
-                          {/* Texto del plato */}
-                          <div className="flex-1">
+                      }`}>
+                        
+                        {/* Texto del plato */}
+                        <div className="flex-1">
                           <h3 className={`font-medium text-sm leading-tight transition-colors duration-300 ${
                             item.isAvailable === false 
                               ? 'text-gray-400' 
@@ -774,8 +522,8 @@ export default function CartaMenuPage() {
                               <span className="text-yellow-400 mr-1">⭐</span>
                             )}
                             {item.name}
-                            </h3>
-                          </div>
+                          </h3>
+                        </div>
 
                         {/* Estado + Precio */}
                         <div className="flex items-center gap-1">
@@ -785,19 +533,19 @@ export default function CartaMenuPage() {
                               AGOTADO
                             </div>
                           )}
-
+                          
                           {/* Precio */}
                           <div className={`text-xs font-bold px-1.5 py-0.5 rounded border-2 transition-colors duration-300 ${
                             item.isAvailable === false 
                               ? 'text-gray-400 bg-gray-600 border-gray-400' 
                               : isDarkMode 
-                              ? 'text-blue-300 bg-gray-800 border-blue-500' 
-                              : 'text-blue-700 bg-blue-50 border-blue-300'
+                                ? 'text-blue-300 bg-gray-800 border-blue-500' 
+                                : 'text-blue-700 bg-blue-50 border-blue-300'
                           }`}>
                             {item.price}
                           </div>
-                          </div>
                         </div>
+                      </div>
                     </div>
                   )
                 ))}
@@ -862,10 +610,10 @@ export default function CartaMenuPage() {
             {modalItem.description && (
               <div className="mb-4">
                 <p className={`text-sm transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                {modalItem.description}
-              </p>
+                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  {modalItem.description}
+                </p>
               </div>
             )}
             
@@ -893,15 +641,15 @@ export default function CartaMenuPage() {
                   +
                 </button>
               </div>
-            
-            {/* Precio destacado */}
+              
+              {/* Precio destacado */}
               <div className={`text-xl font-bold px-4 py-2 rounded-lg transition-colors duration-300 ${
-              isDarkMode 
-                ? 'text-blue-300 bg-blue-900 border-2 border-blue-500' 
-                : 'text-blue-700 bg-blue-100 border-2 border-blue-400'
-            }`}>
-              {modalItem.price}
-            </div>
+                isDarkMode 
+                  ? 'text-blue-300 bg-blue-900 border-2 border-blue-500' 
+                  : 'text-blue-700 bg-blue-100 border-2 border-blue-400'
+              }`}>
+                {modalItem.price}
+              </div>
             </div>
           </div>
         </div>
@@ -914,12 +662,12 @@ export default function CartaMenuPage() {
             {/* Header del modal */}
             <div className="flex justify-between items-center p-4 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-800">📍 Esquina Pompeya Restaurant Bar</h2>
-            <button 
+              <button
                 onClick={() => setShowMapsModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <span className="text-2xl">×</span>
-            </button>
+              </button>
             </div>
             
             {/* Contenido del modal */}

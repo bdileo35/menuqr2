@@ -1,316 +1,245 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Iniciando seed de datos completos...');
+  console.log('🌱 Iniciando seed de base de datos con datos completos...');
 
   // Limpiar datos existentes
   await prisma.menuItem.deleteMany();
   await prisma.category.deleteMany();
   await prisma.menu.deleteMany();
   await prisma.user.deleteMany();
+  console.log('🧹 Datos existentes eliminados');
 
-  // Crear el usuario propietario
+  // Crear usuario
   const user = await prisma.user.create({
     data: {
-      name: 'Esquina Pompeya',
+      name: 'Admin Esquina Pompeya',
       email: 'admin@esquinapompeya.com',
-      password: 'hashedpassword123', // En producción usar bcrypt
+      password: 'password123', // En un entorno real, usar hash
       restaurantId: 'esquina-pompeya',
-      restaurantName: 'Esquina Pompeya Restaurant Bar',
-      phone: '+54 11 2857-9746',
-      address: 'Av. Fernández de la Cruz 1100',
-      role: Role.OWNER
-    }
+      restaurantName: 'Esquina Pompeya',
+      role: 'ADMIN',
+    },
   });
+  console.log(`👤 Usuario creado: ${user.email}`);
 
-  // Crear el menú principal
+  // Crear menú
   const menu = await prisma.menu.create({
     data: {
       restaurantId: 'esquina-pompeya',
-      restaurantName: 'Esquina Pompeya Restaurant Bar',
-      contactAddress: 'Av. Fernández de la Cruz 1100',
+      restaurantName: 'Esquina Pompeya',
+      description: 'El mejor lugar para comer en Pompeya',
       contactPhone: '+54 11 2857-9746',
-      ownerId: user.id
+      contactAddress: 'Av. Fernández de la Cruz 1100',
+      logoUrl: '/demo-images/Logo.jpg',
+      ownerId: user.id,
+      deliveryEnabled: true,
+      deliveryFee: 500,
+      deliveryMinOrder: 8000
     }
   });
+  console.log(`🍽️ Menú creado: ${menu.restaurantName}`);
 
-  console.log('✅ Menú creado:', menu.restaurantName);
-
-  // Definir todas las categorías con sus platos
-  const categoriesData = [
+  // Crear categorías con items
+  const categories = [
     {
       name: 'PLATOS DEL DÍA',
       items: [
-        { name: 'Milanesa de Pollo con Papas', price: 8500, description: 'Milanesa de pechuga de pollo empanada con papas fritas', isAvailable: true, isPromo: false },
-        { name: 'Milanesa de Carne con Puré', price: 9000, description: 'Milanesa de carne empanada con puré de papas', isAvailable: true, isPromo: false },
-        { name: 'Milanesa Napolitana con Ensalada', price: 9500, description: 'Milanesa con jamón, queso y tomate, acompañada de ensalada', isAvailable: true, isPromo: false },
-        { name: 'Pollo a la Plancha con Arroz', price: 8000, description: 'Pechuga de pollo a la plancha con arroz blanco', isAvailable: true, isPromo: false },
-        { name: 'Bife de Chorizo con Papas', price: 12000, description: 'Bife de chorizo a la parrilla con papas fritas', isAvailable: true, isPromo: false },
-        { name: 'Entraña con Chimichurri', price: 13000, description: 'Entraña a la parrilla con chimichurri casero', isAvailable: true, isPromo: false },
-        { name: 'Lomo a la Plancha con Verduras', price: 11000, description: 'Lomo de res a la plancha con verduras salteadas', isAvailable: true, isPromo: false },
-        { name: 'Pescado a la Plancha con Limón', price: 10000, description: 'Filet de merluza a la plancha con limón y hierbas', isAvailable: true, isPromo: false }
+        { name: 'Milanesas al horno c/ Puré', price: 9000, description: 'Milanesas caseras con puré de papa', isAvailable: true, isPromo: false },
+        { name: 'Croquetas de carne c/ensalada', price: 8000, description: 'Croquetas artesanales con ensalada fresca', isAvailable: true, isPromo: false },
+        { name: 'Chuleta de merluza c/rusa', price: 10000, description: 'Merluza a la plancha con papas', isAvailable: false, isPromo: false },
+        { name: 'Pechuga rellena c/ f. españolas', price: 12000, description: 'Pechuga rellena con papas españolas', isAvailable: true, isPromo: false },
+        { name: 'Mejillones c/ fetuccinis', price: 14000, description: 'Mejillones frescos con fettuccine', isAvailable: true, isPromo: false },
+        { name: 'Vacio a la parrilla c/fritas', price: 15000, description: 'Vacio premium a la parrilla con papas fritas', isAvailable: false, isPromo: false },
+        { name: 'Peceto al verdeo c/ Puré', price: 15000, description: 'Peceto con salsa verdeo y puré', isAvailable: true, isPromo: false },
+        { name: 'Arroz integral con vegetales', price: 11000, description: 'Arroz integral con vegetales frescos', isAvailable: true, isPromo: false },
+        { name: 'Riñoncitos al jerez c/ puré', price: 9000, description: 'Riñones al jerez con puré de papa', isAvailable: true, isPromo: false },
+        { name: 'Chupín de merluza c/ papa natural', price: 10000, description: 'Chupín de merluza con papas', isAvailable: true, isPromo: false },
+        { name: 'Correntinos caseros a la Vangoli', price: 13000, description: 'Correntinos caseros estilo Vangoli', isAvailable: true, isPromo: false },
+        { name: 'Lomo saltado', price: 15000, description: 'Lomo saltado con papas', isAvailable: true, isPromo: false },
+        { name: 'Pollo al Curry', price: 13000, description: 'Pollo con curry y arroz', isAvailable: true, isPromo: false },
+        { name: 'Cazuela de Cordero', price: 19000, description: 'Cazuela de cordero con verduras', isAvailable: true, isPromo: false },
+        { name: 'Rabas a la Romana', price: 12000, description: 'Rabas empanizadas a la romana', isAvailable: true, isPromo: false }
       ]
     },
     {
-      name: 'PROMOCIONES',
+      name: 'PROMOCIONES DE LA SEMANA',
       items: [
-        { name: 'Promo 1: Entraña c/ arroz + postre + bebida', price: 15000, description: 'Entraña con arroz, postre a elección y bebida', isAvailable: true, isPromo: true },
-        { name: 'Promo 2: Salpicón de ave + postre + bebida', price: 12000, description: 'Salpicón de pollo con verduras, postre y bebida', isAvailable: true, isPromo: true },
-        { name: 'Promo 3: Milanesa completa + bebida', price: 10000, description: 'Milanesa napolitana con papas y bebida', isAvailable: true, isPromo: true },
-        { name: 'Promo 4: Pollo a la parrilla + ensalada + bebida', price: 11000, description: 'Medio pollo a la parrilla con ensalada y bebida', isAvailable: true, isPromo: true },
-        { name: 'Promo 5: Bife de chorizo + papas + bebida', price: 14000, description: 'Bife de chorizo con papas fritas y bebida', isAvailable: true, isPromo: true }
+        { name: 'Milanesa Completa', price: 12000, description: 'Milanesa + Papas + Bebida', isAvailable: true, isPromo: true },
+        { name: 'Salpicón de Ave', price: 12000, description: 'Ensalada + Bebida + Postre', isAvailable: true, isPromo: true },
+        { name: 'Parrilla Especial', price: 15000, description: 'Carne + Guarnición + Postre', isAvailable: true, isPromo: true },
+        { name: 'Promo Entraña c/ arroz + postre + bebida', price: 12000, description: 'Entraña con arroz + postre + bebida', isAvailable: true, isPromo: true },
+        { name: 'Promo Pollo + Papas + Bebida', price: 11000, description: '1/4 Pollo + Papas + Bebida', isAvailable: true, isPromo: true },
+        { name: 'Promo Milanesa + Ensalada + Postre', price: 13000, description: 'Milanesa + Ensalada + Postre', isAvailable: true, isPromo: true }
       ]
     },
     {
       name: 'COCINA',
       items: [
-        { name: 'Asado de Tira', price: 14000, description: 'Asado de tira a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Vacío a la Parrilla', price: 15000, description: 'Vacío de res a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Matambre de Cerdo', price: 13000, description: 'Matambre de cerdo a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Pechito de Cerdo', price: 12000, description: 'Pechito de cerdo a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Chorizo Parrillero', price: 8000, description: 'Chorizo parrillero casero', isAvailable: true, isPromo: false },
-        { name: 'Morcilla Casera', price: 7500, description: 'Morcilla casera a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Riñones al Vino', price: 11000, description: 'Riñones salteados al vino tinto', isAvailable: true, isPromo: false },
-        { name: 'Hígado a la Plancha', price: 9000, description: 'Hígado encebollado a la plancha', isAvailable: true, isPromo: false },
-        { name: 'Costillas de Cerdo', price: 12500, description: 'Costillas de cerdo a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Bife de Lomo', price: 16000, description: 'Bife de lomo a la parrilla', isAvailable: true, isPromo: false }
+        { name: '1/4 Pollo al horno c/ papas', price: 9000, description: 'Cuarto de pollo al horno con papas', isAvailable: true, isPromo: false },
+        { name: '1/4 Pollo provenzal c/ fritas', price: 10000, description: 'Cuarto de pollo provenzal con papas fritas', isAvailable: true, isPromo: false },
+        { name: 'Matambre al verdeo c/ fritas', price: 12000, description: 'Matambre al verdeo con papas fritas', isAvailable: true, isPromo: false },
+        { name: 'Matambre a la pizza c/ fritas', price: 12000, description: 'Matambre a la pizza con papas fritas', isAvailable: true, isPromo: false },
+        { name: 'Bondiola al ajillo c/ fritas', price: 12000, description: 'Bondiola al ajillo con papas fritas', isAvailable: true, isPromo: false },
+        { name: 'Bondiola al verdeo c/ papas', price: 12000, description: 'Bondiola al verdeo con papas', isAvailable: true, isPromo: false },
+        { name: 'Costillitas (2) a la riojana', price: 18000, description: 'Dos costillitas a la riojana', isAvailable: true, isPromo: false },
+        { name: 'Vacío al horno c/ papas', price: 14000, description: 'Vacío al horno con papas', isAvailable: true, isPromo: false },
+        { name: 'Arepa de Pollo', price: 7500, description: 'Arepa rellena con pollo desmenuzado', isAvailable: true, isPromo: false },
+        { name: 'Arepa de Carne', price: 8000, description: 'Arepa con carne molida', isAvailable: true, isPromo: false },
+        { name: 'Arepa de Queso', price: 6500, description: 'Arepa con queso fresco', isAvailable: true, isPromo: false },
+        { name: 'Arepa Mixta', price: 9000, description: 'Arepa con pollo y carne', isAvailable: true, isPromo: false },
+        { name: 'Casuela de Mariscos', price: 16000, description: 'Casuela con mariscos frescos', isAvailable: true, isPromo: false },
+        { name: 'Pollo al Curry', price: 13000, description: 'Pollo con curry y arroz', isAvailable: true, isPromo: false },
+        { name: 'Lomo Saltado', price: 15000, description: 'Lomo saltado con papas', isAvailable: true, isPromo: false },
+        { name: 'Churrasco c/ Chimichurri', price: 17000, description: 'Churrasco con chimichurri casero', isAvailable: true, isPromo: false },
+        { name: 'Rabas a la Romana', price: 12000, description: 'Rabas empanizadas a la romana', isAvailable: true, isPromo: false },
+        { name: 'Cazuela de Cordero', price: 19000, description: 'Cazuela de cordero con verduras', isAvailable: true, isPromo: false }
+      ]
+    },
+    {
+      name: 'PARRILLA',
+      items: [
+        { name: 'Asado de tira (300gr)', price: 14000, description: 'Asado de tira 300 gramos', isAvailable: true, isPromo: false },
+        { name: 'Bife de chorizo (300gr)', price: 16000, description: 'Bife de chorizo 300 gramos', isAvailable: true, isPromo: false },
+        { name: 'Vacío (300gr)', price: 15000, description: 'Vacío 300 gramos', isAvailable: true, isPromo: false },
+        { name: 'Entraña (250gr)', price: 14000, description: 'Entraña 250 gramos', isAvailable: true, isPromo: false },
+        { name: 'Parrillada para 2', price: 28000, description: 'Parrillada completa para dos personas', isAvailable: true, isPromo: false },
+        { name: 'Parrillada para 4', price: 52000, description: 'Parrillada completa para cuatro personas', isAvailable: true, isPromo: false },
+        { name: 'Chorizo parrillero', price: 8000, description: 'Chorizo a la parrilla', isAvailable: true, isPromo: false },
+        { name: 'Morcilla parrillera', price: 7000, description: 'Morcilla a la parrilla', isAvailable: true, isPromo: false },
+        { name: 'Mollejas', price: 12000, description: 'Mollejas a la parrilla', isAvailable: true, isPromo: false },
+        { name: 'Riñones', price: 11000, description: 'Riñones a la parrilla', isAvailable: true, isPromo: false }
       ]
     },
     {
       name: 'TORTILLAS',
       items: [
-        { name: 'Tortilla Española', price: 7000, description: 'Tortilla española tradicional con papas', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Verdura', price: 6500, description: 'Tortilla de espinaca y acelga', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Jamón y Queso', price: 8000, description: 'Tortilla con jamón cocido y queso', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Chorizo', price: 7500, description: 'Tortilla con chorizo colorado', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Cebolla', price: 7000, description: 'Tortilla con cebolla caramelizada', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Papa', price: 6500, description: 'Tortilla clásica de papas', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Choclo', price: 7000, description: 'Tortilla de choclo fresco', isAvailable: true, isPromo: false },
-        { name: 'Tortilla de Zapallito', price: 6500, description: 'Tortilla de zapallito verde', isAvailable: true, isPromo: false }
+        { name: 'Tortilla Española', price: 8500, description: 'Tortilla tradicional española', isAvailable: true, isPromo: false },
+        { name: 'Tortilla de Papa', price: 7500, description: 'Tortilla de papas casera', isAvailable: true, isPromo: false },
+        { name: 'Tortilla de Jamón y Queso', price: 9000, description: 'Tortilla con jamón y queso', isAvailable: true, isPromo: false },
+        { name: 'Tortilla de Verduras', price: 8000, description: 'Tortilla con verduras frescas', isAvailable: true, isPromo: false },
+        { name: 'Tortilla de Atún', price: 9500, description: 'Tortilla con atún y cebolla', isAvailable: true, isPromo: false },
+        { name: 'Tortilla de Espinaca', price: 8200, description: 'Tortilla de espinaca fresca', isAvailable: true, isPromo: false },
+        { name: 'Tortilla de Cebolla', price: 7800, description: 'Tortilla de cebolla caramelizada', isAvailable: true, isPromo: false }
       ]
     },
     {
       name: 'ENSALADAS',
       items: [
-        { name: 'Ensalada César', price: 6000, description: 'Lechuga, crutones, parmesano y aderezo césar', isAvailable: true, isPromo: false },
-        { name: 'Ensalada Mixta', price: 5500, description: 'Lechuga, tomate, cebolla y huevo duro', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Pollo', price: 7000, description: 'Ensalada mixta con pollo grillé', isAvailable: true, isPromo: false },
-        { name: 'Ensalada Caprese', price: 6500, description: 'Tomate, mozzarella y albahaca fresca', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Atún', price: 7000, description: 'Ensalada mixta con atún en lata', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Palta', price: 6500, description: 'Lechuga, palta, tomate y cebolla morada', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Remolacha', price: 5500, description: 'Remolacha, lechuga y queso fresco', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Zanahoria', price: 5000, description: 'Zanahoria rallada con limón y aceite', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'DE MAR: PESCADOS Y MARISCOS',
-      items: [
-        { name: 'Filet de Merluza a la Romana', price: 8000, description: 'Filet de merluza empanado con papas', isAvailable: true, isPromo: false },
-        { name: 'Filet de Merluza Napolitano', price: 9000, description: 'Filet de merluza con salsa napolitana', isAvailable: true, isPromo: false },
-        { name: 'Filet de Merluza Suisse', price: 9500, description: 'Filet de merluza con salsa suisse', isAvailable: true, isPromo: false },
-        { name: 'Filet Brotola al Verdeo', price: 10000, description: 'Filet de brotola con salsa al verdeo', isAvailable: true, isPromo: false },
-        { name: 'Calamar a la Plancha', price: 8500, description: 'Calamar a la plancha con limón', isAvailable: true, isPromo: false },
-        { name: 'Camarones al Ajillo', price: 12000, description: 'Camarones salteados al ajillo', isAvailable: true, isPromo: false },
-        { name: 'Paella de Mariscos', price: 15000, description: 'Paella con mariscos frescos', isAvailable: true, isPromo: false },
-        { name: 'Rabas a la Provenzal', price: 11000, description: 'Rabas fritas con ajo y perejil', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'ENSALADAS ESPECIALES',
-      items: [
-        { name: 'Ensalada Griega', price: 7500, description: 'Tomate, pepino, aceitunas, queso feta y oregano', isAvailable: true, isPromo: false },
-        { name: 'Ensalada Waldorf', price: 7000, description: 'Manzana, apio, nueces y mayonesa', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Quinoa', price: 8000, description: 'Quinoa con verduras frescas', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Salmón', price: 12000, description: 'Ensalada mixta con salmón ahumado', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Rúcula', price: 6500, description: 'Rúcula con tomate cherry y parmesano', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Endivias', price: 7000, description: 'Endivias con nueces y queso azul', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Espinaca', price: 6000, description: 'Espinaca fresca con aderezo de mostaza', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Frutos Secos', price: 7500, description: 'Mezcla de lechugas con frutos secos', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'SANDWICHES',
-      items: [
-        { name: 'Sandwich de Milanesa', price: 7000, description: 'Sandwich de milanesa con lechuga y tomate', isAvailable: true, isPromo: false },
-        { name: 'Sandwich de Pollo', price: 6500, description: 'Sandwich de pollo grillé con vegetales', isAvailable: true, isPromo: false },
-        { name: 'Sandwich de Jamón y Queso', price: 5500, description: 'Sandwich clásico de jamón y queso', isAvailable: true, isPromo: false },
-        { name: 'Sandwich de Lomo', price: 8000, description: 'Sandwich de lomo con papas fritas', isAvailable: true, isPromo: false },
-        { name: 'Sandwich Vegetariano', price: 6000, description: 'Sandwich con vegetales frescos', isAvailable: true, isPromo: false },
-        { name: 'Sandwich de Atún', price: 6500, description: 'Sandwich de atún con lechuga y tomate', isAvailable: true, isPromo: false },
-        { name: 'Sandwich de Bondiola', price: 7500, description: 'Sandwich de bondiola con cebolla', isAvailable: true, isPromo: false },
-        { name: 'Sandwich de Chorizo', price: 7000, description: 'Sandwich de chorizo parrillero', isAvailable: true, isPromo: false }
+        { name: 'Ensalada César', price: 7000, description: 'Ensalada César con pollo', isAvailable: true, isPromo: false },
+        { name: 'Ensalada Mixta', price: 6000, description: 'Ensalada mixta fresca', isAvailable: true, isPromo: false },
+        { name: 'Ensalada de Rúcula', price: 7500, description: 'Rúcula con parmesano', isAvailable: true, isPromo: false },
+        { name: 'Ensalada Caprese', price: 8500, description: 'Tomate, mozzarella y albahaca', isAvailable: true, isPromo: false },
+        { name: 'Ensalada de Palta', price: 8000, description: 'Ensalada con palta fresca', isAvailable: true, isPromo: false },
+        { name: 'Ensalada de Remolacha', price: 7200, description: 'Ensalada de remolacha con queso de cabra', isAvailable: true, isPromo: false },
+        { name: 'Ensalada Griega', price: 8800, description: 'Ensalada griega tradicional', isAvailable: true, isPromo: false },
+        { name: 'Ensalada Waldorf', price: 8200, description: 'Ensalada Waldorf con manzana y nueces', isAvailable: true, isPromo: false }
       ]
     },
     {
       name: 'PASTAS',
       items: [
-        { name: 'Spaghetti a la Bolognesa', price: 7500, description: 'Spaghetti con salsa bolognesa casera', isAvailable: true, isPromo: false },
-        { name: 'Fettuccine Alfredo', price: 7000, description: 'Fettuccine con salsa alfredo', isAvailable: true, isPromo: false },
-        { name: 'Ravioles de Ricotta', price: 8000, description: 'Ravioles de ricotta con salsa de tomate', isAvailable: true, isPromo: false },
-        { name: 'Lasaña de Carne', price: 9000, description: 'Lasaña tradicional de carne', isAvailable: true, isPromo: false },
-        { name: 'Ñoquis de Papa', price: 6500, description: 'Ñoquis de papa con salsa a elección', isAvailable: true, isPromo: false },
-        { name: 'Canelones de Espinaca', price: 8000, description: 'Canelones de espinaca con salsa blanca', isAvailable: true, isPromo: false },
-        { name: 'Penne a la Vodka', price: 7500, description: 'Penne con salsa a la vodka', isAvailable: true, isPromo: false },
-        { name: 'Sorrentinos de Jamón y Queso', price: 8500, description: 'Sorrentinos de jamón y queso', isAvailable: true, isPromo: false }
+        { name: 'Spaghetti a la Bolognesa', price: 11000, description: 'Spaghetti con salsa bolognesa', isAvailable: true, isPromo: false },
+        { name: 'Fettuccine Alfredo', price: 12000, description: 'Fettuccine con salsa alfredo', isAvailable: true, isPromo: false },
+        { name: 'Ravioles de Ricotta', price: 13000, description: 'Ravioles de ricotta con salsa de tomate', isAvailable: true, isPromo: false },
+        { name: 'Canelones de Espinaca', price: 12500, description: 'Canelones de espinaca con bechamel', isAvailable: true, isPromo: false },
+        { name: 'Lasagna de Carne', price: 14000, description: 'Lasagna de carne con queso', isAvailable: true, isPromo: false },
+        { name: 'Penne Arrabiata', price: 10500, description: 'Penne con salsa arrabiata', isAvailable: true, isPromo: false },
+        { name: 'Gnocchi de Papa', price: 12000, description: 'Gnocchi de papa con salsa de tomate', isAvailable: true, isPromo: false },
+        { name: 'Sorrentinos de Jamón y Queso', price: 13500, description: 'Sorrentinos de jamón y queso', isAvailable: true, isPromo: false }
       ]
     },
     {
       name: 'PIZZAS',
       items: [
-        { name: 'Pizza Margherita', price: 6000, description: 'Pizza con salsa de tomate, mozzarella y albahaca', isAvailable: true, isPromo: false },
-        { name: 'Pizza Napolitana', price: 7000, description: 'Pizza con jamón, tomate y mozzarella', isAvailable: true, isPromo: false },
-        { name: 'Pizza de Jamón y Morrones', price: 7500, description: 'Pizza con jamón, morrones y mozzarella', isAvailable: true, isPromo: false },
-        { name: 'Pizza de Fugazzeta', price: 8000, description: 'Pizza con cebolla y mozzarella', isAvailable: true, isPromo: false },
-        { name: 'Pizza de Calabresa', price: 7500, description: 'Pizza con longaniza y mozzarella', isAvailable: true, isPromo: false },
-        { name: 'Pizza de Rúcula y Jamón Crudo', price: 9000, description: 'Pizza con rúcula y jamón crudo', isAvailable: true, isPromo: false },
-        { name: 'Pizza de Palmitos', price: 8000, description: 'Pizza con palmitos y salsa golf', isAvailable: true, isPromo: false },
-        { name: 'Pizza de Anchoas', price: 8500, description: 'Pizza con anchoas y mozzarella', isAvailable: true, isPromo: false }
+        { name: 'Pizza Margherita', price: 8500, description: 'Pizza con tomate, mozzarella y albahaca', isAvailable: true, isPromo: false },
+        { name: 'Pizza Napolitana', price: 9500, description: 'Pizza napolitana tradicional', isAvailable: true, isPromo: false },
+        { name: 'Pizza de Jamón y Morrones', price: 10000, description: 'Pizza con jamón y morrones', isAvailable: true, isPromo: false },
+        { name: 'Pizza de Calabresa', price: 10500, description: 'Pizza con calabresa y cebolla', isAvailable: true, isPromo: false },
+        { name: 'Pizza de Rúcula y Parmesano', price: 11000, description: 'Pizza con rúcula y parmesano', isAvailable: true, isPromo: false },
+        { name: 'Pizza de Champiñones', price: 9800, description: 'Pizza con champiñones frescos', isAvailable: true, isPromo: false },
+        { name: 'Pizza de Palmitos', price: 12000, description: 'Pizza con palmitos y salsa golf', isAvailable: true, isPromo: false },
+        { name: 'Pizza de Anchoas', price: 11500, description: 'Pizza con anchoas y aceitunas', isAvailable: true, isPromo: false }
       ]
     },
     {
-      name: 'EMPANADAS',
+      name: 'SANDWICHES',
       items: [
-        { name: 'Empanada de Carne', price: 800, description: 'Empanada de carne picada con cebolla', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Pollo', price: 800, description: 'Empanada de pollo con cebolla', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Jamón y Queso', price: 800, description: 'Empanada de jamón y queso', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Cebolla y Queso', price: 800, description: 'Empanada de cebolla y queso', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Choclo', price: 800, description: 'Empanada de choclo con salsa blanca', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Verdura', price: 800, description: 'Empanada de verdura fresca', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Atún', price: 800, description: 'Empanada de atún con cebolla', isAvailable: true, isPromo: false },
-        { name: 'Empanada de Bondiola', price: 800, description: 'Empanada de bondiola con cebolla', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'PARRILLAS',
-      items: [
-        { name: 'Parrilla para 2', price: 25000, description: 'Asado de tira, chorizo, morcilla, pollo y ensalada', isAvailable: true, isPromo: false },
-        { name: 'Parrilla para 4', price: 45000, description: 'Asado de tira, vacío, chorizo, morcilla, pollo y ensaladas', isAvailable: true, isPromo: false },
-        { name: 'Parrilla Familiar', price: 65000, description: 'Parrilla completa para 6 personas', isAvailable: true, isPromo: false },
-        { name: 'Medio Pollo a la Parrilla', price: 6000, description: 'Medio pollo a la parrilla con limón', isAvailable: true, isPromo: false },
-        { name: 'Pollo Completo a la Parrilla', price: 11000, description: 'Pollo completo a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Costillas de Cerdo', price: 12500, description: 'Costillas de cerdo a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Matambre de Cerdo', price: 13000, description: 'Matambre de cerdo a la parrilla', isAvailable: true, isPromo: false },
-        { name: 'Chorizo Parrillero', price: 8000, description: 'Chorizo parrillero casero', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'ACOMPAÑAMIENTOS',
-      items: [
-        { name: 'Papas Fritas', price: 2500, description: 'Papas fritas caseras', isAvailable: true, isPromo: false },
-        { name: 'Papas a la Crema', price: 3000, description: 'Papas con crema y queso', isAvailable: true, isPromo: false },
-        { name: 'Puré de Papas', price: 2500, description: 'Puré de papas casero', isAvailable: true, isPromo: false },
-        { name: 'Arroz Blanco', price: 2000, description: 'Arroz blanco cocido', isAvailable: true, isPromo: false },
-        { name: 'Arroz con Pollo', price: 3500, description: 'Arroz con pollo y verduras', isAvailable: true, isPromo: false },
-        { name: 'Ensalada Mixta', price: 2500, description: 'Ensalada de lechuga, tomate y cebolla', isAvailable: true, isPromo: false },
-        { name: 'Verduras Salteadas', price: 3000, description: 'Verduras frescas salteadas', isAvailable: true, isPromo: false },
-        { name: 'Papas al Horno', price: 3000, description: 'Papas al horno con especias', isAvailable: true, isPromo: false }
+        { name: 'Sandwich de Milanesa', price: 8000, description: 'Sandwich de milanesa con lechuga y tomate', isAvailable: true, isPromo: false },
+        { name: 'Sandwich de Pollo', price: 7500, description: 'Sandwich de pollo grillado', isAvailable: true, isPromo: false },
+        { name: 'Sandwich de Lomo', price: 9000, description: 'Sandwich de lomo completo', isAvailable: true, isPromo: false },
+        { name: 'Sandwich de Bondiola', price: 8500, description: 'Sandwich de bondiola con chimichurri', isAvailable: true, isPromo: false },
+        { name: 'Sandwich Veggie', price: 7000, description: 'Sandwich vegetariano', isAvailable: true, isPromo: false },
+        { name: 'Sandwich de Atún', price: 7800, description: 'Sandwich de atún con mayonesa', isAvailable: true, isPromo: false },
+        { name: 'Sandwich Club', price: 9200, description: 'Sandwich club triple', isAvailable: true, isPromo: false }
       ]
     },
     {
       name: 'BEBIDAS',
       items: [
-        { name: 'Coca Cola 500ml', price: 1200, description: 'Coca Cola 500ml', isAvailable: true, isPromo: false },
-        { name: 'Sprite 500ml', price: 1200, description: 'Sprite 500ml', isAvailable: true, isPromo: false },
-        { name: 'Fanta 500ml', price: 1200, description: 'Fanta 500ml', isAvailable: true, isPromo: false },
-        { name: 'Agua Mineral 500ml', price: 800, description: 'Agua mineral 500ml', isAvailable: true, isPromo: false },
-        { name: 'Agua Saborizada', price: 1000, description: 'Agua saborizada 500ml', isAvailable: true, isPromo: false },
-        { name: 'Jugo de Naranja', price: 1500, description: 'Jugo de naranja natural', isAvailable: true, isPromo: false },
-        { name: 'Cerveza Nacional 473ml', price: 2000, description: 'Cerveza nacional 473ml', isAvailable: true, isPromo: false },
-        { name: 'Cerveza Importada 355ml', price: 2500, description: 'Cerveza importada 355ml', isAvailable: true, isPromo: false }
+        { name: 'Coca Cola', price: 1500, description: 'Coca Cola 500ml', isAvailable: true, isPromo: false },
+        { name: 'Sprite', price: 1500, description: 'Sprite 500ml', isAvailable: true, isPromo: false },
+        { name: 'Agua Mineral', price: 1200, description: 'Agua mineral 500ml', isAvailable: true, isPromo: false },
+        { name: 'Jugo de Naranja', price: 1800, description: 'Jugo de naranja natural', isAvailable: true, isPromo: false },
+        { name: 'Cerveza Quilmes', price: 2500, description: 'Cerveza Quilmes 473ml', isAvailable: true, isPromo: false },
+        { name: 'Cerveza Stella Artois', price: 2800, description: 'Cerveza Stella Artois 330ml', isAvailable: true, isPromo: false },
+        { name: 'Vino Tinto de la Casa', price: 4500, description: 'Vino tinto de la casa por copa', isAvailable: true, isPromo: false },
+        { name: 'Vino Blanco de la Casa', price: 4500, description: 'Vino blanco de la casa por copa', isAvailable: true, isPromo: false },
+        { name: 'Café', price: 800, description: 'Café expreso', isAvailable: true, isPromo: false },
+        { name: 'Té', price: 600, description: 'Té de hierbas', isAvailable: true, isPromo: false }
       ]
     },
     {
       name: 'POSTRES',
       items: [
-        { name: 'Flan Casero', price: 2500, description: 'Flan casero con dulce de leche', isAvailable: true, isPromo: false },
-        { name: 'Tiramisu', price: 3000, description: 'Tiramisu casero', isAvailable: true, isPromo: false },
-        { name: 'Cheesecake', price: 2800, description: 'Cheesecake de frutos rojos', isAvailable: true, isPromo: false },
-        { name: 'Brownie con Helado', price: 3200, description: 'Brownie con helado de vainilla', isAvailable: true, isPromo: false },
-        { name: 'Profiteroles', price: 3000, description: 'Profiteroles con dulce de leche', isAvailable: true, isPromo: false },
-        { name: 'Mousse de Chocolate', price: 2500, description: 'Mousse de chocolate negro', isAvailable: true, isPromo: false },
-        { name: 'Helado 3 Sabores', price: 2000, description: 'Helado de 3 sabores a elección', isAvailable: true, isPromo: false },
-        { name: 'Ensalada de Frutas', price: 2200, description: 'Ensalada de frutas frescas', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'VINOS',
-      items: [
-        { name: 'Vino Tinto Malbec', price: 8000, description: 'Vino tinto Malbec por copa', isAvailable: true, isPromo: false },
-        { name: 'Vino Blanco Chardonnay', price: 7500, description: 'Vino blanco Chardonnay por copa', isAvailable: true, isPromo: false },
-        { name: 'Vino Rosé', price: 7000, description: 'Vino rosé por copa', isAvailable: true, isPromo: false },
-        { name: 'Champagne', price: 12000, description: 'Champagne por copa', isAvailable: true, isPromo: false },
-        { name: 'Botella Vino Tinto', price: 25000, description: 'Botella de vino tinto', isAvailable: true, isPromo: false },
-        { name: 'Botella Vino Blanco', price: 22000, description: 'Botella de vino blanco', isAvailable: true, isPromo: false },
-        { name: 'Vino de la Casa', price: 5000, description: 'Vino de la casa por copa', isAvailable: true, isPromo: false },
-        { name: 'Sangría', price: 4000, description: 'Sangría casera', isAvailable: true, isPromo: false }
-      ]
-    },
-    {
-      name: 'COCTELES',
-      items: [
-        { name: 'Fernet con Coca', price: 3000, description: 'Fernet Branca con Coca Cola', isAvailable: true, isPromo: false },
-        { name: 'Cuba Libre', price: 3500, description: 'Ron con Coca Cola y limón', isAvailable: true, isPromo: false },
-        { name: 'Caipirinha', price: 4000, description: 'Caipirinha de cachaça', isAvailable: true, isPromo: false },
-        { name: 'Mojito', price: 3800, description: 'Mojito de ron blanco', isAvailable: true, isPromo: false },
-        { name: 'Piña Colada', price: 4200, description: 'Piña colada con ron y coco', isAvailable: true, isPromo: false },
-        { name: 'Margarita', price: 4000, description: 'Margarita de tequila', isAvailable: true, isPromo: false },
-        { name: 'Daiquiri', price: 3800, description: 'Daiquiri de ron', isAvailable: true, isPromo: false },
-        { name: 'Cosmopolitan', price: 4500, description: 'Cosmopolitan de vodka', isAvailable: true, isPromo: false }
+        { name: 'Tiramisú', price: 4500, description: 'Tiramisú casero', isAvailable: true, isPromo: false },
+        { name: 'Flan Casero', price: 3500, description: 'Flan de vainilla casero', isAvailable: true, isPromo: false },
+        { name: 'Helado 3 Bolas', price: 4000, description: 'Helado artesanal 3 sabores', isAvailable: true, isPromo: false },
+        { name: 'Brownie con Helado', price: 5000, description: 'Brownie caliente con helado', isAvailable: true, isPromo: false },
+        { name: 'Cheesecake', price: 4800, description: 'Cheesecake de frutos rojos', isAvailable: true, isPromo: false },
+        { name: 'Profiteroles', price: 4200, description: 'Profiteroles con dulce de leche', isAvailable: true, isPromo: false },
+        { name: 'Mousse de Chocolate', price: 3800, description: 'Mousse de chocolate negro', isAvailable: true, isPromo: false },
+        { name: 'Panqueques con Dulce de Leche', price: 3600, description: 'Panqueques con dulce de leche', isAvailable: true, isPromo: false }
       ]
     }
   ];
 
-  // Crear categorías y sus items
-  for (let i = 0; i < categoriesData.length; i++) {
-    const categoryData = categoriesData[i];
-    
+  let totalItems = 0;
+  for (const categoryData of categories) {
     const category = await prisma.category.create({
       data: {
         name: categoryData.name,
-        position: i,
-        menuId: menu.id
-      }
+        menuId: menu.id,
+        items: {
+          create: (categoryData.items || []).map((item, index) => ({
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            position: index,
+            isAvailable: item.isAvailable ?? true,
+            isPromo: item.isPromo ?? false,
+            menu: { connect: { id: menu.id } }, 
+          })),
+        },
+      },
     });
-
-    console.log(`✅ Categoría creada: ${category.name}`);
-
-    // Crear items para esta categoría
-    for (let j = 0; j < categoryData.items.length; j++) {
-      const itemData = categoryData.items[j];
-      
-      await prisma.menuItem.create({
-        data: {
-          name: itemData.name,
-          price: itemData.price,
-          description: itemData.description,
-          position: j,
-          isAvailable: itemData.isAvailable,
-          isPromo: itemData.isPromo,
-          categoryId: category.id,
-          menuId: menu.id
-        }
-      });
-    }
-
-    console.log(`✅ ${categoryData.items.length} items creados para ${category.name}`);
+    console.log(`📂 Categoría creada: ${category.name} (${categoryData.items.length} items)`);
+    totalItems += categoryData.items.length;
   }
-
-  // Contar totales
-  const totalCategories = await prisma.category.count();
-  const totalItems = await prisma.menuItem.count();
-
-  console.log('🎉 Seed completado exitosamente!');
-  console.log(`📊 Total categorías: ${totalCategories}`);
-  console.log(`📊 Total items: ${totalItems}`);
+  
+  console.log(`🍽️ Total items: ${totalItems}`);
+  console.log(`📊 Total categorías: ${categories.length}`);
+  console.log('✅ Seed completado exitosamente!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error durante el seed:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
+
