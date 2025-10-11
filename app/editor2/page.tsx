@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// import { getDemoMenuData } from '@/lib/demo-data';
+import { getDemoMenuData } from '@/lib/demo-data';
 
 interface MenuItem {
   id?: string;
