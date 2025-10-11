@@ -5,6 +5,8 @@ const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Buscando menú de Esquina Pompeya...');
+    
     // Buscar el menú de Esquina Pompeya
     const menu = await prisma.menu.findFirst({
       where: {

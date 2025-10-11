@@ -123,15 +123,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`🚀 Datos de Esquina Pompeya poblados exitosamente con ${platos.length} platos.`);
+    console.log(`🚀 Datos de Esquina Pompeya poblados exitosamente con ${platosData.length} platos.`);
 
     return NextResponse.json({
       success: true,
       message: 'Datos de Esquina Pompeya creados exitosamente en Supabase',
       data: {
-        menuId: menuId,
-        categoriesCount: categories.length,
-        itemsCount: platos.length
+        menuId: menu.id,
+        categoriesCount: categoriesData.length,
+        itemsCount: platosData.length
       }
     });
 
