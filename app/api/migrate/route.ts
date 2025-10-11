@@ -7,21 +7,40 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔧 Ejecutando migraciones en Supabase...');
 
-    // Ejecutar migraciones de Prisma
+    // Verificar conexión
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('✅ Conexión a Supabase establecida');
+
+    // Ejecutar migraciones usando execSync
     const { execSync } = require('child_process');
     
-    // Generar cliente Prisma
-    execSync('npx prisma generate', { stdio: 'inherit' });
-    console.log('✅ Cliente Prisma generado');
+    try {
+      // Generar cliente Prisma
+      console.log('🔄 Generando cliente Prisma...');
+      execSync('npx prisma generate', { stdio: 'pipe' });
+      console.log('✅ Cliente Prisma generado');
 
-    // Ejecutar migraciones
-    execSync('npx prisma db push', { stdio: 'inherit' });
-    console.log('✅ Migraciones ejecutadas');
+      // Ejecutar db push para crear tablas
+      console.log('🔄 Ejecutando db push...');
+      execSync('npx prisma db push --force-reset', { stdio: 'pipe' });
+      console.log('✅ Tablas creadas en Supabase');
 
-    return NextResponse.json({
-      success: true,
-      message: 'Migraciones ejecutadas exitosamente en Supabase'
-    });
+      return NextResponse.json({
+        success: true,
+        message: 'Migraciones ejecutadas exitosamente en Supabase'
+      });
+
+    } catch (execError) {
+      console.error('❌ Error ejecutando comandos:', execError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Error ejecutando comandos de migración',
+          details: execError instanceof Error ? execError.message : 'Error desconocido'
+        },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
     console.error('❌ Error en migraciones:', error);
