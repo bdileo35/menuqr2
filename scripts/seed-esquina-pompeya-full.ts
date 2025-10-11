@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -92,7 +92,7 @@ async function main() {
       restaurantName: 'Esquina Pompeya',
       phone: '+54 11 4911-6666',
       address: 'Av. Fernández de la Cruz 1100, Buenos Aires',
-      role: 'OWNER',
+      role: Role.OWNER,
       isActive: true,
     },
   });
