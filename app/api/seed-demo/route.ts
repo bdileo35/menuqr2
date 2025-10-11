@@ -8,8 +8,7 @@ export async function POST(request: NextRequest) {
     console.log('🌱 Iniciando seed de datos reales para Esquina Pompeya...');
 
     // Verificar conexión a la base de datos
-    await prisma.$queryRaw`SELECT 1`;
-    console.log('✅ Conexión a Supabase establecida');
+    console.log('🔗 Conectando a Supabase...');
 
     // Crear tablas si no existen (usando SQL directo)
     console.log('🔧 Creando tablas en Supabase...');
