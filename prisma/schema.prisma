@@ -124,6 +124,7 @@ model Category {
   description String?
   position    Int      @default(0)
   isActive    Boolean  @default(true)
+  code        String?  @unique // Código único para la categoría (ej: "01", "02", "03")
   
   // Image
   imageUrl    String?
@@ -147,6 +148,7 @@ model MenuItem {
   price           Float
   originalPrice   Float?
   position        Int      @default(0)
+  code            String?  // Código del plato (ej: "0101", "0302", "0401")
   
   // Images (VALOR AGREGADO COMERCIAL)
   imageUrl        String?  // URL principal

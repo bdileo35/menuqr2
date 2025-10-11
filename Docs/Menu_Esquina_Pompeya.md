@@ -1,15 +1,15 @@
-| Categoría              | Plato                                              | Precio |
-|------------------------|----------------------------------------------------|--------|
-| Platos del Día         | Riñoncitos al jerez c/ puré                        | 9000   |
-| Platos del Día         | Croquetas de carne c/ ensalada                     | 9000   |
-| Platos del Día         | Chupín de merluza c/ papa natural                  | 10000  |
-| Platos del Día         | Pechuga rellena c/ f. españolas                    | 12000  |
-| Platos del Día         | Mejillones c/ fettuccinis                          | 12000  |
-| Platos del Día         | Vacío a la parrilla c/ fritas                      | 14000  |
-| Platos del Día         | Peceto al verdeo c/ puré                           | 15000  |
-| Platos del Día         | Correntinos caseros a la Vangoli                   | 13000  |
-| Promos de la Semana    | Promo 1 (Entraña c/ arroz + postre + bebida)        | 12000  |
-| Promos de la Semana    | Promo 2 (Salpicón de ave + postre + bebida)        | 12000  |
+| Código | Categoría              | Plato                                              | Precio | Imagen |
+|--------|------------------------|----------------------------------------------------|--------|--------|
+| 0101 | Platos del Día         | Riñoncitos al jerez c/ puré                        | 9000   | rinoncitos-jerez.jpg |
+| 0102 | Platos del Día         | Croquetas de carne c/ ensalada                     | 9000   | croquetas-carne.jpg |
+| 0103 | Platos del Día         | Chupín de merluza c/ papa natural                  | 10000  | chupin-merluza.jpg |
+| 0104 | Platos del Día         | Pechuga rellena c/ f. españolas                    | 12000  | pechuga-rellena.jpg |
+| 0105 | Platos del Día         | Mejillones c/ fettuccinis                          | 12000  | mejillones-fettuccini.jpg |
+| 0106 | Platos del Día         | Vacío a la parrilla c/ fritas                      | 14000  | vacio-parrilla.jpg |
+| 0107 | Platos del Día         | Peceto al verdeo c/ puré                           | 15000  | peceto-verdeo.jpg |
+| 0108 | Platos del Día         | Correntinos caseros a la Vangoli                   | 13000  | correntinos-vangoli.jpg |
+| 0201 | Promos de la Semana    | Promo 1 (Entraña c/ arroz + postre + bebida)        | 12000  | promo-entrana.jpg |
+| 0202 | Promos de la Semana    | Promo 2 (Salpicón de ave + postre + bebida)        | 12000  | promo-salpicon.jpg |
 | Cocina                 | 1/4 Pollo al horno c/ papas                        | 9000   |
 | Cocina                 | 1/4 Pollo provenzal c/ fritas                      | 10000  |
 | Cocina                 | Matambre al verdeo c/ fritas                       | 12000  |
@@ -24,25 +24,25 @@
 | Cocina                 | Peceto al roquefort c/ f. españolas                | 18000  |
 | Cocina                 | Tapa de asado al horno c/ papas                    | 12000  |
 | Cocina                 | Costillitas a la mostaza c/ fritas                 | 12000  |
-| DE MAR: PESCADOS Y MARISCOS | Filet de merluza a la romana c/ g.            | 8000   |
-| DE MAR: PESCADOS Y MARISCOS | Filet de merluza napolitano / capresse c/g    | 10000  |
-| DE MAR: PESCADOS Y MARISCOS | Filet de merluza Suisse c/g.                  | 10000  |
-| DE MAR: PESCADOS Y MARISCOS | Filet brotola al verdeo c/g                   | 12000  |
-| DE MAR: PESCADOS Y MARISCOS | Trucha a la manteca negra c/ alcapparras      | 25000  |
-| DE MAR: PESCADOS Y MARISCOS | Salmón rosado c/ crema de puerros             | 30000  |
-| DE MAR: PESCADOS Y MARISCOS | Gambas al ajillo c/ fritas a la española      | 20000  |
-| DE MAR: PESCADOS Y MARISCOS | Calamares a la leonesa                        | 18000  |
-| DE MAR: PESCADOS Y MARISCOS | Calamares con arroz                           | 12000  |
-| DE MAR: PESCADOS Y MARISCOS | Calamares con spaguettis                      | 13000  |
-| DE MAR: PESCADOS Y MARISCOS | Mejillones c/ arroz                           | 12000  |
-| DE MAR: PESCADOS Y MARISCOS | Mejillones c/ spaguettis                      | 13000  |
-| DE MAR: PESCADOS Y MARISCOS | Arroz con mariscos p/2                        | 25000  |
-| DE MAR: PESCADOS Y MARISCOS | Cazuela de mariscos                           | 25000  |
-| DE MAR: PESCADOS Y MARISCOS | Paella a la valenciana p/2                    | 30000  |
-| DE MAR: PESCADOS Y MARISCOS | Rabas a la romana c/ f. españolas             | 18000  |
-| DE MAR: PESCADOS Y MARISCOS | Pulpo a la gallega                            | 60000  |
-| DE MAR: PESCADOS Y MARISCOS | Bacalao de Noruega a la gallega               | 30000  |
-| DE MAR: PESCADOS Y MARISCOS | Bacalao a la vizcaína                         | 30000  |
+| Pescados y Mariscos | Filet de merluza a la romana c/ g.            | 8000   |
+| Pescados y Mariscos | Filet de merluza napolitano / capresse c/g    | 10000  |
+| Pescados y Mariscos | Filet de merluza Suisse c/g.                  | 10000  |
+| Pescados y Mariscos | Filet brotola al verdeo c/g                   | 12000  |
+| Pescados y Mariscos | Trucha a la manteca negra c/ alcapparras      | 25000  |
+| Pescados y Mariscos | Salmón rosado c/ crema de puerros             | 30000  |
+| Pescados y Mariscos | Gambas al ajillo c/ fritas a la española      | 20000  |
+| Pescados y Mariscos | Calamares a la leonesa                        | 18000  |
+| Pescados y Mariscos | Calamares con arroz                           | 12000  |
+| Pescados y Mariscos | Calamares con spaguettis                      | 13000  |
+| Pescados y Mariscos | Mejillones c/ arroz                           | 12000  |
+| Pescados y Mariscos | Mejillones c/ spaguettis                      | 13000  |
+| Pescados y Mariscos | Arroz con mariscos p/2                        | 25000  |
+| Pescados y Mariscos | Cazuela de mariscos                           | 25000  |
+| Pescados y Mariscos | Paella a la valenciana p/2                    | 30000  |
+| Pescados y Mariscos | Rabas a la romana c/ f. españolas             | 18000  |
+| Pescados y Mariscos | Pulpo a la gallega                            | 60000  |
+| Pescados y Mariscos | Bacalao de Noruega a la gallega               | 30000  |
+| Pescados y Mariscos | Bacalao a la vizcaína                         | 30000  |
 | ENSALADAS              | 1 Ingrediente                                      | 4000   |
 | ENSALADAS              | 2 Ingrediente                                      | 4500   |
 | ENSALADAS              | 3 Ingredientes                                     | 5000   |

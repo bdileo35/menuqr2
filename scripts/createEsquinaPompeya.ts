@@ -199,7 +199,7 @@ async function createEsquinaPompeyaMenu() {
         ]
       },
       {
-        name: 'DE MAR - PESCADOS Y MARISCOS',
+        name: 'Pescados y Mariscos',
         description: 'Especialidades del mar',
         items: [
           { name: 'Filet de merluza a la romana c/ g.', price: 8000, description: 'Filet de merluza rebozado' },
