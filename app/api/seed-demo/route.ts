@@ -11,10 +11,100 @@ export async function POST(request: NextRequest) {
     await prisma.$queryRaw`SELECT 1`;
     console.log('✅ Conexión a Supabase establecida');
 
-    // Verificar si las tablas existen, si no, Prisma las creará automáticamente
+    // Crear tablas si no existen (usando SQL directo)
+    console.log('🔧 Creando tablas en Supabase...');
+    
     try {
-      await prisma.user.findFirst();
-      console.log('✅ Tablas ya existen');
+      // Crear tabla users
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "User" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "email" TEXT NOT NULL,
+          "password" TEXT NOT NULL,
+          "restaurantId" TEXT NOT NULL,
+          "restaurantName" TEXT NOT NULL,
+          "phone" TEXT,
+          "address" TEXT,
+          "plan" TEXT DEFAULT 'basic',
+          "role" "Role" NOT NULL DEFAULT 'ADMIN',
+          "avatar" TEXT,
+          "isActive" BOOLEAN NOT NULL DEFAULT true,
+          "lastLogin" TIMESTAMP(3),
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+        )
+      `;
+      
+      // Crear tabla menus
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "Menu" (
+          "id" TEXT NOT NULL,
+          "restaurantName" TEXT NOT NULL,
+          "restaurantId" TEXT NOT NULL,
+          "description" TEXT,
+          "logoUrl" TEXT,
+          "contactPhone" TEXT,
+          "contactAddress" TEXT,
+          "contactEmail" TEXT,
+          "socialInstagram" TEXT,
+          "primaryColor" TEXT,
+          "secondaryColor" TEXT,
+          "showPrices" BOOLEAN NOT NULL DEFAULT true,
+          "showImages" BOOLEAN NOT NULL DEFAULT true,
+          "showDescriptions" BOOLEAN NOT NULL DEFAULT true,
+          "currency" TEXT NOT NULL DEFAULT '$',
+          "language" TEXT NOT NULL DEFAULT 'es',
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          "ownerId" TEXT NOT NULL,
+          CONSTRAINT "Menu_pkey" PRIMARY KEY ("id"),
+          CONSTRAINT "Menu_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      `;
+      
+      // Crear tabla categories
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "Category" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "description" TEXT,
+          "position" INTEGER NOT NULL DEFAULT 0,
+          "isActive" BOOLEAN NOT NULL DEFAULT true,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          "menuId" TEXT NOT NULL,
+          "code" TEXT,
+          CONSTRAINT "Category_pkey" PRIMARY KEY ("id"),
+          CONSTRAINT "Category_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      `;
+      
+      // Crear tabla menuItems
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "MenuItem" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "price" DOUBLE PRECISION NOT NULL,
+          "description" TEXT,
+          "imageUrl" TEXT,
+          "position" INTEGER NOT NULL DEFAULT 0,
+          "isAvailable" BOOLEAN NOT NULL DEFAULT true,
+          "isPopular" BOOLEAN NOT NULL DEFAULT false,
+          "isPromo" BOOLEAN NOT NULL DEFAULT false,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          "categoryId" TEXT NOT NULL,
+          "menuId" TEXT NOT NULL,
+          "code" TEXT,
+          CONSTRAINT "MenuItem_pkey" PRIMARY KEY ("id"),
+          CONSTRAINT "MenuItem_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+          CONSTRAINT "MenuItem_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      `;
+      
+      console.log('✅ Tablas creadas exitosamente');
       
       // Limpiar datos existentes
       await prisma.menuItem.deleteMany();
@@ -22,8 +112,9 @@ export async function POST(request: NextRequest) {
       await prisma.menu.deleteMany();
       await prisma.user.deleteMany();
       console.log('🧹 Datos limpiados');
+      
     } catch (error) {
-      console.log('ℹ️ Tablas no existen, Prisma las creará automáticamente');
+      console.log('⚠️ Error creando tablas, continuando...', error);
     }
 
     // Crear usuario
