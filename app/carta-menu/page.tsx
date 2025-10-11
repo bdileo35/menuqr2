@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getDemoMenuData } from "@/lib/demo-data";
 // import DevBanner from '../components/DevBanner'; // Moved to _unused
 
 interface MenuItem {
@@ -101,8 +102,10 @@ export default function CartaMenuPage() {
           setMenuData(restaurantInfo);
           console.log('⚠️ Usando datos de localStorage como fallback');
         } else {
-          console.error('❌ No hay datos disponibles');
-          setMenuData(null);
+          console.error('❌ No hay datos en localStorage, usando datos de demo...');
+          // Fallback final: usar datos de demo compartidos
+          const demoData = getDemoMenuData();
+          setMenuData(demoData);
         }
       } finally {
         setLoading(false);
