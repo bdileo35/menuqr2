@@ -188,3 +188,185 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+
+
+
+  // 3. Crear menú principal
+
+  console.log('📋 Creando menú...');
+
+  const menu = await prisma.menu.create({
+
+    data: {
+
+      restaurantId: 'esquina-pompeya',
+
+      restaurantName: 'Esquina Pompeya',
+
+      description: 'Restaurante tradicional con cocina argentina y especialidades del mar',
+
+      ownerId: owner.id,
+
+      contactPhone: '+54 11 4911-6666',
+
+      contactAddress: 'Av. Fernández de la Cruz 1100, Buenos Aires',
+
+      contactEmail: 'esquina@pompeya.com',
+
+      primaryColor: '#2563eb',
+
+      secondaryColor: '#64748b',
+
+      showPrices: true,
+
+      showImages: true,
+
+      showDescriptions: true,
+
+      currency: '$',
+
+      language: 'es',
+
+    },
+
+  });
+
+  console.log(`✅ Menú creado: ${menu.restaurantName}\n`);
+
+
+
+  // 4. Agrupar platos por categoría
+
+  console.log('📦 Organizando categorías...');
+
+  const categoriesMap = new Map<string, Array<{ categoria: string; plato: string; precio: number; }>>();
+  
+
+  menuData.forEach(item => {
+
+    if (!categoriesMap.has(item.categoria)) {
+
+      categoriesMap.set(item.categoria, []);
+
+    }
+
+    categoriesMap.get(item.categoria)!.push(item);
+
+  });
+
+
+
+  console.log(`✅ ${categoriesMap.size} categorías encontradas\n`);
+
+
+
+  // 5. Crear categorías y productos
+
+  let categoryPosition = 0;
+
+  let totalItems = 0;
+
+
+
+  for (const [categoryName, items] of Array.from(categoriesMap.entries())) {
+    console.log(`📁 Creando categoría: ${categoryName} (${items.length} items)...`);
+
+    
+
+    const category = await prisma.category.create({
+
+      data: {
+
+        name: categoryName,
+
+        menuId: menu.id,
+
+        position: categoryPosition++,
+
+        isActive: true,
+
+      },
+
+    });
+
+
+
+    // Crear items de esta categoría
+
+    let itemPosition = 0;
+
+    for (const item of items) {
+
+      await prisma.menuItem.create({
+
+        data: {
+
+          name: item.plato,
+
+          price: item.precio,
+
+          menuId: menu.id,
+
+          categoryId: category.id,
+
+          position: itemPosition++,
+
+          isAvailable: true,
+
+          isPopular: false,
+
+          isPromo: categoryName === 'Promos de la Semana',
+
+        },
+
+      });
+
+      totalItems++;
+
+    }
+
+
+
+    console.log(`   ✅ ${items.length} items creados`);
+
+  }
+
+
+
+  console.log(`\n✨ SEED COMPLETADO CON ÉXITO ✨`);
+
+  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+
+  console.log(`👤 Usuario:       esquina@pompeya.com`);
+
+  console.log(`🔑 Password:      esquina2024`);
+
+  console.log(`📋 Menú:          Esquina Pompeya`);
+
+  console.log(`📁 Categorías:    ${categoriesMap.size}`);
+
+  console.log(`🍽️  Productos:     ${totalItems}`);
+
+  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+}
+
+
+
+main()
+
+  .catch((e) => {
+
+    console.error(e);
+    process.exit(1);
+
+  })
+
+  .finally(async () => {
+
+    await prisma.$disconnect();
+
+  });
+
+

@@ -549,7 +549,7 @@ export default function Editor2() {
                       {isExpanded ? '▲' : '▼'}
                     </span>
                   </div>
-                </div>
+                    </div>
                 </div>
 
               {/* Items de la Categoría */}
