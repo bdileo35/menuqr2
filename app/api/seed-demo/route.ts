@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -11,118 +11,55 @@ export async function POST(request: NextRequest) {
     // Verificar conexión a la base de datos
     console.log('🔗 Conectando a Supabase...');
     
-    // Crear tablas simplificadas
-    console.log('🔧 Creando tablas en Supabase...');
+    // Limpiar datos existentes (Prisma se encarga de crear las tablas)
+    console.log('🧹 Limpiando datos existentes...');
     
     try {
-      // Crear tabla users (simplificada)
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          email TEXT NOT NULL,
-          password TEXT NOT NULL,
-          restaurant_id TEXT NOT NULL,
-          restaurant_name TEXT NOT NULL,
-          phone TEXT,
-          address TEXT,
-          plan TEXT DEFAULT 'basic',
-          role TEXT DEFAULT 'ADMIN',
-          avatar TEXT,
-          is_active BOOLEAN DEFAULT true,
-          last_login TIMESTAMP,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `;
-      
-      // Crear tabla menus (simplificada)
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS menus (
-          id TEXT PRIMARY KEY,
-          restaurant_name TEXT NOT NULL,
-          restaurant_id TEXT NOT NULL,
-          description TEXT,
-          logo_url TEXT,
-          contact_phone TEXT,
-          contact_address TEXT,
-          contact_email TEXT,
-          social_instagram TEXT,
-          primary_color TEXT,
-          secondary_color TEXT,
-          show_prices BOOLEAN DEFAULT true,
-          show_images BOOLEAN DEFAULT true,
-          show_descriptions BOOLEAN DEFAULT true,
-          currency TEXT DEFAULT '$',
-          language TEXT DEFAULT 'es',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          owner_id TEXT NOT NULL
-        )
-      `;
-      
-      // Crear tabla categories (simplificada)
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS categories (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          description TEXT,
-          position INTEGER DEFAULT 0,
-          is_active BOOLEAN DEFAULT true,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          menu_id TEXT NOT NULL,
-          code TEXT
-        )
-      `;
-      
-      // Crear tabla menu_items (simplificada)
-      await prisma.$executeRaw`
-        CREATE TABLE IF NOT EXISTS menu_items (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          price DOUBLE PRECISION NOT NULL,
-          description TEXT,
-          image_url TEXT,
-          position INTEGER DEFAULT 0,
-          is_available BOOLEAN DEFAULT true,
-          is_popular BOOLEAN DEFAULT false,
-          is_promo BOOLEAN DEFAULT false,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          category_id TEXT NOT NULL,
-          menu_id TEXT NOT NULL,
-          code TEXT
-        )
-      `;
-      
-      console.log('✅ Tablas creadas exitosamente');
-      
+      await prisma.menuItem.deleteMany();
+      await prisma.category.deleteMany();
+      await prisma.menu.deleteMany();
+      await prisma.user.deleteMany();
+      console.log('✅ Datos limpiados exitosamente');
     } catch (error) {
-      console.log('⚠️ Error creando tablas, continuando...', error);
+      console.log('⚠️ Error limpiando datos, continuando...', error);
     }
 
-    // Crear usuario usando SQL directo
+    // Crear usuario usando Prisma ORM
     console.log('👤 Creando usuario...');
-    const userId = 'user_' + Date.now();
-    await prisma.$executeRaw`
-      INSERT INTO users (id, name, email, password, restaurant_id, restaurant_name, phone, address, role, is_active, created_at, updated_at)
-      VALUES (${userId}, 'Esquina Pompeya', 'admin@esquinapompeya.com', 'esquina2024', 'esquina-pompeya', 'Esquina Pompeya', '+54 11 4911-6666', 'Av. Fernández de la Cruz 1100, Buenos Aires', 'ADMIN', true, NOW(), NOW())
-    `;
-    console.log(`✅ Usuario creado: admin@esquinapompeya.com`);
+    const user = await prisma.user.create({
+      data: {
+        name: 'Esquina Pompeya',
+        email: 'admin@esquinapompeya.com',
+        password: 'esquina2024',
+        restaurantId: 'esquina-pompeya',
+        restaurantName: 'Esquina Pompeya',
+        phone: '+54 11 4911-6666',
+        address: 'Av. Fernández de la Cruz 1100, Buenos Aires',
+        role: Role.ADMIN,
+        isActive: true,
+      },
+    });
+    console.log(`✅ Usuario creado: ${user.email}`);
 
-    // Crear menú usando SQL directo
+    // Crear menú usando Prisma ORM
     console.log('🍽️ Creando menú...');
-    const menuId = 'menu_' + Date.now();
-    await prisma.$executeRaw`
-      INSERT INTO menus (id, restaurant_name, restaurant_id, description, contact_phone, contact_address, contact_email, social_instagram, owner_id, created_at, updated_at)
-      VALUES (${menuId}, 'Esquina Pompeya', 'esquina-pompeya', 'Restaurante tradicional argentino', '+54 11 4911-6666', 'Av. Fernández de la Cruz 1100, Buenos Aires', 'info@esquinapompeya.com', '@esquinapompeya', ${userId}, NOW(), NOW())
-    `;
-    console.log(`✅ Menú creado: Esquina Pompeya`);
+    const menu = await prisma.menu.create({
+      data: {
+        restaurantName: 'Esquina Pompeya',
+        restaurantId: 'esquina-pompeya',
+        description: 'Restaurante tradicional argentino',
+        contactPhone: '+54 11 4911-6666',
+        contactAddress: 'Av. Fernández de la Cruz 1100, Buenos Aires',
+        contactEmail: 'info@esquinapompeya.com',
+        socialInstagram: '@esquinapompeya',
+        ownerId: user.id,
+      },
+    });
+    console.log(`✅ Menú creado: ${menu.restaurantName}`);
 
-    // Crear categorías principales usando SQL directo
+    // Crear categorías principales usando Prisma ORM
     console.log('📂 Creando categorías...');
-    const categories = [
+    const categoriesData = [
       { name: 'Platos del Día', code: '01', position: 1 },
       { name: 'Promos de la Semana', code: '02', position: 2 },
       { name: 'Cocina', code: '03', position: 3 },
@@ -130,20 +67,25 @@ export async function POST(request: NextRequest) {
       { name: 'Pescados y Mariscos', code: '05', position: 5 }
     ];
 
-    const categoryIds = {};
-    for (const catData of categories) {
-      const categoryId = 'cat_' + catData.code;
-      await prisma.$executeRaw`
-        INSERT INTO categories (id, name, code, position, description, menu_id, is_active, created_at, updated_at)
-        VALUES (${categoryId}, ${catData.name}, ${catData.code}, ${catData.position}, ${`Categoría de ${catData.name}`}, ${menuId}, true, NOW(), NOW())
-      `;
-      categoryIds[catData.code] = categoryId;
-      console.log(`📂 Categoría creada: ${catData.name} (${catData.code})`);
+    const createdCategories = [];
+    for (const catData of categoriesData) {
+      const category = await prisma.category.create({
+        data: {
+          name: catData.name,
+          code: catData.code,
+          position: catData.position,
+          description: `Categoría de ${catData.name}`,
+          menuId: menu.id,
+          isActive: true,
+        },
+      });
+      createdCategories.push(category);
+      console.log(`📂 Categoría creada: ${category.name} (${category.code})`);
     }
 
-    // Crear algunos platos de ejemplo usando SQL directo
+    // Crear algunos platos de ejemplo usando Prisma ORM
     console.log('🍽️ Creando platos...');
-    const platos = [
+    const platosData = [
       // Platos del Día
       { name: 'Riñoncitos al jerez c/ puré', price: 9000, code: '0101', categoryCode: '01' },
       { name: 'Croquetas de carne c/ ensalada', price: 9000, code: '0102', categoryCode: '01' },
@@ -160,13 +102,25 @@ export async function POST(request: NextRequest) {
       { name: 'Rabas a la romana c/ f. españolas', price: 18000, code: '0503', categoryCode: '05' }
     ];
 
-    for (const plato of platos) {
-      const itemId = 'item_' + plato.code;
-      await prisma.$executeRaw`
-        INSERT INTO menu_items (id, name, price, code, description, category_id, menu_id, is_available, is_popular, is_promo, position, created_at, updated_at)
-        VALUES (${itemId}, ${plato.name}, ${plato.price}, ${plato.code}, ${`Delicioso ${plato.name.toLowerCase()}`}, ${categoryIds[plato.categoryCode]}, ${menuId}, true, false, false, ${parseInt(plato.code.substring(2), 10)}, NOW(), NOW())
-      `;
-      console.log(`  - Plato creado: ${plato.name} (${plato.code})`);
+    for (const plato of platosData) {
+      const category = createdCategories.find(cat => cat.code === plato.categoryCode);
+      if (category) {
+        await prisma.menuItem.create({
+          data: {
+            name: plato.name,
+            price: plato.price,
+            code: plato.code,
+            description: `Delicioso ${plato.name.toLowerCase()}`,
+            position: parseInt(plato.code.substring(2), 10),
+            isAvailable: true,
+            isPopular: false,
+            isPromo: false,
+            categoryId: category.id,
+            menuId: menu.id,
+          },
+        });
+        console.log(`  - Plato creado: ${plato.name} (${plato.code})`);
+      }
     }
 
     console.log(`🚀 Datos de Esquina Pompeya poblados exitosamente con ${platos.length} platos.`);
