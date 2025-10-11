@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -20,9 +20,12 @@ export async function POST(request: NextRequest) {
       data: {
         name: 'Esquina Pompeya',
         email: 'admin@esquinapompeya.com',
+        password: 'demo123',
+        restaurantId: 'esquina-pompeya',
+        restaurantName: 'Esquina Pompeya',
         phone: '+54 9 11 1234-5678',
         address: 'Av. Corrientes 1234, CABA',
-        role: 'ADMIN'
+        role: Role.ADMIN
       }
     });
 
