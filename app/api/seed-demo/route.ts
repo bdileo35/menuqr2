@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
     console.log('🔧 Creando tablas en Supabase...');
     
     try {
+      // Crear enum Role si no existe
+      await prisma.$executeRaw`CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');`;
+      
       // Crear tabla users
       await prisma.$executeRaw`
         CREATE TABLE IF NOT EXISTS "User" (
