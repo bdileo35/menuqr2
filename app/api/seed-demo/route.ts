@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 export async function POST(request: NextRequest) {
   try {
     console.log('🌱 Iniciando seed de datos reales para Esquina Pompeya...');
+    console.log('🔍 Verificando que el endpoint se ejecuta correctamente...');
 
     // Crear tablas simplificadas
     console.log('🔧 Creando tablas en Supabase...');
