@@ -11,15 +11,19 @@ export async function POST(request: NextRequest) {
     await prisma.$queryRaw`SELECT 1`;
     console.log('✅ Conexión a Supabase establecida');
 
-    // Limpiar datos existentes (con try/catch por si las tablas no existen)
+    // Verificar si las tablas existen, si no, Prisma las creará automáticamente
     try {
+      await prisma.user.findFirst();
+      console.log('✅ Tablas ya existen');
+      
+      // Limpiar datos existentes
       await prisma.menuItem.deleteMany();
       await prisma.category.deleteMany();
       await prisma.menu.deleteMany();
       await prisma.user.deleteMany();
       console.log('🧹 Datos limpiados');
     } catch (error) {
-      console.log('ℹ️ Tablas aún no existen, se crearán automáticamente');
+      console.log('ℹ️ Tablas no existen, Prisma las creará automáticamente');
     }
 
     // Crear usuario
