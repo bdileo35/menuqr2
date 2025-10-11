@@ -94,12 +94,23 @@ export async function POST(request: NextRequest) {
       
       console.log('✅ Tablas creadas exitosamente');
       
+      // Verificar si las tablas existen
+      const tableCheck = await prisma.$queryRaw`
+        SELECT table_name FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name IN ('users', 'menus', 'categories', 'menu_items')
+      `;
+      console.log('📋 Tablas existentes:', tableCheck);
+      
       // Limpiar datos existentes (usando nombres de tabla correctos)
-      await prisma.$executeRaw`DELETE FROM menu_items`;
-      await prisma.$executeRaw`DELETE FROM categories`;
-      await prisma.$executeRaw`DELETE FROM menus`;
-      await prisma.$executeRaw`DELETE FROM users`;
-      console.log('🧹 Datos limpiados');
+      try {
+        await prisma.$executeRaw`DELETE FROM menu_items`;
+        await prisma.$executeRaw`DELETE FROM categories`;
+        await prisma.$executeRaw`DELETE FROM menus`;
+        await prisma.$executeRaw`DELETE FROM users`;
+        console.log('🧹 Datos limpiados');
+      } catch (cleanError) {
+        console.log('⚠️ Error limpiando datos (normal si las tablas están vacías):', cleanError);
+      }
       
     } catch (error) {
       console.log('⚠️ Error creando tablas, continuando...', error);
