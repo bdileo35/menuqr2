@@ -5,12 +5,23 @@ const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Buscando menú de Esquina Pompeya...');
+    
+    // Verificar si las tablas existen
+    const tableCheck = await prisma.$queryRaw`
+      SELECT table_name FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name IN ('menus', 'categories', 'menu_items')
+    `;
+    console.log('📋 Tablas existentes:', tableCheck);
+    
     // Buscar el menú de Esquina Pompeya usando SQL directo
     const menuResult = await prisma.$queryRaw`
       SELECT * FROM menus WHERE restaurant_id = 'esquina-pompeya' LIMIT 1
     `;
+    console.log('📊 Resultado de búsqueda de menú:', menuResult);
     
     if (!menuResult || (menuResult as any[]).length === 0) {
+      console.log('❌ Menú no encontrado');
       return NextResponse.json(
         { error: 'Menú no encontrado' },
         { status: 404 }
