@@ -33,6 +33,8 @@
     "typescript": "^5"
   },
   "devDependencies": {
+    "@storybook/nextjs": "^9.1.10",
+    "@storybook/react": "^9.1.10",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.5",
     "autoprefixer": "^10.4.14",

@@ -828,30 +828,31 @@ export default function Editor2() {
                             className="w-full h-full object-cover rounded-lg"
                           />
                         ) : (
-                          <span className="text-gray-400 text-2xl">📷</span>
+                          <div className="text-center">
+                            <span className="text-gray-400 text-2xl block mb-1">📷</span>
+                            <span className="text-gray-400 text-xs">Toca para tomar foto o seleccionar</span>
+                          </div>
                         )}
                       </label>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">📷</span>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Toca para tomar foto o seleccionar</p>
                   </div>
                   
-                  {/* Código + Precio al lado de la foto */}
-                  <div className="flex-1 space-y-3">
+                  {/* Código + Precio al lado de la foto - alineados con altura de foto */}
+                  <div className="flex-1 h-24 flex flex-col justify-between">
                     {/* Código - label e input en misma línea */}
                     <div className="flex items-center gap-3">
                       <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Código:</label>
                       <input
                         type="text"
-                        value={modalData.code}
+                        value={modalData.code || ''}
                         readOnly
                         className="flex-1 p-2 bg-gray-600 border border-gray-500 rounded text-gray-300 cursor-not-allowed text-sm"
-                        placeholder="Se genera automáticamente"
+                        placeholder={modalData.code ? modalData.code : "Automático"}
                       />
                     </div>
-                    <p className="text-xs text-gray-400">El código se genera al seleccionar categoría</p>
                     
                     {/* Precio */}
                     <div className="flex items-center gap-3">
