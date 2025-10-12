@@ -42,9 +42,15 @@ export async function POST(request: NextRequest) {
           "avatar" TEXT,
           "isActive" BOOLEAN DEFAULT true,
           "lastLogin" TIMESTAMP(3),
+          "whatsappPhone" TEXT,
+          "whatsappToken" TEXT,
+          "whatsappPhoneId" TEXT,
+          "whatsappEnabled" BOOLEAN DEFAULT false,
           "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP(3) NOT NULL,
-          CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+          CONSTRAINT "users_pkey" PRIMARY KEY ("id"),
+          CONSTRAINT "users_email_key" UNIQUE ("email"),
+          CONSTRAINT "users_restaurantId_key" UNIQUE ("restaurantId")
         )
       `;
       
