@@ -198,6 +198,17 @@ export default function Editor2() {
     }
   };
 
+  // Estados para el modal de plato
+  const [modalData, setModalData] = useState({
+    name: '',
+    code: '',
+    price: '',
+    description: '',
+    categoryId: '',
+    imageFile: null as File | null,
+    imagePreview: ''
+  });
+
   // Guardar item
   const handleSaveItem = async (item: MenuItem) => {
     try {
@@ -220,6 +231,50 @@ export default function Editor2() {
       alert('❌ Error al guardar. Intenta nuevamente.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Abrir modal para editar plato
+  const openEditPlateModal = (item: MenuItem, categoryId: string) => {
+    setModalData({
+      name: item.name,
+      code: item.code || '',
+      price: item.price,
+      description: item.description || '',
+      categoryId: categoryId,
+      imageFile: null,
+      imagePreview: ''
+    });
+    setEditingItem(item);
+    setShowAddItem(true);
+  };
+
+  // Manejar cambio de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setModalData(prev => ({
+        ...prev,
+        imageFile: file,
+        imagePreview: URL.createObjectURL(file)
+      }));
+    }
+  };
+
+  // Manejar cambio de categoría y generar código automáticamente
+  const handleCategoryChange = (categoryId: string) => {
+    const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
+    if (selectedCategory) {
+      // Generar código automáticamente
+      const categoryCode = selectedCategory.code || '01';
+      const nextItemNumber = (selectedCategory.items.length + 1).toString().padStart(2, '0');
+      const generatedCode = `${categoryCode}${nextItemNumber}`;
+      
+      setModalData(prev => ({
+        ...prev,
+        categoryId: categoryId,
+        code: generatedCode
+      }));
     }
   };
 
@@ -664,6 +719,15 @@ export default function Editor2() {
                   setShowAddItem(false);
                   setEditingItem(null);
                   setSelectedCategoryForItem('');
+                  setModalData({
+                    name: '',
+                    code: '',
+                    price: '',
+                    description: '',
+                    categoryId: '',
+                    imageFile: null,
+                    imagePreview: ''
+                  });
                 }}
                 className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
               >
@@ -679,19 +743,58 @@ export default function Editor2() {
                 name: formData.get('name') as string,
                 price: formData.get('price') as string,
                 description: formData.get('description') as string,
+                code: modalData.code,
                 isAvailable: true
               };
               handleSaveItem(item);
             }}>
               <div className="space-y-4">
-                {/* Foto + Precio - Arriba a la izquierda */}
+                {/* Código (fijo, no editable) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Código</label>
+                  <input
+                    type="text"
+                    value={modalData.code}
+                    readOnly
+                    className="w-full p-3 bg-gray-600 border border-gray-500 rounded-lg text-gray-300 cursor-not-allowed"
+                    placeholder="Código generado automáticamente"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">El código se genera automáticamente</p>
+                </div>
+
+                {/* Foto + Precio - Arriba */}
                 <div className="flex gap-4">
-                  {/* Cuadro de imagen - 30% ancho */}
-                  <div className="w-[30%]">
+                  {/* Cuadro de imagen - 40% ancho */}
+                  <div className="w-[40%]">
                     <label className="block text-sm font-medium text-gray-300 mb-2">Foto</label>
-                    <div className="w-full h-24 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors">
-                      <span className="text-gray-400 text-2xl">📷</span>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="camera"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="imageInput"
+                      />
+                      <label
+                        htmlFor="imageInput"
+                        className="w-full h-24 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
+                      >
+                        {modalData.imagePreview ? (
+                          <img 
+                            src={modalData.imagePreview} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <span className="text-gray-400 text-2xl">📷</span>
+                        )}
+                      </label>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">📷</span>
+                      </div>
                     </div>
+                    <p className="text-xs text-gray-400 mt-1">Toca para tomar foto o seleccionar</p>
                   </div>
                   
                   {/* Precio al lado de la foto */}
@@ -701,7 +804,8 @@ export default function Editor2() {
                       name="price"
                       type="text"
                       required
-                      defaultValue={editingItem?.price || ''}
+                      value={modalData.price}
+                      onChange={(e) => setModalData(prev => ({ ...prev, price: e.target.value }))}
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Ej: $9000"
                     />
@@ -714,13 +818,14 @@ export default function Editor2() {
                   <select
                     name="category"
                     required
-                    defaultValue={selectedCategoryForItem}
+                    value={modalData.categoryId}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Seleccionar categoría...</option>
                     {menuData?.categories.map((category) => (
                       <option key={category.id || category.name} value={category.id || category.name}>
-                        {category.name}
+                        {category.name} ({category.code})
                       </option>
                     ))}
                   </select>
@@ -733,7 +838,8 @@ export default function Editor2() {
                     name="name"
                     type="text"
                     required
-                    defaultValue={editingItem?.name || ''}
+                    value={modalData.name}
+                    onChange={(e) => setModalData(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Ej: Milanesa con papas"
                   />
@@ -745,7 +851,8 @@ export default function Editor2() {
                   <textarea
                     name="description"
                     rows={3}
-                    defaultValue={editingItem?.description || ''}
+                    value={modalData.description}
+                    onChange={(e) => setModalData(prev => ({ ...prev, description: e.target.value }))}
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Descripción opcional del plato..."
                   />
