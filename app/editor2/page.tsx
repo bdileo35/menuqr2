@@ -206,7 +206,8 @@ export default function Editor2() {
     description: '',
     categoryId: '',
     imageFile: null as File | null,
-    imagePreview: ''
+    imagePreview: '',
+    isAvailable: true  // ✅ AGREGAR ESTADO DISPONIBLE/AGOTADO
   });
 
   // Guardar item
@@ -243,7 +244,8 @@ export default function Editor2() {
       description: item.description || '',
       categoryId: categoryId,
       imageFile: null,
-      imagePreview: ''
+      imagePreview: '',
+      isAvailable: item.isAvailable ?? true  // ✅ INCLUIR ESTADO DISPONIBLE
     });
     setEditingItem(item);
     setShowAddItem(true);
@@ -662,22 +664,8 @@ export default function Editor2() {
                           </h4>
                             </div>
                             
-                        {/* Estado + Precio sin marco */}
+                        {/* Precio sin marco */}
                         <div className="flex items-center gap-2">
-                          {/* Checkbox Disponible */}
-                              <label className="cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={item.isAvailable !== false}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                // TODO: Actualizar disponibilidad via API
-                                console.log('Toggle disponibilidad:', item.name, e.target.checked);
-                              }}
-                              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent checked:bg-green-500 checked:border-green-500"
-                                  title={item.isAvailable !== false ? 'Disponible' : 'Sin Stock'}
-                                />
-                              </label>
                           
                           {/* Precio sin marco */}
                           <span className={`text-sm font-bold transition-colors duration-300 ${
@@ -726,7 +714,8 @@ export default function Editor2() {
                     description: '',
                     categoryId: '',
                     imageFile: null,
-                    imagePreview: ''
+                    imagePreview: '',
+                    isAvailable: true
                   });
                 }}
                 className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
@@ -744,7 +733,7 @@ export default function Editor2() {
                 price: formData.get('price') as string,
                 description: formData.get('description') as string,
                 code: modalData.code,
-                isAvailable: true
+                isAvailable: modalData.isAvailable  // ✅ USAR ESTADO DEL MODAL
               };
               handleSaveItem(item);
             }}>
@@ -856,6 +845,29 @@ export default function Editor2() {
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Descripción opcional del plato..."
                   />
+                </div>
+
+                {/* Estado Disponible/Agotado */}
+                <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg border border-gray-600">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300">Estado del plato</label>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {modalData.isAvailable ? '✅ Disponible para pedidos' : '❌ Agotado - No disponible'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalData(prev => ({ ...prev, isAvailable: !prev.isAvailable }))}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      modalData.isAvailable ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                        modalData.isAvailable ? 'translate-x-7' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
               
