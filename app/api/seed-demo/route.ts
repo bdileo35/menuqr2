@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       { name: 'Pescados y Mariscos', code: '05', position: 5 }
     ];
 
-    const categoryIds = {};
+    const categoryIds: { [key: string]: string } = {};
     for (const catData of categoriesData) {
       const categoryId = 'cat_' + catData.code;
       await prisma.$executeRaw`
