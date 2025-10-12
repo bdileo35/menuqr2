@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
         name: cat.name,
         description: cat.description,
         position: cat.position,
+        code: cat.code,  // ✅ AGREGAR CÓDIGO DE CATEGORÍA
         items: cat.items.map(item => ({
           id: item.id,
           name: item.name,
@@ -81,7 +82,8 @@ export async function GET(request: NextRequest) {
           imageUrl: item.imageUrl,
           isPopular: item.isPopular,
           isPromo: item.isPromo,
-          isAvailable: item.isAvailable
+          isAvailable: item.isAvailable,
+          code: item.code  // ✅ AGREGAR CÓDIGO DE PLATO
         }))
       }))
     };
