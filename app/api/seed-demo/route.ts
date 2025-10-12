@@ -154,40 +154,25 @@ export async function POST(request: NextRequest) {
       console.log('⚠️ Error creando tablas, continuando...', error);
     }
 
-    // Crear usuario usando Prisma ORM
+    // Crear usuario usando SQL directo
     console.log('👤 Creando usuario...');
-    const user = await prisma.user.create({
-      data: {
-        name: 'Esquina Pompeya',
-        email: 'admin@esquinapompeya.com',
-        password: 'esquina2024',
-        restaurantId: 'esquina-pompeya',
-        restaurantName: 'Esquina Pompeya',
-        phone: '+54 11 4911-6666',
-        address: 'Av. Fernández de la Cruz 1100, Buenos Aires',
-        role: Role.ADMIN,
-        isActive: true,
-      },
-    });
-    console.log(`✅ Usuario creado: ${user.email}`);
+    const userId = 'user_' + Date.now();
+    await prisma.$executeRaw`
+      INSERT INTO "users" ("id", "name", "email", "password", "restaurantId", "restaurantName", "phone", "address", "role", "isActive", "createdAt", "updatedAt")
+      VALUES (${userId}, 'Esquina Pompeya', 'admin@esquinapompeya.com', 'esquina2024', 'esquina-pompeya', 'Esquina Pompeya', '+54 11 4911-6666', 'Av. Fernández de la Cruz 1100, Buenos Aires', 'ADMIN', true, NOW(), NOW())
+    `;
+    console.log(`✅ Usuario creado: admin@esquinapompeya.com`);
 
-    // Crear menú usando Prisma ORM
+    // Crear menú usando SQL directo
     console.log('🍽️ Creando menú...');
-    const menu = await prisma.menu.create({
-      data: {
-        restaurantName: 'Esquina Pompeya',
-        restaurantId: 'esquina-pompeya',
-        description: 'Restaurante tradicional argentino',
-        contactPhone: '+54 11 4911-6666',
-        contactAddress: 'Av. Fernández de la Cruz 1100, Buenos Aires',
-        contactEmail: 'info@esquinapompeya.com',
-        socialInstagram: '@esquinapompeya',
-        ownerId: user.id,
-      },
-    });
-    console.log(`✅ Menú creado: ${menu.restaurantName}`);
+    const menuId = 'menu_' + Date.now();
+    await prisma.$executeRaw`
+      INSERT INTO "menus" ("id", "restaurantName", "restaurantId", "description", "contactPhone", "contactAddress", "contactEmail", "socialInstagram", "ownerId", "createdAt", "updatedAt")
+      VALUES (${menuId}, 'Esquina Pompeya', 'esquina-pompeya', 'Restaurante tradicional argentino', '+54 11 4911-6666', 'Av. Fernández de la Cruz 1100, Buenos Aires', 'info@esquinapompeya.com', '@esquinapompeya', ${userId}, NOW(), NOW())
+    `;
+    console.log(`✅ Menú creado: Esquina Pompeya`);
 
-    // Crear categorías principales usando Prisma ORM
+    // Crear categorías principales usando SQL directo
     console.log('📂 Creando categorías...');
     const categoriesData = [
       { name: 'Platos del Día', code: '01', position: 1 },
@@ -197,23 +182,18 @@ export async function POST(request: NextRequest) {
       { name: 'Pescados y Mariscos', code: '05', position: 5 }
     ];
 
-    const createdCategories = [];
+    const categoryIds = {};
     for (const catData of categoriesData) {
-      const category = await prisma.category.create({
-        data: {
-          name: catData.name,
-          code: catData.code,
-          position: catData.position,
-          description: `Categoría de ${catData.name}`,
-          menuId: menu.id,
-          isActive: true,
-        },
-      });
-      createdCategories.push(category);
-      console.log(`📂 Categoría creada: ${category.name} (${category.code})`);
+      const categoryId = 'cat_' + catData.code;
+      await prisma.$executeRaw`
+        INSERT INTO "categories" ("id", "name", "code", "position", "description", "menuId", "isActive", "createdAt", "updatedAt")
+        VALUES (${categoryId}, ${catData.name}, ${catData.code}, ${catData.position}, ${`Categoría de ${catData.name}`}, ${menuId}, true, NOW(), NOW())
+      `;
+      categoryIds[catData.code] = categoryId;
+      console.log(`📂 Categoría creada: ${catData.name} (${catData.code})`);
     }
 
-    // Crear algunos platos de ejemplo usando Prisma ORM
+    // Crear algunos platos de ejemplo usando SQL directo
     console.log('🍽️ Creando platos...');
     const platosData = [
       // Platos del Día
@@ -233,24 +213,12 @@ export async function POST(request: NextRequest) {
     ];
 
     for (const plato of platosData) {
-      const category = createdCategories.find(cat => cat.code === plato.categoryCode);
-      if (category) {
-        await prisma.menuItem.create({
-          data: {
-            name: plato.name,
-            price: plato.price,
-            code: plato.code,
-            description: `Delicioso ${plato.name.toLowerCase()}`,
-            position: parseInt(plato.code.substring(2), 10),
-            isAvailable: true,
-            isPopular: false,
-            isPromo: false,
-            categoryId: category.id,
-            menuId: menu.id,
-          },
-        });
-        console.log(`  - Plato creado: ${plato.name} (${plato.code})`);
-      }
+      const itemId = 'item_' + plato.code;
+      await prisma.$executeRaw`
+        INSERT INTO "menu_items" ("id", "name", "price", "code", "description", "position", "isAvailable", "isPopular", "isPromo", "categoryId", "menuId", "createdAt", "updatedAt")
+        VALUES (${itemId}, ${plato.name}, ${plato.price}, ${plato.code}, ${`Delicioso ${plato.name.toLowerCase()}`}, ${parseInt(plato.code.substring(2), 10)}, true, false, false, ${categoryIds[plato.categoryCode]}, ${menuId}, NOW(), NOW())
+      `;
+      console.log(`  - Plato creado: ${plato.name} (${plato.code})`);
     }
 
     console.log(`🚀 Datos de Esquina Pompeya poblados exitosamente con ${platosData.length} platos.`);
