@@ -1,9 +1,10 @@
 # 📚 PROYECTO MENUQR - DOCUMENTACIÓN MAESTRA
 
 **Fecha de creación:** Octubre 2025  
-**Autor:** Sistema MenuQR  
-**Versión:** 1.0.0  
-**Estado:** MVP en desarrollo activo  
+**Última actualización:** 13 de Octubre 2025  
+**Autor:** Sistema MenuQR / bdileo35  
+**Versión:** 2.0.0  
+**Estado:** Demo funcional con datos reales en Supabase  
 
 ---
 
@@ -66,29 +67,39 @@ PREMIUM:  $30/mes - Multi-sucursal + POS + Analytics
 ### 🏗️ **Stack Tecnológico**
 
 ```yaml
-Frontend:
+Fullstack (Frontend + Backend):
   - Next.js 14.2.5 (App Router)
   - React 18
   - TypeScript 5.x
   - Tailwind CSS 3.x
-
-Backend:
   - Next.js API Routes (serverless)
   - Node.js runtime
 
 Base de Datos:
   - Prisma ORM 5.x
-  - SQLite (desarrollo)
-  - PostgreSQL (producción recomendado)
+  - PostgreSQL en Supabase (producción) ✅ ACTIVO
+  - SQLite (desarrollo local)
 
 Deploy:
-  - Vercel (frontend + APIs)
-  - Railway/Supabase (DB producción)
+  - Vercel (aplicación completa + APIs) ✅ ACTIVO
+  - Supabase (PostgreSQL) ✅ ACTIVO
+  - GitHub Actions (CI/CD pendiente)
 
-Herramientas:
-  - Tesseract.js (OCR scanner)
+Herramientas y Dependencias:
+  - Tesseract.js (OCR scanner - gratuito)
+  - OpenAI GPT-4 Vision (OCR mejorado - futuro)
   - bcryptjs (encriptación)
+  - qrcode (generación QR)
+  - react-dropzone (upload archivos)
+  - Storybook (testing visual - instalado)
   - Git/GitHub (control versiones)
+  
+Servicios Externos (Gratuitos):
+  - Supabase (PostgreSQL + Auth + Storage)
+  - Cloudinary (1000 imágenes/mes gratis)
+  - Resend (3000 emails/mes gratis)
+  - Google Places API (futuro - para horarios)
+  - WhatsApp Business API (básico gratis)
 ```
 
 ### 📁 **Estructura del Proyecto**
@@ -98,45 +109,50 @@ MenuQR/
 ├── app/                          # Next.js App Router
 │   ├── page.tsx                 # Landing page
 │   ├── api/                     # Backend APIs
-│   │   └── menu/
-│   │       └── [restaurantId]/
-│   │           ├── route.ts     # GET menú completo
-│   │           └── items/
-│   │               └── route.ts # CRUD items
+│   │   ├── menu/
+│   │   │   └── esquina-pompeya/
+│   │   │       └── route.ts     # GET menú específico ⭐
+│   │   ├── seed-demo/
+│   │   │   └── route.ts         # POST seed Supabase ⭐
+│   │   └── health/
+│   │       └── route.ts         # Health check
 │   ├── carta-menu/
-│   │   └── page.tsx             # Vista pública del menú
-│   ├── editor/
-│   │   └── page.tsx             # Editor original (con pasos)
-│   ├── editor-clean/
-│   │   └── page.tsx             # Editor optimizado ⭐
-│   ├── editor-v2/
-│   │   └── page.tsx             # Editor mobile (menú ⋮)
+│   │   └── page.tsx             # Vista pública del menú ⭐ FUNCIONAL
+│   ├── editor2/
+│   │   └── page.tsx             # Editor principal ⭐ FUNCIONAL
 │   ├── scanner/
 │   │   └── page.tsx             # OCR de carta física
-│   ├── setup-comercio/
-│   │   └── page.tsx             # Onboarding inicial
+│   ├── qr-shop/
+│   │   └── page.tsx             # Tienda QR (futuro)
 │   └── components/
-│       ├── DevBanner.tsx        # Banner dev mode
-│       └── DemoHeader.tsx       # Header demo
+│       ├── DemoHeader.tsx       # Header demo
+│       └── SmartScannerMejorado.tsx  # Scanner multi-imagen ⭐
 │
 ├── prisma/
-│   ├── schema.prisma            # Definición DB
-│   ├── dev.db                   # SQLite local
-│   └── migrations/              # Historial migraciones
+│   ├── schema.prisma            # Definición DB (PostgreSQL)
+│   └── dev.db                   # SQLite local
 │
 ├── scripts/
-│   └── seed-esquina-pompeya.ts  # Datos demo reales
+│   └── [eliminados]             # Scripts de seed deprecados
+│
+├── lib/
+│   └── prisma.ts                # Cliente Prisma singleton
 │
 ├── public/
-│   └── demo-images/             # Imágenes ejemplo
+│   ├── demo-images/             # Imágenes ejemplo
+│   ├── platos/                  # Fotos de platos
+│   ├── DatosComercio.jpg        # Mockup paso 1 wizard
+│   ├── Scanner_OCR.jpg          # Mockup paso 2 wizard
+│   ├── page1.jpg, page4.jpg, page5.jpg, final.jpg  # Mockups
+│   └── Logo.jpg                 # Logo Esquina Pompeya
 │
-├── Docs/                         # Documentación previa
-│   ├── ARQUITECTURA-COMANDAS.md
-│   ├── Menu_Esquina_Pompeya.md
-│   └── [otros docs antiguos]
+├── Docs/                         # Documentación
+│   ├── PROYECTO-MENUQR-COMPLETO.md  # ⭐ DOCUMENTO MAESTRO
+│   ├── Menu_Esquina_Pompeya.md      # Datos reales del menú
+│   ├── Qwen_md_20251012_uv3p97ob8.md  # Análisis Qwen AI
+│   └── [otros docs deprecados]
 │
-└── _deprecated/                  # Código en desuso
-    └── demo/                    # Páginas demo viejas
+└── [archivos deprecados eliminados]  # Limpieza reciente
 ```
 
 ### 🔄 **Arquitectura de Datos**
@@ -1263,26 +1279,250 @@ Dependencias:
 
 ## 10. ROADMAP Y PRÓXIMOS PASOS
 
-### 🎯 **Fase 1: MVP Comandas (1-2 semanas)**
+### ✅ **COMPLETADO (Octubre 2025)**
 
-**Objetivo:** Sistema básico de pedidos funcional
+#### **Base de Datos:**
+- [x] Schema Prisma completo con PostgreSQL
+- [x] Migración a Supabase exitosa
+- [x] Seed con 20 categorías y 190 platos reales (Esquina Pompeya)
+- [x] Códigos XX/XXXX implementados para organización
+
+#### **APIs:**
+- [x] GET `/api/menu/esquina-pompeya` - Menú completo con códigos
+- [x] POST `/api/seed-demo` - Seed automático en Supabase
+- [x] Códigos de categorías (01-20) y platos (XXYY)
+
+#### **Frontend:**
+- [x] Carta digital (`/carta-menu`) con estética QRing
+- [x] Dark/Light mode toggle funcional
+- [x] Carrito flotante transparente (pill-shaped)
+- [x] Filtros de categorías (pill-shaped)
+- [x] Búsqueda activa con clear button
+- [x] Editor2 (`/editor2`) con doble-click y long-press
+- [x] Modales Add/Edit con layout horizontal (foto + código + precio)
+- [x] Códigos automáticos al seleccionar categoría
+- [x] Input de imagen con capture="camera"
+
+#### **Deploy:**
+- [x] Vercel deployment activo
+- [x] Supabase PostgreSQL conectado
+- [x] GitHub CI/CD configurado
+
+---
+
+### 🚀 **FASE 1: FINALIZAR DEMO (AHORA - 1-2 días)**
+
+**Objetivo:** Demo lista para presentar con funcionalidad completa de Add/Edit
 
 ```
-Semana 1:
-  ✅ Día 1-2: APIs CRUD items (completado)
-  ✅ Día 3-4: Conectar carta-menu y editor-clean (completado)
-  ⏳ Día 5-7: API comandas + carrito frontend
+✅ COMPLETADO:
+  - Modal visual mejorado (código automático, foto con texto)
+  - Alineación campos con altura de foto
+  - Push a Vercel exitoso
+
+⏳ PENDIENTE INMEDIATO:
+  Día 1 (2-4 horas):
+    - [ ] Implementar lógica Add Plato (guardar en DB)
+    - [ ] Implementar lógica Edit Plato (actualizar en DB)
+    - [ ] Loading states en modales
+    - [ ] Probar en móvil (touch events)
   
-Semana 2:
-  ⏳ Día 8-10: Panel admin comandas básico
-  ⏳ Día 11-12: Testing y bugfixes
-  ⏳ Día 13-14: Deploy a producción (Vercel + Railway)
+  Día 2 (2-3 horas):
+    - [ ] Implementar Add/Edit Categoría
+    - [ ] Upload de imagen (Cloudinary o Supabase Storage)
+    - [ ] Validaciones de formularios
+    - [ ] Testing completo en móvil y desktop
 ```
 
 **Entregables:**
-- [ ] Cliente puede hacer pedidos de salón
-- [ ] Admin ve pedidos en panel
-- [ ] Cambio de estados (Preparing → Ready → Delivered)
+- [ ] Add/Edit de platos funcional
+- [ ] Add/Edit de categorías funcional
+- [ ] Upload de imágenes funcional
+- [ ] Demo testeada y estable
+
+---
+
+### ⚡ **FASE 2: QUICK WINS (2-3 días después de demo)**
+
+**Objetivo:** Mejoras rápidas de alto impacto
+
+#### **Prioridad 1: Carrito Funcional (4h)**
+```typescript
+ESTRUCTURA DEL CARRITO (idea original):
+  [Icono] → [Productos] → [Total] → [Método] → [Forma Pago] → [Aceptar]
+
+Implementación:
+- [ ] Guardar carrito en localStorage
+- [ ] Mostrar: Icono carrito + Cantidad productos + Total
+- [ ] Al expandir: Lista de productos con códigos XXYY
+- [ ] Selector de método: 📍 Local / 🚶 Retiro / 🚚 Delivery
+- [ ] Selector de pago: 💵 Efectivo / 💳 Tarjeta / 📱 Transferencia
+- [ ] Botón "Aceptar" → Generar mensaje WhatsApp
+- [ ] Botón alternativo "Enviar por WhatsApp"
+```
+
+#### **Prioridad 2: Mejoras UX (3h)**
+```typescript
+- [ ] Agregar horarios en header (input manual)
+- [ ] Toast notifications (react-hot-toast)
+- [ ] Confirmaciones al eliminar
+- [ ] Validaciones mejoradas
+- [ ] Loading states globales
+```
+
+#### **Prioridad 3: Gestión de Imágenes (2h)**
+```typescript
+- [ ] Setup Cloudinary (gratis 1000 img/mes)
+- [ ] Upload desde modal Add/Edit
+- [ ] Preview antes de guardar
+- [ ] Fallback a placeholder si no hay imagen
+```
+
+**Entregables:**
+- [ ] Cliente puede enviar pedido por WhatsApp
+- [ ] UX pulida con feedback visual
+- [ ] Imágenes gestionadas en cloud
+
+---
+
+### 🏗️ **FASE 3: ESTRUCTURA FINAL (1-2 semanas)**
+
+**Objetivo:** Arquitectura multi-tenant completa
+
+#### **Página Raíz con IDU (2 días)**
+```typescript
+// app/[idu]/page.tsx
+- [ ] Landing con input de IDU
+- [ ] Validación de IDU en DB
+- [ ] Redirección a wizard si es primera vez
+- [ ] Redirección a dashboard si ya completó
+```
+
+#### **Wizard 4 Pasos (3 días)**
+```
+Paso 1: Datos del Comercio
+  - [ ] Formulario con Google Places API
+  - [ ] Auto-completar dirección y horarios
+  
+Paso 2: Scanner OCR
+  - [ ] Subir múltiples imágenes
+  - [ ] Procesar con IA (Tesseract gratis)
+  - [ ] Mostrar datos extraídos
+  
+Paso 3: Editor de Menú
+  - [ ] Revisar y corregir datos
+  - [ ] Agregar/eliminar categorías y platos
+  
+Paso 4: Generar QR
+  - [ ] Generar QR único
+  - [ ] Opciones: Descargar, Imprimir, Compartir
+  - [ ] Vista previa de carta digital
+```
+
+#### **Dashboard Central (2 días)**
+```typescript
+// app/[idu]/dashboard/page.tsx
+Hamburger Menu con 5 opciones:
+  - [ ] Editar Datos Comercio
+  - [ ] Re-escanear Carta
+  - [ ] Editor de Menú (Editor2)
+  - [ ] Gestión QR
+  - [ ] Vista Previa Carta (carta-menu)
+```
+
+#### **Mercado Pago Integration (1 día)**
+```typescript
+- [ ] Checkout para generar IDU
+- [ ] Webhook para confirmar pago
+- [ ] Generar IDU único (ej: esquina-pompeya-a3f9)
+- [ ] Crear usuario en DB
+- [ ] Enviar email con link a wizard
+```
+
+**Entregables:**
+- [ ] Cualquier restaurante puede registrarse
+- [ ] Wizard guiado completo
+- [ ] Dashboard funcional
+- [ ] Generación de IDU automática
+
+---
+
+### 🎯 **FASE 4: COMANDAS Y PEDIDOS (2-3 semanas)**
+
+**Objetivo:** Sistema de pedidos completo
+
+#### **API de Pedidos (1 semana)**
+```typescript
+- [ ] POST /api/orders/create
+- [ ] GET /api/orders/[idu]
+- [ ] PUT /api/orders/[id]/status
+- [ ] DELETE /api/orders/[id]
+```
+
+#### **Panel de Comandas (1 semana)**
+```typescript
+// app/[idu]/admin/comandas/page.tsx
+- [ ] Vista SALÓN (por mesa)
+- [ ] Vista DELIVERY (por cliente)
+- [ ] Cambio de estados (Pending → Preparing → Ready → Delivered)
+- [ ] Notificaciones en tiempo real (Polling o WebSockets)
+```
+
+#### **WhatsApp Integration (3 días)**
+```typescript
+- [ ] WhatsApp Business API setup
+- [ ] Confirmaciones automáticas
+- [ ] Estados de pedido
+- [ ] Plantillas de mensajes
+```
+
+**Entregables:**
+- [ ] Sistema de comandas funcional
+- [ ] Cliente recibe confirmación por WhatsApp
+- [ ] Admin gestiona pedidos en panel
+
+---
+
+### 📈 **FASE 5: FEATURES AVANZADOS (2-3 meses)**
+
+#### **Analytics y Reportes (2 semanas)**
+```typescript
+- [ ] Dashboard de ventas
+- [ ] Productos más vendidos
+- [ ] Análisis por canal (Salón/Delivery)
+- [ ] Reportes exportables (PDF/Excel)
+```
+
+#### **Multi-sucursal (3 semanas)**
+```typescript
+- [ ] Gestión de múltiples locales
+- [ ] Menús por sucursal
+- [ ] Analytics por sucursal
+- [ ] Gestión de usuarios por sucursal
+```
+
+#### **Autenticación y Roles (2 semanas)**
+```typescript
+- [ ] NextAuth setup
+- [ ] Login/Registro
+- [ ] Roles: Owner, Admin, Staff, Cocina
+- [ ] Protección de rutas
+- [ ] Permisos por rol
+```
+
+#### **Pagos Online (1 semana)**
+```typescript
+- [ ] Mercado Pago checkout en delivery
+- [ ] Confirmación de pago
+- [ ] Reembolsos
+- [ ] Historial de transacciones
+```
+
+**Entregables:**
+- [ ] Plataforma escalable multi-tenant
+- [ ] Analytics completo
+- [ ] Sistema de suscripciones
+- [ ] Pagos online integrados
 
 ---
 
@@ -1745,6 +1985,43 @@ Toda la información necesaria para entender, desarrollar y extender el proyecto
 
 ---
 
-**Versión:** 1.0.0  
-**Última modificación:** 2025-10-03  
-**Próxima revisión:** Después de implementar Fase 1 (Comandas MVP)
+**Versión:** 2.0.0  
+**Última modificación:** 2025-10-13  
+**Próxima revisión:** Después de implementar Fase 1 (Demo Funcional Add/Edit)
+
+---
+
+## 🎓 PARA CUALQUIER IA QUE LEA ESTO
+
+Este documento contiene **TODA** la información del proyecto MenuQR:
+- ✅ Stack tecnológico completo (Fullstack Next.js + Supabase)
+- ✅ Arquitectura y decisiones de diseño
+- ✅ Estado actual (Demo funcional con 190 platos reales)
+- ✅ Roadmap detallado por fases
+- ✅ Código de ejemplo y APIs
+- ✅ Principio: TODO GRATUITO en etapa inicial
+
+**NO necesitas:**
+- ❌ Buscar en otros documentos (están desactualizados)
+- ❌ Adivinar el contexto (está todo aquí)
+- ❌ Proponer soluciones pagas (solo gratuitas por ahora)
+
+**Cuando trabajes en MenuQR:**
+1. Este documento es la fuente de verdad
+2. Mantén consistencia con lo documentado
+3. Actualiza este documento si haces cambios importantes
+4. Respeta el principio de "Quick Wins" (cambios < 2h)
+5. Usa la metodología: Commit → Push → Test → Siguiente
+
+---
+
+## 📞 CONTACTO
+
+**Repositorio:** https://github.com/bdileo35/menuqr2  
+**Deploy Vercel:** https://menuqr-nine.vercel.app  
+**Supabase Project:** [Configurado y activo]  
+**Creador:** bdileo35  
+
+---
+
+**✨ MenuQR - Digitaliza tu carta en minutos, sin costo inicial ✨**
