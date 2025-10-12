@@ -11,17 +11,141 @@ export async function POST(request: NextRequest) {
     // Verificar conexión a la base de datos
     console.log('🔗 Conectando a Supabase...');
     
-    // Limpiar datos existentes (Prisma se encarga de crear las tablas)
-    console.log('🧹 Limpiando datos existentes...');
+    // Crear tablas con nombres de columna correctos para Prisma
+    console.log('🔧 Creando tablas con schema correcto...');
     
     try {
-      await prisma.menuItem.deleteMany();
-      await prisma.category.deleteMany();
-      await prisma.menu.deleteMany();
-      await prisma.user.deleteMany();
-      console.log('✅ Datos limpiados exitosamente');
+      // Eliminar tablas existentes si existen
+      await prisma.$executeRaw`DROP TABLE IF EXISTS menu_items CASCADE`;
+      await prisma.$executeRaw`DROP TABLE IF EXISTS categories CASCADE`;
+      await prisma.$executeRaw`DROP TABLE IF EXISTS menus CASCADE`;
+      await prisma.$executeRaw`DROP TABLE IF EXISTS users CASCADE`;
+      await prisma.$executeRaw`DROP TYPE IF EXISTS "Role" CASCADE`;
+      console.log('🧹 Tablas existentes eliminadas');
+
+      // Crear enum Role
+      await prisma.$executeRaw`CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'OWNER', 'SUPERADMIN')`;
+      
+      // Crear tabla users con nombres correctos
+      await prisma.$executeRaw`
+        CREATE TABLE "users" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "email" TEXT NOT NULL,
+          "password" TEXT NOT NULL,
+          "restaurantId" TEXT NOT NULL,
+          "restaurantName" TEXT NOT NULL,
+          "phone" TEXT,
+          "address" TEXT,
+          "plan" TEXT DEFAULT 'basic',
+          "role" "Role" DEFAULT 'ADMIN',
+          "avatar" TEXT,
+          "isActive" BOOLEAN DEFAULT true,
+          "lastLogin" TIMESTAMP(3),
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+        )
+      `;
+      
+      // Crear tabla menus con nombres correctos
+      await prisma.$executeRaw`
+        CREATE TABLE "menus" (
+          "id" TEXT NOT NULL,
+          "restaurantId" TEXT NOT NULL,
+          "restaurantName" TEXT NOT NULL,
+          "description" TEXT,
+          "logoUrl" TEXT,
+          "logoPublicId" TEXT,
+          "primaryColor" TEXT DEFAULT '#2563eb',
+          "secondaryColor" TEXT DEFAULT '#64748b',
+          "backgroundColor" TEXT DEFAULT '#ffffff',
+          "textColor" TEXT DEFAULT '#1f2937',
+          "fontFamily" TEXT DEFAULT 'Inter',
+          "contactPhone" TEXT,
+          "contactEmail" TEXT,
+          "contactAddress" TEXT,
+          "contactWebsite" TEXT,
+          "socialInstagram" TEXT,
+          "socialFacebook" TEXT,
+          "socialTwitter" TEXT,
+          "showPrices" BOOLEAN DEFAULT true,
+          "showImages" BOOLEAN DEFAULT true,
+          "showDescriptions" BOOLEAN DEFAULT true,
+          "showNutritional" BOOLEAN DEFAULT false,
+          "allowOrdering" BOOLEAN DEFAULT false,
+          "currency" TEXT DEFAULT '$',
+          "language" TEXT DEFAULT 'es',
+          "deliveryEnabled" BOOLEAN DEFAULT false,
+          "deliveryFee" DOUBLE PRECISION DEFAULT 0,
+          "deliveryRadius" DOUBLE PRECISION,
+          "deliveryMinOrder" DOUBLE PRECISION,
+          "isActive" BOOLEAN DEFAULT true,
+          "ownerId" TEXT NOT NULL,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "menus_pkey" PRIMARY KEY ("id"),
+          CONSTRAINT "menus_restaurantId_key" UNIQUE ("restaurantId")
+        )
+      `;
+      
+      // Crear tabla categories con nombres correctos
+      await prisma.$executeRaw`
+        CREATE TABLE "categories" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "description" TEXT,
+          "position" INTEGER DEFAULT 0,
+          "isActive" BOOLEAN DEFAULT true,
+          "code" TEXT,
+          "imageUrl" TEXT,
+          "imagePublicId" TEXT,
+          "menuId" TEXT NOT NULL,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "categories_pkey" PRIMARY KEY ("id"),
+          CONSTRAINT "categories_code_key" UNIQUE ("code")
+        )
+      `;
+      
+      // Crear tabla menu_items con nombres correctos
+      await prisma.$executeRaw`
+        CREATE TABLE "menu_items" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "description" TEXT,
+          "price" DOUBLE PRECISION NOT NULL,
+          "originalPrice" DOUBLE PRECISION,
+          "position" INTEGER DEFAULT 0,
+          "code" TEXT,
+          "imageUrl" TEXT,
+          "imagePublicId" TEXT,
+          "galleryImages" TEXT,
+          "hasImage" BOOLEAN DEFAULT false,
+          "isAvailable" BOOLEAN DEFAULT true,
+          "isPopular" BOOLEAN DEFAULT false,
+          "isPromo" BOOLEAN DEFAULT false,
+          "spicyLevel" INTEGER DEFAULT 0,
+          "preparationTime" INTEGER,
+          "tags" TEXT,
+          "menuId" TEXT NOT NULL,
+          "categoryId" TEXT NOT NULL,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "menu_items_pkey" PRIMARY KEY ("id")
+        )
+      `;
+      
+      // Agregar foreign keys
+      await prisma.$executeRaw`ALTER TABLE "menus" ADD CONSTRAINT "menus_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE`;
+      await prisma.$executeRaw`ALTER TABLE "categories" ADD CONSTRAINT "categories_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "menus"("id") ON DELETE CASCADE ON UPDATE CASCADE`;
+      await prisma.$executeRaw`ALTER TABLE "menu_items" ADD CONSTRAINT "menu_items_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "menus"("id") ON DELETE CASCADE ON UPDATE CASCADE`;
+      await prisma.$executeRaw`ALTER TABLE "menu_items" ADD CONSTRAINT "menu_items_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE CASCADE`;
+      
+      console.log('✅ Tablas creadas con schema correcto');
+      
     } catch (error) {
-      console.log('⚠️ Error limpiando datos, continuando...', error);
+      console.log('⚠️ Error creando tablas, continuando...', error);
     }
 
     // Crear usuario usando Prisma ORM
