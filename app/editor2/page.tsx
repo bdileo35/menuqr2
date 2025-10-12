@@ -803,20 +803,7 @@ export default function Editor2() {
               handleSaveItem(item);
             }}>
               <div className="space-y-4">
-                {/* Código (fijo, no editable) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Código</label>
-                  <input
-                    type="text"
-                    value={modalData.code}
-                    readOnly
-                    className="w-full p-3 bg-gray-600 border border-gray-500 rounded-lg text-gray-300 cursor-not-allowed"
-                    placeholder="Código generado automáticamente"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">El código se genera automáticamente</p>
-                </div>
-
-                {/* Foto + Precio - Arriba */}
+                {/* Foto + Código + Precio en layout horizontal */}
                 <div className="flex gap-4">
                   {/* Cuadro de imagen - 40% ancho */}
                   <div className="w-[40%]">
@@ -851,18 +838,34 @@ export default function Editor2() {
                     <p className="text-xs text-gray-400 mt-1">Toca para tomar foto o seleccionar</p>
                   </div>
                   
-                  {/* Precio al lado de la foto */}
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Precio *</label>
-                    <input
-                      name="price"
-                      type="text"
-                      required
-                      value={modalData.price}
-                      onChange={(e) => setModalData(prev => ({ ...prev, price: e.target.value }))}
-                      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ej: $9000"
-                    />
+                  {/* Código + Precio al lado de la foto */}
+                  <div className="flex-1 space-y-3">
+                    {/* Código - label e input en misma línea */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Código:</label>
+                      <input
+                        type="text"
+                        value={modalData.code}
+                        readOnly
+                        className="flex-1 p-2 bg-gray-600 border border-gray-500 rounded text-gray-300 cursor-not-allowed text-sm"
+                        placeholder="Se genera automáticamente"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400">El código se genera al seleccionar categoría</p>
+                    
+                    {/* Precio */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Precio:</label>
+                      <input
+                        name="price"
+                        type="text"
+                        required
+                        value={modalData.price}
+                        onChange={(e) => setModalData(prev => ({ ...prev, price: e.target.value }))}
+                        className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="Ej: $9000"
+                      />
+                    </div>
                   </div>
                 </div>
 
