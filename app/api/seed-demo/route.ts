@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Datos de Esquina Pompeya creados exitosamente en Supabase',
       data: {
-        menuId: menu.id,
+        menuId: menuId,
         categoriesCount: categoriesData.length,
         itemsCount: platosData.length
       }
