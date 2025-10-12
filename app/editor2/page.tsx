@@ -235,6 +235,10 @@ export default function Editor2() {
     }
   };
 
+  // Estados para interacciones táctiles
+  const [touchStartTime, setTouchStartTime] = useState<number>(0);
+  const [touchTimer, setTouchTimer] = useState<NodeJS.Timeout | null>(null);
+
   // Abrir modal para editar plato
   const openEditPlateModal = (item: MenuItem, categoryId: string) => {
     setModalData({
@@ -249,6 +253,59 @@ export default function Editor2() {
     });
     setEditingItem(item);
     setShowAddItem(true);
+  };
+
+  // Abrir modal para editar categoría
+  const openEditCategoryModal = (category: MenuCategory) => {
+    // TODO: Implementar modal de edición de categoría
+    console.log('Editando categoría:', category.name);
+    alert(`Editando categoría: ${category.name} (${category.code})`);
+  };
+
+  // Manejar inicio de toque (móvil)
+  const handleTouchStart = (e: React.TouchEvent, action: 'category' | 'item', data: any) => {
+    e.preventDefault();
+    setTouchStartTime(Date.now());
+    
+    const timer = setTimeout(() => {
+      // Sostener por más de 500ms
+      if (action === 'category') {
+        openEditCategoryModal(data);
+      } else if (action === 'item') {
+        openEditPlateModal(data.item, data.categoryId);
+      }
+    }, 500);
+    
+    setTouchTimer(timer);
+  };
+
+  // Manejar fin de toque (móvil)
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      setTouchTimer(null);
+    }
+    
+    const touchDuration = Date.now() - touchStartTime;
+    
+    // Si fue un toque corto, no hacer nada (evitar conflicto con doble click)
+    if (touchDuration < 500) {
+      return;
+    }
+  };
+
+  // Manejar doble click (PC)
+  const handleDoubleClick = (e: React.MouseEvent, action: 'category' | 'item', data: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (action === 'category') {
+      openEditCategoryModal(data);
+    } else if (action === 'item') {
+      openEditPlateModal(data.item, data.categoryId);
+    }
   };
 
   // Manejar cambio de imagen
@@ -553,6 +610,9 @@ export default function Editor2() {
                     : 'bg-blue-100 hover:bg-blue-200'
                 }`}
                 onClick={() => toggleCategory(categoryId)}
+                onTouchStart={(e) => handleTouchStart(e, 'category', category)}
+                onTouchEnd={handleTouchEnd}
+                onDoubleClick={(e) => handleDoubleClick(e, 'category', category)}
               >
                 <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 pl-3">
@@ -564,6 +624,7 @@ export default function Editor2() {
                   }`}>
                     {filteredItems.length}
                   </span>
+                  <span className="text-xs text-gray-400 ml-2">✏️</span>
                 </div>
                   <div className="flex items-center justify-end gap-3">
                     {/* 1. Botón Lupa (placeholder para futura funcionalidad) */}
@@ -621,6 +682,9 @@ export default function Editor2() {
                           : 'hover:opacity-90 cursor-pointer border-gray-700'
                       }`}
                       onClick={() => item.isAvailable !== false && setEditingItem(item) && setShowAddItem(true)}
+                      onTouchStart={(e) => item.isAvailable !== false && handleTouchStart(e, 'item', { item, categoryId })}
+                      onTouchEnd={handleTouchEnd}
+                      onDoubleClick={(e) => item.isAvailable !== false && handleDoubleClick(e, 'item', { item, categoryId })}
                     >
                       {/* Imagen sin marco */}
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 mr-3">
@@ -661,6 +725,7 @@ export default function Editor2() {
                               <span className="text-yellow-400 mr-1">⭐</span>
                             )}
                             {item.name}
+                            <span className="text-xs text-gray-400 ml-2">✏️</span>
                           </h4>
                             </div>
                             
