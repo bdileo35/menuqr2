@@ -5,121 +5,98 @@ import { useState } from "react";
 export default function HomePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [uniqueId, setUniqueId] = useState("5XJ1J37F"); // Demo ID para Esquina Pompeya
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full card-qring">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
         
-        {/* Header estilo QRing profesional */}
-        <div className="card-qring-header">
-          <div className="border-2 border-white/20 border-dashed p-4 rounded-lg backdrop-blur-sm">
-            <h1 className="text-2xl font-bold mb-2 text-white">
-              🍽️ MenuQR
-            </h1>
-            <p className="text-blue-100 font-medium">
-              DIGITALIZACIÓN INTELIGENTE
-            </p>
-            <p className="text-sm text-blue-200 mt-1">
-              Cartas Digitales & Scanner OCR
-            </p>
-          </div>
-        </div>
-
-        {/* Contenido principal */}
-        <div className="p-6">
+        {/* Card principal */}
+        <div className="bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
           
-          {/* Sección PLATOS DEL DIA - Estilo QRing sobrio */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-slate-50 border-l-4 border-blue-600 rounded-lg">
-            <h2 className="text-lg font-semibold text-blue-900 mb-2 text-center">
-              📅 PLATOS DEL DIA
-            </h2>
-            <p className="text-sm text-blue-700 text-center">
-              Especialidades frescas y promociones diarias
+          {/* Header verde */}
+          <div className="bg-green-600 p-6 text-center">
+            <div className="text-4xl mb-2">🍽️</div>
+            <h1 className="text-2xl font-bold text-white mb-1">
+              MenuQR
+            </h1>
+            <p className="text-green-100 text-sm mb-3">
+              Cartas Digitales + Scanner OCR
+            </p>
+            <p className="text-3xl font-bold text-white">
+              $14999/mes
+            </p>
+            <p className="text-lg text-green-100">
+              $149990/año
             </p>
           </div>
 
-          {/* Sección PROMOS - Estilo QRing sobrio */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-slate-50 border-l-4 border-emerald-600 rounded-lg">
-            <h2 className="text-lg font-semibold text-emerald-900 mb-2 text-center">
-              🎯 PROMOS DE LA SEMANA
-            </h2>
-            <div className="text-sm text-emerald-700 space-y-1">
-              <p className="text-center font-medium">PROMO 1: Milanesa c/Papas + Postre</p>
-              <p className="text-center font-medium">PROMO 2: Salpicón de Ave + Postre + Bebida</p>
+          {/* Contenido principal */}
+          <div className="p-6 bg-gray-800">
+            
+            {/* Descripción */}
+            <p className="text-white text-center mb-6">
+              Digitaliza tu carta física automáticamente y crea menús digitales profesionales
+            </p>
+
+            {/* Características */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center space-x-3">
+                <span className="text-green-500">✅</span>
+                <span className="text-white text-sm">Scanner OCR automático</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="text-green-500">✅</span>
+                <span className="text-white text-sm">Menús digitales responsivos</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="text-green-500">✅</span>
+                <span className="text-white text-sm">Pedidos por WhatsApp</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="text-green-500">✅</span>
+                <span className="text-white text-sm">Panel de gestión</span>
+              </div>
             </div>
-          </div>
 
-          {/* Botones de navegación - Estilo QRing */}
-          <div className="space-y-3">
-            <button
-              onClick={() => router.push('/menu/esquina-pompeya')}
-              className="btn-qring-primary w-full"
-              disabled={isLoading}
-            >
-              🍽️ Ver Menú Digital - Esquina Pompeya
-            </button>
+            {/* ID único en una línea */}
+            <div className="mb-6">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={uniqueId}
+                  onChange={(e) => setUniqueId(e.target.value)}
+                  placeholder="Ingresa tu ID único (ej: 5XJ1J37F)"
+                  className="flex-1 px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  onClick={() => router.push('/editor')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Ir
+                </button>
+              </div>
+            </div>
 
-            <button
-              onClick={() => router.push('/scanner')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md border-2 border-blue-500"
-              disabled={isLoading}
-            >
-              📷 Digitalizar Mi Carta (OCR Scanner)
-            </button>
+            {/* Botones de acción */}
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/carta-menu')}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2"
+                disabled={isLoading}
+              >
+                <span>💎</span>
+                <span>Ver Demo Carta/Menu</span>
+              </button>
 
-            <button
-              onClick={() => router.push('/admin/login')}
-              className="btn-qring-secondary w-full"
-              disabled={isLoading}
-            >
-              🔑 Panel de Control
-            </button>
-
-            <button
-              onClick={() => router.push('/admin/register')}
-              className="btn-qring-outline w-full"
-              disabled={isLoading}
-            >
-              ✨ Crear Mi Restaurante
-            </button>
-
-            <button
-              onClick={() => router.push('/qr-shop')}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-              disabled={isLoading}
-            >
-              🛒 QR-Shop • Ver Toda la Suite
-            </button>
-          </div>
-
-          {/* Footer con características - Estilo QRing */}
-          <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3 text-center">🚀 Características MenuQR:</h3>
-            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
-              <div className="flex items-center space-x-1">
-                <span className="text-blue-600">✅</span>
-                <span>Scanner OCR Automático</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-blue-600">✅</span>
-                <span>Pedidos por WhatsApp</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-blue-600">✅</span>
-                <span>Panel de Control</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-blue-600">✅</span>
-                <span>QR Codes Dinámicos</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-blue-600">✅</span>
-                <span>Diseño Personalizable</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-blue-600">✅</span>
-                <span>Compatible QRing Suite</span>
-              </div>
+              <button
+                onClick={() => router.push('/comprar')}
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 border border-gray-500"
+                disabled={isLoading}
+              >
+                <span>💳</span>
+                <span>Comprar</span>
+              </button>
             </div>
           </div>
         </div>

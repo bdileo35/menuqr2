@@ -118,7 +118,7 @@ MenuQR/
 │   │       └── route.ts         # Health check
 │   ├── carta-menu/
 │   │   └── page.tsx             # Vista pública del menú ⭐ FUNCIONAL
-│   ├── editor2/
+│   ├── editor/
 │   │   └── page.tsx             # Editor principal ⭐ FUNCIONAL
 │   ├── scanner/
 │   │   └── page.tsx             # OCR de carta física
@@ -1298,7 +1298,7 @@ Dependencias:
 - [x] Carrito flotante transparente (pill-shaped)
 - [x] Filtros de categorías (pill-shaped)
 - [x] Búsqueda activa con clear button
-- [x] Editor2 (`/editor2`) con doble-click y long-press
+- [x] Editor2 (`/editor`) con doble-click y long-press
 - [x] Modales Add/Edit con layout horizontal (foto + código + precio)
 - [x] Códigos automáticos al seleccionar categoría
 - [x] Input de imagen con capture="camera"

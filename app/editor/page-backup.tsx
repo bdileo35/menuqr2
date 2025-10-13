@@ -483,7 +483,7 @@ export default function CartaMenuPage() {
                       onClick={() => item.isAvailable !== false && setModalItem(item)}
                     >
                       {/* Imagen más grande sin marco */}
-                      <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mx-2 my-1`}>
+                      <div className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 mx-3 my-1`}>
                           <img 
                             src={(() => {
                               const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
@@ -517,7 +517,7 @@ export default function CartaMenuPage() {
                           
                           {/* Texto del plato */}
                           <div className="flex-1">
-                          <h3 className={`font-medium text-xs leading-tight transition-colors duration-300 ${
+                          <h3 className={`font-medium text-sm leading-tight transition-colors duration-300 ${
                             item.isAvailable === false 
                               ? 'text-gray-400' 
                               : isDarkMode ? 'text-white' : 'text-gray-900'

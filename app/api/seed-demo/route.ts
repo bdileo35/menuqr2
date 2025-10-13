@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         name: 'Esquina Pompeya',
         email: 'admin@esquinapompeya.com',
         password: 'esquina2024',
-        restaurantId: 'esquina-pompeya',
+        restaurantId: '5XJ1J37F', // ID único para demo
         restaurantName: 'Esquina Pompeya',
         phone: '+54 11 4911-6666',
         address: 'Av. Fernández de la Cruz 1100, Buenos Aires',
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const menu = await prisma.menu.create({
       data: {
         restaurantName: 'Esquina Pompeya',
-        restaurantId: 'esquina-pompeya',
+        restaurantId: '5XJ1J37F', // ID único para demo
         description: 'Restaurante tradicional argentino',
         contactPhone: '+54 11 4911-6666',
         contactAddress: 'Av. Fernández de la Cruz 1100, Buenos Aires',

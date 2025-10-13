@@ -104,3 +104,5 @@ ehthumbs.db
 
 # Unused code (moved to _unused)
 _unused/
+*storybook.log
+storybook-static

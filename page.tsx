@@ -812,7 +812,7 @@ export default function Editor2() {
                       <input
                         type="file"
                         accept="image/*"
-                        capture="camera"
+                        capture="environment"
                         onChange={handleImageChange}
                         className="hidden"
                         id="imageInput"

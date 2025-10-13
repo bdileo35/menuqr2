@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     // Buscar el menú de Esquina Pompeya
     const menu = await prisma.menu.findFirst({
       where: {
-        restaurantId: 'esquina-pompeya'
+        restaurantId: '5XJ1J37F'
       },
       include: {
         categories: {

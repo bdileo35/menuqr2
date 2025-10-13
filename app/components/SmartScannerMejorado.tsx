@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import OpenAI from 'openai';
 
 interface ExtractedItem {
   category: string;
@@ -105,7 +104,7 @@ export default function SmartScannerMejorado({
     let categoryIndex = 1;
     const result: ExtractedItem[] = [];
 
-    for (const [category, categoryItems] of byCategory.entries()) {
+    Array.from(byCategory.entries()).forEach(([category, categoryItems]) => {
       const catCode = String(categoryIndex).padStart(2, '0');
       
       categoryItems.forEach((item, itemIndex) => {
@@ -117,7 +116,7 @@ export default function SmartScannerMejorado({
       });
 
       categoryIndex++;
-    }
+    });
 
     return result;
   };
