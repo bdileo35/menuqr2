@@ -110,43 +110,8 @@ export default function Editor2() {
     } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // Datos temporales para demo
-        const tempData: RestaurantData = {
-          restaurantName: 'Esquina Pompeya',
-          categories: [
-            {
-              id: 'platos-dia',
-              name: 'Platos del Día',
-              items: [
-                { id: '1', name: 'Riñoncitos al jerez c/ puré', price: '$9000', description: 'Deliciosos riñones en salsa jerez', isAvailable: true },
-                { id: '2', name: 'Croquetas de carne c/ ensalada', price: '$9000', description: 'Croquetas caseras con ensalada fresca', isAvailable: true },
-                { id: '3', name: 'Chupín de merluza c/ papa natural', price: '$10000', description: 'Pescado fresco con papas naturales', isAvailable: true },
-                { id: '4', name: 'Pechuga rellena c/ f. españolas', price: '$12000', description: 'Pechuga rellena con papas españolas', isAvailable: true },
-                { id: '5', name: 'Mejillones c/ fettuccinis', price: '$12000', description: 'Mejillones con pasta fresca', isAvailable: true },
-                { id: '6', name: 'Vacío a la parrilla c/ fritas', price: '$14000', description: 'Corte premium con papas fritas', isAvailable: false },
-                { id: '7', name: 'Peceto al verdeo c/ puré', price: '$15000', description: 'Carne tierna con puré de papas', isAvailable: true },
-                { id: '8', name: 'Correntinos caseros a la Vangoli', price: '$13000', description: 'Especialidad casera con salsa especial', isAvailable: true }
-              ]
-            },
-            {
-              id: 'promos',
-              name: 'Promos',
-              items: [
-                { id: '9', name: 'Milanesa Completa', price: '$2500', description: 'Milanesa con papas, huevo y ensalada', isAvailable: true },
-                { id: '10', name: 'Vacio con Papas', price: '$3000', description: 'Corte de vacío con papas fritas', isAvailable: true },
-                { id: '11', name: 'Rabas', price: '$2800', description: 'Rabas frescas con limón', isAvailable: true }
-              ]
-            },
-            {
-              id: 'cocina',
-              name: 'Cocina',
-              items: [
-                { id: '12', name: 'Albóndigas con papas', price: '$2200', description: 'Albóndigas caseras con papas', isAvailable: true },
-                { id: '13', name: 'Pollo al horno', price: '$1800', description: 'Pollo entero al horno', isAvailable: true }
-              ]
-            }
-          ]
-        };
+        // Usar datos demo completos como fallback
+        const tempData = getDemoMenuData();
         
         setMenuData(tempData);
         
