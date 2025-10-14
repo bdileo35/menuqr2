@@ -110,7 +110,22 @@ export default function Editor2() {
     } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // Usar datos demo completos como fallback
+        // Intentar cargar datos completos desde seed-demo
+        try {
+          const seedResponse = await fetch('/api/seed-demo', { method: 'POST' });
+          const seedData = await seedResponse.json();
+          
+          if (seedData.success) {
+            console.log('✅ Datos completos cargados desde seed-demo');
+            // Recargar la página para obtener los datos frescos
+            window.location.reload();
+            return;
+          }
+        } catch (seedError) {
+          console.log('⚠️ Error cargando seed-demo, usando datos demo limitados');
+        }
+        
+        // Fallback final: datos demo limitados
         const tempData = getDemoMenuData();
         
         setMenuData(tempData);
