@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { getDemoMenuData } from '@/lib/demo-data'; // Fallback para desarrollo
 // import DevBanner from '../components/DevBanner'; // Moved to _unused
 
@@ -9,6 +10,7 @@ interface MenuItem {
   name: string;
   price: string;
   description?: string;
+
   isAvailable?: boolean;
 }
 
@@ -31,15 +33,26 @@ export default function CartaMenuPage() {
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
+  const [modalItemImage, setModalItemImage] = useState<string>('');
+
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearch, setShowSearch] = useState(true);
   const [showMapsModal, setShowMapsModal] = useState(false);
+  const [showMencionesModal, setShowMencionesModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [cartItems, setCartItems] = useState<Array<{item: MenuItem, quantity: number, code: string}>>([]);
   const [showCart, setShowCart] = useState(false);
   const [modalQuantity, setModalQuantity] = useState(1);
   const [modalidad, setModalidad] = useState<'salon' | 'retiro' | 'delivery' | null>(null);
   const [formaPago, setFormaPago] = useState<'efectivo' | 'mp' | null>(null);
+  const [productosClicked, setProductosClicked] = useState(false);
+  const [showModalidadModal, setShowModalidadModal] = useState(false);
+  const [showPagosModal, setShowPagosModal] = useState(false);
+  const [showTelon, setShowTelon] = useState(false);
+  const [telonContent, setTelonContent] = useState<'productos' | 'entrega' | 'pagos'>('productos');
+  const [animationActive, setAnimationActive] = useState(false);
 
   // Función para generar link de Mercado Pago
   const generateMPLink = async () => {
@@ -92,6 +105,7 @@ export default function CartaMenuPage() {
         
         if (data.success && data.menu) {
           console.log('✅ Menú cargado desde API:', data.menu);
+
           
           // Debug: verificar categoría "Platos del Día"
           const platosDelDia = data.menu.categories.find((cat: any) => cat.name.includes('Platos del Día'));
@@ -114,6 +128,7 @@ export default function CartaMenuPage() {
                 id: item.id,
                 name: item.name,
                 price: `$${item.price}`,
+
                 description: item.description,
                 isAvailable: item.isAvailable
               }))
@@ -148,6 +163,7 @@ export default function CartaMenuPage() {
           console.log('⚠️ Usando datos de localStorage como fallback');
         } else {
           console.error('❌ No hay datos disponibles');
+
           // Fallback final: usar datos demo
           console.log('⚠️ Usando datos demo como fallback final...');
           const demoData = getDemoMenuData();
@@ -166,6 +182,9 @@ export default function CartaMenuPage() {
 
     loadMenuFromAPI();
   }, []);
+
+
+
 
   // Función para filtrar platos por término de búsqueda
   const filterItems = (items: MenuItem[]) => {
@@ -214,30 +233,13 @@ export default function CartaMenuPage() {
       
       {/* <DevBanner /> */} {/* Moved to _unused */}
       
-      {/* Toggle sol/luna - Esquina superior derecha */}
-      <button 
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsDarkMode(!isDarkMode);
-        }}
-        className={`fixed top-2 right-2 z-50 w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
-          isDarkMode 
-            ? 'text-yellow-400 hover:text-yellow-300' 
-            : 'text-gray-600 hover:text-gray-800'
-        }`}
-        title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-      >
-        {isDarkMode ? '☀️' : '🌙'}
-      </button>
-      
       {/* Header con info del restaurante - COMPACTO */}
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 relative ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
       }`}>
         <div className="max-w-4xl mx-auto px-4 py-0 pb-0.5">
           {/* HEADER: LOGO + BOTONES EN LÍNEA */}
-          <div className="flex items-center justify-center gap-8">
+          <div className="flex items-center justify-center gap-4">
             
             {/* LOGO A LA IZQUIERDA */}
             <div className="flex-shrink-0">
@@ -254,35 +256,85 @@ export default function CartaMenuPage() {
               />
             </div>
 
-            {/* SOLO BUSCADOR */}
-            {showSearch && (
-              <div className="flex items-center gap-1">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar..."
-                  className={`px-3 py-2 text-sm rounded-lg transition-colors duration-300 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
-                      : 'bg-blue-50 border border-blue-300 text-gray-900 placeholder-blue-400 focus:outline-none focus:border-blue-500'
-                  }`}
-                  autoFocus
-                  style={{ width: '140px' }}
-                />
+            {/* COLUMNA DERECHA: BOTONES + BUSCADOR */}
+            <div className="flex flex-col gap-2">
+              {/* FILA 1: DOS BOTONES */}
+              <div className="flex items-center gap-2">
+                {/* Botón 1: Reseñas */}
                 <button
-                  onClick={() => setSearchTerm('')}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors text-sm ${
-                    isDarkMode 
-                      ? 'bg-gray-600 hover:bg-gray-500 text-gray-300' 
+                  onClick={() => setShowMencionesModal(true)}
+                  className={`h-10 px-4 rounded-lg flex items-center gap-2 transition-colors ${
+                    isDarkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                       : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
                   }`}
-                  title="Limpiar filtro"
+                  title="Ver Reseñas"
                 >
-                  ✕
+                  <span className="text-lg">🔍</span>
+                  <span className="text-sm font-medium">Reseñas</span>
+                </button>
+
+                {/* Botón 2: Toggle sol/luna */}
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDarkMode(!isDarkMode);
+                  }}
+                  className={`h-10 px-4 rounded-lg flex items-center gap-2 transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                      : 'bg-blue-100 hover:bg-blue-200 text-gray-600'
+                  }`}
+                  title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                >
+                  <span className="text-lg">{isDarkMode ? '☀️' : '🌙'}</span>
+                  <span className="text-sm font-medium">{isDarkMode ? 'Claro' : 'Oscuro'}</span>
                 </button>
               </div>
-            )}
+
+              {/* FILA 2: BUSCADOR (ANCHO) */}
+              {showSearch ? (
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar platos..."
+                    className={`w-full pl-3 pr-10 py-2 text-sm rounded-lg transition-colors duration-300 ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
+                        : 'bg-blue-50 border border-blue-300 text-gray-900 placeholder-blue-400 focus:outline-none focus:border-blue-500'
+                    }`}
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded flex items-center justify-center transition-colors text-sm ${
+                      isDarkMode 
+                        ? 'hover:bg-gray-600 text-gray-300' 
+                        : 'hover:bg-blue-200 text-blue-700'
+                    }`}
+                    title="Limpiar filtro"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className={`w-full h-10 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    isDarkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                  }`}
+                  title="Buscar platos"
+                >
+                  <span className="text-lg">🔍</span>
+                  <span className="text-sm font-medium">Buscar platos...</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* FILTROS DE CATEGORÍAS SUPERPUESTOS */}
@@ -307,6 +359,7 @@ export default function CartaMenuPage() {
                   {/* Botones de categorías */}
                   {menuData.categories.map((category) => (
               <button
+
                       key={category.id}
                       onClick={() => {
                         if (category.id) {
@@ -323,9 +376,11 @@ export default function CartaMenuPage() {
                     >
                       {category.name}
               </button>
+
                   ))}
             </div>
           </div>
+
             </div>
           )}
         </div>
@@ -349,6 +404,9 @@ export default function CartaMenuPage() {
               Ir al Editor →
             </button>
           </div>
+
+
+
         ) : searchTerm && menuData.categories.filter(category => filterItems(category.items).length > 0).length === 0 ? (
           // Mensaje cuando no hay resultados de búsqueda
           <div className="text-center py-12">
@@ -385,11 +443,13 @@ export default function CartaMenuPage() {
             })
             .map((category, index) => (
             <div key={category.id || index} className={`mb-4 rounded-lg border transition-colors duration-300 ${
+
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-blue-300'
             }`}>
               
               {/* Header de Categoría */}
               <div className={`px-4 py-2 border-b rounded-t-lg transition-colors duration-300 ${
+
                 isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-100 border-blue-300'
               }`}>
                 <h2 className={`text-base font-bold text-center transition-colors duration-300 ${
@@ -400,28 +460,37 @@ export default function CartaMenuPage() {
               </div>
               
               {/* Items de la Categoría */}
-              <div className={`px-3 pt-0 pb-3 ${
+
+              <div className={`px-3 pb-3 ${
                 category.name.toUpperCase().includes('PROMO') 
-                  ? 'flex flex-wrap justify-evenly gap-2' 
-                  : 'space-y-0'
+
+                  ? 'pt-3 flex flex-wrap justify-evenly gap-2' 
+                  : 'pt-0 space-y-0'
               }`}>
+
                 {filterItems(category.items).map((item, itemIndex) => (
                   
                   // DISEÑO ESPECIAL PARA PROMOS - MERGED COMO PLATOS
                   category.name.toUpperCase().includes('PROMO') ? (
                     <div 
                       key={item.id || itemIndex}
-                      className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer"
-                      onDoubleClick={() => setModalItem(item)}
-                      title="Doble click para ver detalles"
+
+                      className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full"
+                      onClick={() => {
+                        setModalItem(item);
+                        const promoImages = ['/platos/milanesa-completa.jpg', '/platos/vacio-papas.jpg', '/platos/rabas.jpg'];
+                        setModalItemImage(promoImages[itemIndex % promoImages.length]);
+                      }}
+                      title="Click para ver detalles"
                     >
                       {/* Imagen merged con borde superior */}
-                      <div className={`h-24 rounded-t-lg overflow-hidden border-2 border-b-0 ${
+                      <div className={`h-28 rounded-t-lg overflow-hidden border-2 border-b-0 ${
+
                         isDarkMode ? 'border-blue-400' : 'border-blue-300'
                       }`}>
                         <img 
                           src={(() => {
-                            const promoImages = ['/demo-images/milanesa-completa.jpg', '/demo-images/vacio-papas.jpg', '/demo-images/rabas.jpg'];
+                            const promoImages = ['/platos/milanesa-completa.jpg', '/platos/vacio-papas.jpg', '/platos/rabas.jpg'];
                             return promoImages[itemIndex % promoImages.length];
                           })()}
                           alt={item.name}
@@ -431,6 +500,7 @@ export default function CartaMenuPage() {
                             const parent = e.currentTarget.parentElement;
                             if (parent) {
                               parent.innerHTML = `
+
                                 <div class="w-full h-full flex items-center justify-center bg-blue-100">
                                   <span class="text-lg">🎯</span>
                                 </div>
@@ -444,6 +514,7 @@ export default function CartaMenuPage() {
                       <div className={`p-2 rounded-b-lg border-2 border-t-0 transition-colors duration-300 ${
                         isDarkMode 
                           ? 'border-blue-400 bg-gradient-to-b from-blue-900/30 to-blue-800/20' 
+
                           : 'border-blue-300 bg-gradient-to-b from-blue-50 to-blue-100'
                       }`}>
                         <h3 className={`font-bold text-xs mb-1 text-center transition-colors duration-300 ${
@@ -464,6 +535,7 @@ export default function CartaMenuPage() {
                         <div className={`text-xs font-bold px-2 py-1 rounded text-center transition-colors duration-300 ${
                           isDarkMode 
                             ? 'text-blue-100 bg-blue-600 border border-blue-400' 
+
                             : 'text-blue-700 bg-blue-100 border border-blue-400'
                         }`}>
                           {item.price}
@@ -471,25 +543,34 @@ export default function CartaMenuPage() {
                       </div>
                     </div>
                   ) : (
+
                     // PLATO SIN MARCOS - SOLO LÍNEA INFERIOR
                     <div 
                       key={item.id || itemIndex}
+
                       className={`flex items-center transition-all duration-300 border-b ${
                         isDarkMode ? 'border-gray-700' : 'border-gray-200'
                       } ${item.isAvailable === false 
                           ? 'opacity-50 cursor-not-allowed' 
                           : 'hover:opacity-90 cursor-pointer'
                       }`}
-                      onClick={() => item.isAvailable !== false && setModalItem(item)}
+                      onClick={() => {
+                        if (item.isAvailable !== false) {
+                          setModalItem(item);
+                          const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20250926-WA0005.jpg'];
+                          setModalItemImage(platosImages[itemIndex % platosImages.length]);
+                        }
+                      }}
                     >
                       {/* Imagen más grande sin marco */}
                       <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mx-2 my-1`}>
                           <img 
                             src={(() => {
-                              const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
+                              const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20250926-WA0005.jpg'];
                               return platosImages[itemIndex % platosImages.length];
                             })()}
                             alt={item.name}
+
                           className={`w-full h-full object-cover ${
                             item.isAvailable === false ? 'grayscale' : ''
                           }`}
@@ -508,6 +589,7 @@ export default function CartaMenuPage() {
                           />
                         </div>
                         
+
                       {/* Contenido sin marco */}
                       <div className={`flex-1 flex items-center justify-between px-2 py-1 transition-colors duration-300 ${
                         item.isAvailable === false 
@@ -517,17 +599,21 @@ export default function CartaMenuPage() {
                           
                           {/* Texto del plato */}
                           <div className="flex-1">
-                          <h3 className={`font-medium text-xs leading-tight transition-colors duration-300 ${
+                            <h3 className={`font-medium text-xs leading-tight transition-colors duration-300 ${
+
                             item.isAvailable === false 
                               ? 'text-gray-400' 
                               : isDarkMode ? 'text-white' : 'text-gray-900'
-                          }`}>
+                            }`}>
+
                             {category.name.toUpperCase().includes('PLATOS DEL DÍA') && (
                               <span className="text-yellow-400 mr-1">⭐</span>
                             )}
                             {item.name}
                             </h3>
                           </div>
+
+
 
                         {/* Estado + Precio */}
                         <div className="flex items-center gap-1">
@@ -579,6 +665,9 @@ export default function CartaMenuPage() {
             }`}
             onClick={(e) => e.stopPropagation()}
           >
+
+
+
             {/* LÍNEA 1: Nombre y X para cerrar */}
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-xl font-bold transition-colors duration-300 ${
@@ -601,23 +690,23 @@ export default function CartaMenuPage() {
             {/* LÍNEA 2: Foto */}
             <div className="w-full h-48 rounded-lg overflow-hidden mb-4">
               <img 
-                src={(() => {
-                  const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
-                  return platosImages[0]; // Por ahora primera imagen
-                })()}
+                src={modalItemImage || '/platos/albondigas.jpg'}
                 alt={modalItem.name}
                 className="w-full h-full object-cover"
               />
             </div>
             
+
             {/* LÍNEA 3: Descripción expandible */}
             {modalItem.description && (
+
               <div className="mb-4">
                 <p className={`text-sm transition-colors duration-300 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 {modalItem.description}
               </p>
+
               </div>
             )}
             
@@ -628,7 +717,8 @@ export default function CartaMenuPage() {
                 <button 
                   onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition-colors ${
-                    isDarkMode 
+              isDarkMode 
+
                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                   }`}
@@ -640,14 +730,16 @@ export default function CartaMenuPage() {
                 }`}>
                   {modalQuantity}
                 </span>
-                <button 
+            <button 
+
                   onClick={() => setModalQuantity(modalQuantity + 1)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
-                >
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+
                   +
                 </button>
               </div>
@@ -694,6 +786,7 @@ export default function CartaMenuPage() {
         </div>
       )}
 
+
       {/* Modal Google Maps */}
       {showMapsModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
@@ -731,78 +824,215 @@ export default function CartaMenuPage() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="w-[95%] mx-auto">
           
-          {/* DETALLE - SE DIBUJA ARRIBA DEL FOOTER */}
-          {showCart && cartItems.length > 0 && (
+          {/* TELÓN UNIFICADO - SE DIBUJA ARRIBA DEL FOOTER */}
+          {showTelon && (
             <div className={`mb-1 transition-all duration-300 ${
               isDarkMode 
                 ? 'bg-gray-800/60 border border-white/15' 
                 : 'bg-white/60 border border-gray-200/25'
             } backdrop-blur-sm shadow-2xl rounded-t-2xl`}>
-              {/* Lista de productos */}
-              <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
-                {cartItems.map((cartItem, index) => (
-                  <div key={index} className={`flex items-center justify-between p-2 rounded-lg ${
-                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-100/50'
+              
+              {/* CONTENIDO PRODUCTOS */}
+              {telonContent === 'productos' && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  <h3 className={`text-lg font-bold mb-3 text-center ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'
-                      }`}>
-                        {cartItem.code}
-                      </div>
-                      <div className="flex-1">
-                        <div className={`font-medium text-xs ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
+                    Productos seleccionados
+                  </h3>
+                  {cartItems.map((cartItem, index) => (
+                    <div key={index} className={`flex items-center justify-between p-2 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-100/50'
+                    }`}>
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'
                         }`}>
-                          {cartItem.item.name}
+                          {cartItem.code}
+                        </div>
+                        <div className="flex-1">
+                          <div className={`font-medium text-xs ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {cartItem.item.name}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (cartItem.quantity > 1) {
+                      
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (cartItem.quantity > 1) {
+                              setCartItems(prev => prev.map((item, i) => 
+                                i === index ? { ...item, quantity: item.quantity - 1 } : item
+                              ));
+                            } else {
+                              setCartItems(prev => prev.filter((_, i) => i !== index));
+                            }
+                          }}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                            isDarkMode 
+                              ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                              : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                          }`}
+                        >
+                          -
+                        </button>
+                        <span className={`w-4 text-center text-xs font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {cartItem.quantity}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setCartItems(prev => prev.map((item, i) => 
-                              i === index ? { ...item, quantity: item.quantity - 1 } : item
+                              i === index ? { ...item, quantity: item.quantity + 1 } : item
                             ));
-                          } else {
-                            setCartItems(prev => prev.filter((_, i) => i !== index));
-                          }
-                        }}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                          isDarkMode 
-                            ? 'bg-gray-600 hover:bg-gray-500 text-white' 
-                            : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                        }`}
-                      >
-                        -
-                      </button>
-                      <span className={`w-4 text-center text-xs font-bold ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        {cartItem.quantity}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCartItems(prev => prev.map((item, i) => 
-                            i === index ? { ...item, quantity: item.quantity + 1 } : item
-                          ));
-                        }}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                          isDarkMode 
-                            ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                            : 'bg-blue-500 hover:bg-blue-600 text-white'
-                        }`}
-                      >
-                        +
-                      </button>
+                          }}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                            isDarkMode 
+                              ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                              : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          }`}
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+
+              {/* CONTENIDO ENTREGA - TELÓN VACÍO CON CARDS HORIZONTALES */}
+              {telonContent === 'entrega' && (
+                <div className="p-4">
+                  <h3 className={`text-lg font-bold mb-4 text-center ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Seleccionar modalidad
+                  </h3>
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      onClick={() => {
+                        setModalidad('salon');
+                        setShowTelon(false);
+                      }}
+                      className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">🏠</div>
+                      <div className="font-bold text-sm">Local</div>
+                      <div className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        En el local
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setModalidad('retiro');
+                        setShowTelon(false);
+                      }}
+                      className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">🏪</div>
+                      <div className="font-bold text-sm">Mostrador</div>
+                      <div className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        Retiro
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setModalidad('delivery');
+                        setShowTelon(false);
+                      }}
+                      className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">🚚</div>
+                      <div className="font-bold text-sm">Delivery</div>
+                      <div className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        A domicilio
+                      </div>
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {/* CONTENIDO PAGOS - TELÓN VACÍO CON CARDS HORIZONTALES */}
+              {telonContent === 'pagos' && (
+                <div className="p-4">
+                  <h3 className={`text-lg font-bold mb-4 text-center ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Seleccionar forma de pago
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        setFormaPago('efectivo');
+                        setShowTelon(false);
+                        generateMPLink();
+                      }}
+                      className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">💵</div>
+                      <div className="font-bold text-sm">Efectivo</div>
+                      <div className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        Pago en cash
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setFormaPago('mp');
+                        setShowTelon(false);
+                        generateMPLink();
+                      }}
+                      className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">💳</div>
+                      <div className="font-bold text-sm">Mercado Pago</div>
+                      <div className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        Con tarjeta
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+              
             </div>
           )}
 
@@ -818,60 +1048,495 @@ export default function CartaMenuPage() {
             }`}
           >
             <div className="px-3 py-1">
-              <div className="flex items-center justify-between">
-                {/* Icono carrito pequeño y delicado - Con espaciado uniforme */}
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ml-1 ${
-                  isDarkMode 
-                    ? 'bg-blue-500' 
-                    : 'bg-blue-500'
-                }`}>
-                  🛒
+              <div className="flex items-center justify-between gap-5 w-full">
+                {/* Botón 1: Productos */}
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (cartItems.length > 0) {
+                      if (showTelon && telonContent === 'productos') {
+                        setShowTelon(false);
+                        setProductosClicked(true);
+                      } else {
+                        setTelonContent('productos');
+                        setShowTelon(true);
+                      }
+                    }
+                  }}
+                  className={`flex items-center justify-between h-8 px-2.5 rounded-full w-[27%] cursor-pointer transition-all ${
+                    cartItems.length > 0 
+                      ? (isDarkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600')
+                      : (isDarkMode ? 'bg-gray-600' : 'bg-gray-400')
+                  }`}
+                >
+                  <span className="text-white text-sm">🛒</span>
+                  <span className="text-white text-xs font-medium whitespace-nowrap">
+                    {cartItems.length > 0 ? `${cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0)} prod` : '0 prod'}
+                  </span>
                 </div>
                 
-                {/* Contenido central */}
-                <div className="flex-1 px-2">
-                  {cartItems.length > 0 ? (
-                    <>
-                      {/* Contador de productos y precio total en una línea */}
-                      <div className="flex items-center justify-between">
-                        <div className={`font-medium text-xs ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}>
-                          {cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0)} productos
-                        </div>
-                        <div className={`font-bold text-xs ${
-                          isDarkMode ? 'text-blue-300' : 'text-blue-600'
-                        }`}>
-                          {cartItems.reduce((total, cartItem) => {
-                            const price = parseFloat(cartItem.item.price.replace('$', '').replace(',', ''));
-                            return total + (price * cartItem.quantity);
-                          }, 0).toLocaleString('es-AR', {style: 'currency', currency: 'ARS'})}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className={`text-center ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
-                      <div className="text-xs font-medium">Carrito vacío</div>
-                    </div>
-                  )}
+                {/* Botón 2: Entrega */}
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (cartItems.length > 0 && productosClicked) {
+                      if (showTelon && telonContent === 'entrega') {
+                        setShowTelon(false);
+                      } else {
+                        setTelonContent('entrega');
+                        setShowTelon(true);
+                      }
+                    }
+                  }}
+                  className={`flex items-center justify-between h-8 px-2.5 rounded-full w-[27%] transition-all ${
+                    cartItems.length > 0 && productosClicked
+                      ? (isDarkMode ? 'bg-orange-500 hover:bg-orange-600 cursor-pointer' : 'bg-orange-500 hover:bg-orange-600 cursor-pointer')
+                      : (isDarkMode ? 'bg-gray-600 cursor-not-allowed' : 'bg-gray-400 cursor-not-allowed')
+                  }`}
+                >
+                  <span className="text-white text-sm">🚚</span>
+                  <span className="text-white text-xs font-medium whitespace-nowrap">
+                    {cartItems.length > 0 
+                      ? (modalidad === 'salon' ? 'Local' : modalidad === 'retiro' ? 'Mostrador' : modalidad === 'delivery' ? 'Delivery' : 'Entrega')
+                      : 'Entrega'}
+                  </span>
                 </div>
                 
-                {/* Triángulo expandir - SOLO SI HAY PRODUCTOS */}
-                {cartItems.length > 0 && (
-                  <div className={`text-sm transition-transform duration-300 ${
-                    showCart ? 'rotate-180' : ''
-                  } ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    ▲
-                  </div>
-                )}
+                {/* Botón 3: Pagos */}
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (cartItems.length > 0 && modalidad) {
+                      if (showTelon && telonContent === 'pagos') {
+                        setShowTelon(false);
+                      } else {
+                        setTelonContent('pagos');
+                        setShowTelon(true);
+                      }
+                    }
+                  }}
+                  className={`flex items-center justify-between h-8 px-2.5 rounded-full w-[27%] transition-all ${
+                    cartItems.length > 0 && modalidad
+                      ? (isDarkMode ? 'bg-purple-500 hover:bg-purple-600 cursor-pointer' : 'bg-purple-500 hover:bg-purple-600 cursor-pointer')
+                      : (isDarkMode ? 'bg-gray-600 cursor-not-allowed' : 'bg-gray-400 cursor-not-allowed')
+                  }`}
+                >
+                  <span className="text-white text-sm">💲</span>
+                  <span className="text-white text-xs font-medium whitespace-nowrap">
+                    {cartItems.length > 0 
+                      ? (formaPago === 'efectivo' ? 'Efectivo' : formaPago === 'mp' ? 'Mercado Pago' : cartItems.reduce((total, cartItem) => {
+                          const priceStr = cartItem.item.price.replace(/[$,\s]/g, '');
+                          const price = parseFloat(priceStr) || 0;
+                          return total + (price * cartItem.quantity);
+                        }, 0).toLocaleString('es-AR', {style: 'currency', currency: 'ARS'}))
+                      : '$0'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
           </div>
         </div>
       </div>
+
+      {/* Animación de flecha */}
+      {animationActive && (
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="animate-bounce text-2xl text-orange-500">
+            →
+          </div>
+        </div>
+      )}
+
+      {/* Cards de selección de modalidad */}
+      {showModalidadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-4xl mx-auto px-4 w-full">
+            <div className={`p-6 rounded-lg ${
+              isDarkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <h3 className={`text-lg font-bold mb-6 text-center ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Seleccionar modalidad
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => {
+                    setModalidad('salon');
+                    setShowModalidadModal(false);
+                  }}
+                  className={`p-6 rounded-lg text-center transition-all hover:scale-105 ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                  }`}
+                >
+                  <div className="text-4xl mb-3">🏠</div>
+                  <div className="font-bold text-lg">Local</div>
+                  <div className={`text-sm mt-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    Consumir en el local
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setModalidad('retiro');
+                    setShowModalidadModal(false);
+                  }}
+                  className={`p-6 rounded-lg text-center transition-all hover:scale-105 ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                  }`}
+                >
+                  <div className="text-4xl mb-3">🏪</div>
+                  <div className="font-bold text-lg">Mostrador</div>
+                  <div className={`text-sm mt-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    Retirar en mostrador
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setModalidad('delivery');
+                    setShowModalidadModal(false);
+                  }}
+                  className={`p-6 rounded-lg text-center transition-all hover:scale-105 ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                  }`}
+                >
+                  <div className="text-4xl mb-3">🚚</div>
+                  <div className="font-bold text-lg">Delivery</div>
+                  <div className={`text-sm mt-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    Envío a domicilio
+                  </div>
+                </button>
+              </div>
+              
+              <button
+                onClick={() => setShowModalidadModal(false)}
+                className={`mt-6 w-full p-3 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-900'
+                }`}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Reseñas - Estilo Google */}
+      {showMencionesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-4xl mx-auto px-4 w-full">
+            <div className={`p-6 rounded-lg max-h-[90vh] overflow-y-auto ${
+              isDarkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              {/* Header del Modal */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className={`text-2xl font-bold ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Reseñas
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowMencionesModal(false)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  }`}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Resumen de opiniones de Google */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className={`text-lg font-semibold ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Resumen de opiniones de Google
+                    </h3>
+                    <span className="text-gray-400">ⓘ</span>
+                  </div>
+                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Escribir una opinión
+                  </button>
+                </div>
+
+                {/* Gráfico de barras + Rating */}
+                <div className="flex items-center gap-6">
+                  {/* Gráfico de barras */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm w-8">5</span>
+                      <div className="w-32 h-4 bg-gray-200 rounded">
+                        <div className="h-full bg-yellow-400 rounded" style={{width: '85%'}}></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm w-8">4</span>
+                      <div className="w-32 h-4 bg-gray-200 rounded">
+                        <div className="h-full bg-yellow-400 rounded" style={{width: '10%'}}></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm w-8">3</span>
+                      <div className="w-32 h-4 bg-gray-200 rounded">
+                        <div className="h-full bg-yellow-400 rounded" style={{width: '3%'}}></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm w-8">2</span>
+                      <div className="w-32 h-4 bg-gray-200 rounded">
+                        <div className="h-full bg-yellow-400 rounded" style={{width: '1%'}}></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm w-8">1</span>
+                      <div className="w-32 h-4 bg-gray-200 rounded">
+                        <div className="h-full bg-yellow-400 rounded" style={{width: '1%'}}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rating grande */}
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-yellow-400">4,5</div>
+                    <div className="text-yellow-400 text-xl">★★★★★</div>
+                    <div className={`text-sm ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>528 opiniones</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección Opiniones */}
+              <div className="mb-6">
+                <h3 className={`text-lg font-semibold mb-4 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Opiniones
+                </h3>
+
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    Todas
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    Servicio ▼
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    Comida ▼
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    Precio
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    precios 115
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    económico 16
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    ambiente 9
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    bodegón 7
+                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    +6
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
+                  <span className={`text-sm ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>Ordenar por:</span>
+                  <button className={`px-3 py-1 rounded text-sm ${
+                    isDarkMode 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    Más relevantes
+                  </button>
+                  <button className={`px-3 py-1 rounded text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    Más recientes
+                  </button>
+                  <button className={`px-3 py-1 rounded text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    Más alta
+                  </button>
+                  <button className={`px-3 py-1 rounded text-sm ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    Más baja
+                  </button>
+                </div>
+              </div>
+
+              {/* Reviews */}
+              <div className="space-y-6">
+                {/* Review 1 - Juan Carlos Dileo */}
+                <div className="border-b border-gray-200 pb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                      JC
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`font-semibold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>Juan Carlos Dileo</span>
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          Local Guide - 99 opiniones - 149 fotos
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-yellow-400">★★★★★</span>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>$10,000-12,000</span>
+                      </div>
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Excelente lugar, muy buena atención y comida deliciosa. Recomiendo especialmente las milanesas y las empanadas.
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <button className={`text-sm ${
+                          isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                        }`}>
+                          Más
+                        </button>
+                        <button className="text-gray-400">⋮</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review 2 - Natalia Palacios */}
+                <div className="border-b border-gray-200 pb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                      NP
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`font-semibold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>Natalia Palacios</span>
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          Local Guide - 199 opiniones - 841 fotos
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-yellow-400">★★★★☆</span>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>$1-5,000</span>
+                      </div>
+                      <p className={`text-sm mb-2 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Hace un mes
+                      </p>
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Fui a tomar un café. Le sumé un tostado porque me tenté. Muy rico y buen precio de desayunos. Miré la carta de comidas y precios muy accesibles. Ya iré a comer. Las chicas que atienden muy simpáticas. Solo saqué foto de las especialidades en pescados y mariscos pero hay de todo... 
+                        <span className={`${
+                          isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                        }`}>Más</span>
+                      </p>
+                      
+                      {/* Fotos de la review */}
+                      <div className="flex gap-2 mt-3">
+                        <div className="w-16 h-16 bg-gray-300 rounded"></div>
+                        <div className="w-16 h-16 bg-gray-300 rounded"></div>
+                        <div className="w-16 h-16 bg-gray-300 rounded"></div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-2">
+                        <div></div>
+                        <button className="text-gray-400">⋮</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -569,7 +569,7 @@ export default function Editor2() {
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 mr-3">
                         <img 
                           src={(() => {
-                            const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
+                            const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20251002-WA0005.jpg'];
                             return platosImages[itemIndex % platosImages.length];
                           })()}
                           alt={item.name}

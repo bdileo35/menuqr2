@@ -68,42 +68,41 @@ export default function Editor2() {
   const [allCategoriesExpanded, setAllCategoriesExpanded] = useState(true);
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
 
-  // Cargar datos desde API
-  useEffect(() => {
-    const loadMenuFromAPI = async () => {
-      console.log('🔍 Cargando menú desde la base de datos...');
-      
-      try {
-        const response = await fetch('/api/menu/esquina-pompeya');
+  // Función para cargar datos desde API
+  const loadMenuFromAPI = async () => {
+    console.log('🔍 Cargando menú desde la base de datos...');
+    
+    try {
+      const response = await fetch('/api/menu/esquina-pompeya');
       const data = await response.json();
       
-        if (data.success && data.menu) {
-          console.log('✅ Menú cargado desde API:', data.menu);
-      
-          const restaurantInfo: RestaurantData = {
-            restaurantName: data.menu.restaurantName,
-            categories: data.menu.categories.map((cat: any) => ({
+      if (data.success && data.menu) {
+        console.log('✅ Menú cargado desde API:', data.menu);
+    
+        const restaurantInfo: RestaurantData = {
+          restaurantName: data.menu.restaurantName,
+          categories: data.menu.categories.map((cat: any) => ({
           id: cat.id,
           name: cat.name,
           items: cat.items.map((item: any) => ({
             id: item.id,
             name: item.name,
             price: `$${item.price}`,
-                description: item.description,
-            isAvailable: item.isAvailable
-          }))
-            }))
-          };
-          
-          setMenuData(restaurantInfo);
-          
-          // Expandir todas las categorías por defecto
-          const initialExpanded: {[key: string]: boolean} = {};
-          restaurantInfo.categories.forEach(cat => {
-            initialExpanded[cat.id || cat.name] = true;
-          });
-          setExpandedCategories(initialExpanded);
-          
+              description: item.description,
+          isAvailable: item.isAvailable
+        }))
+      }))
+        };
+    
+        setMenuData(restaurantInfo);
+        
+        // Expandir todas las categorías por defecto
+        const initialExpanded: {[key: string]: boolean} = {};
+        restaurantInfo.categories.forEach(cat => {
+          initialExpanded[cat.id || cat.name] = true;
+        });
+        setExpandedCategories(initialExpanded);
+        
       } else {
           throw new Error('No se pudo cargar el menú');
       }
@@ -131,6 +130,8 @@ export default function Editor2() {
     }
   };
 
+  // Cargar datos desde API
+  useEffect(() => {
     loadMenuFromAPI();
   }, []);
 
@@ -185,13 +186,48 @@ export default function Editor2() {
       setSaving(true);
       
       if (editingItem) {
-        // TODO: Implementar actualización via API
-        console.log('Actualizando item:', item);
-        alert('✅ Producto actualizado (demo)');
+        // Actualizar item existente
+        const response = await fetch('/api/menu/esquina-pompeya/items', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            itemId: editingItem.id,
+            name: item.name,
+            price: item.price,
+            description: item.description,
+            isAvailable: item.isAvailable,
+            code: item.code,
+            categoryId: modalData.categoryId // ✅ INCLUIR CAMBIO DE CATEGORÍA
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          await loadMenuFromAPI();
+          alert('✅ Producto actualizado correctamente');
+        } else {
+          alert(`❌ Error: ${result.error || 'Error desconocido'}`);
+        }
       } else {
-        // TODO: Implementar creación via API
-        console.log('Creando item:', item);
-        alert('✅ Producto agregado (demo)');
+        // Crear nuevo item
+        const response = await fetch('/api/menu/esquina-pompeya/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: item.name,
+            price: item.price,
+            description: item.description,
+            isAvailable: item.isAvailable,
+            code: item.code,
+            categoryId: modalData.categoryId
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          await loadMenuFromAPI();
+          alert('✅ Producto agregado correctamente');
+        } else {
+          alert(`❌ Error: ${result.error || 'Error desconocido'}`);
+        }
       }
       
       setEditingItem(null);
@@ -383,19 +419,19 @@ export default function Editor2() {
                 </div>
               </button>
               <h1 className="text-xl font-bold">📝 Panel de Control</h1>
-              {saving && (
+            {saving && (
                 <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
                   <span className="animate-pulse">●</span>
                   Guardando...
-                </span>
-              )}
-              </div>
+              </span>
+            )}
+          </div>
 
             {/* Botones del lado derecho - Alineados horizontalmente */}
             <div className="flex items-center gap-2">
               {/* Botón Carta Menu - Icono + Texto */}
-              <button
-                onClick={() => router.push('/carta-menu')}
+          <button 
+            onClick={() => router.push('/carta-menu')}
                 className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
@@ -405,7 +441,7 @@ export default function Editor2() {
               >
                 <span className="text-lg">👁️</span>
                 <span className="text-sm font-medium">Ver Carta</span>
-              </button>
+          </button>
 
               {/* Botón modo claro/oscuro */}
               <button
@@ -419,8 +455,8 @@ export default function Editor2() {
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
-            </div>
-              </div>
+          </div>
+        </div>
 
           {/* LÍNEA 2: Configuración de Categorías + Funciones */}
           <div className="flex items-center justify-between">
@@ -462,7 +498,7 @@ export default function Editor2() {
                 >
                   ✏️
                 </button>
-                
+
                 {/* Botón Expandir/Contraer TODAS las categorías */}
                 <button
                   onClick={toggleAllCategories}
@@ -515,8 +551,8 @@ export default function Editor2() {
 
                 {/* Buscador integrado */}
                 <div className="relative ml-2">
-                  <input
-                    type="text"
+                <input
+                  type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar..."
@@ -525,10 +561,10 @@ export default function Editor2() {
                         ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
                         : 'bg-white border border-blue-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
                     }`}
-                    autoFocus
-                  />
+                  autoFocus
+                />
                   {searchTerm && (
-                    <button
+                  <button
                       onClick={() => setSearchTerm('')}
                       className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center transition-colors text-xs ${
                         isDarkMode 
@@ -538,12 +574,12 @@ export default function Editor2() {
                       title="Limpiar búsqueda"
                     >
                       ✕
-                    </button>
-                  )}
-                </div>
+                  </button>
+                )}
               </div>
             </div>
           </div>
+                        </div>
                       </div>
                     </div>
 
@@ -551,7 +587,7 @@ export default function Editor2() {
       {showMenuHamburguesa && (
         <div className="fixed top-16 left-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-lg min-w-64">
           <div className="p-2">
-            <button 
+                      <button
               onClick={() => router.push('/datos-comercio')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
@@ -560,8 +596,8 @@ export default function Editor2() {
               }`}
             >
               📋 Datos del comercio
-            </button>
-            <button 
+                      </button>
+                      <button
               onClick={() => router.push('/generar-menu')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
@@ -570,7 +606,7 @@ export default function Editor2() {
               }`}
             >
               📝 Generar menú (TXT/Scanner/Manual)
-            </button>
+                      </button>
             <button 
               onClick={() => router.push('/qr-opciones')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
@@ -665,7 +701,7 @@ export default function Editor2() {
                       type="button"
                       className="w-8 h-8 flex items-center justify-center text-lg text-gray-400 hover:text-gray-300 transition-colors active:scale-95"
                       onClick={(e) => {
-                        e.stopPropagation();
+                                e.stopPropagation();
                         toggleCategory(categoryId);
                       }}
                       onTouchStart={(e) => e.stopPropagation()}
@@ -673,10 +709,10 @@ export default function Editor2() {
                     >
                       {isExpanded ? '▲' : '▼'}
                     </button>
-                  </div>
+                            </div>
                     </div>
-                </div>
-
+                            </div>
+                            
               {/* Items de la Categoría */}
               {isExpanded && (
                 <div className="p-3 space-y-2">
@@ -697,7 +733,17 @@ export default function Editor2() {
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mr-2">
                         <img 
                           src={(() => {
-                            const platosImages = ['/demo-images/albondigas.jpg', '/demo-images/rabas.jpg', '/demo-images/IMG-20250926-WA0005.jpg'];
+                            const platosImages = [
+                              '/platos/albondigas.jpg',
+                              '/platos/rabas.jpg',
+                              '/platos/IMG-20251002-WA0005.jpg',
+                              '/platos/milanesa-completa.jpg',
+                              '/platos/vacio-papas.jpg',
+                              '/platos/IMG-20251005-WA0007.jpg',
+                              '/platos/IMG-20251005-WA0012.jpg',
+                              '/platos/IMG-20251005-WA0014.jpg',
+                              '/platos/IMG-20251010-WA0011.jpg'
+                            ];
                             return platosImages[itemIndex % platosImages.length];
                           })()}
                           alt={item.name}
@@ -711,12 +757,12 @@ export default function Editor2() {
                               parent.innerHTML = `
                                 <div class="w-full h-full flex items-center justify-center bg-gray-200">
                                   <span class="text-xs">🍽️</span>
-                                </div>
+                            </div>
                               `;
                             }
                           }}
                         />
-                            </div>
+                          </div>
                             
                       {/* Contenido sin marco */}
                       <div className="flex-1 flex items-center justify-between">
@@ -733,7 +779,7 @@ export default function Editor2() {
                             )}
                             {item.name}
                           </h4>
-                            </div>
+                        </div>
                             
                         {/* Precio sin marco */}
                         <div className="flex items-center gap-2">
@@ -748,8 +794,8 @@ export default function Editor2() {
                           }`}>
                             {item.price}
                           </span>
-                            </div>
-                          </div>
+                    </div>
+                    </div>
                         </div>
                       ))}
                   
@@ -768,7 +814,7 @@ export default function Editor2() {
       {/* Modal agregar/editar plato */}
       {showAddItem && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl p-6 max-w-lg w-full border border-gray-700">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-bold">
                 {editingItem ? 'Editar Plato' : 'Agregar Plato'}
@@ -811,11 +857,10 @@ export default function Editor2() {
               <div className="space-y-4">
                 {/* Foto + Código + Precio en layout horizontal */}
                 <div className="flex gap-4">
-                  {/* Cuadro de imagen - 40% ancho */}
-                  <div className="w-[40%]">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Foto</label>
+                  {/* Cuadro de imagen - 60% ancho */}
+                  <div className="w-[60%]">
                     <div className="relative">
-                      <input
+                  <input
                         type="file"
                         accept="image/*"
                         capture="environment"
@@ -825,7 +870,7 @@ export default function Editor2() {
                       />
                       <label
                         htmlFor="imageInput"
-                        className="w-full h-24 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
+                        className="w-full h-32 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
                       >
                         {modalData.imagePreview ? (
                           <img 
@@ -846,8 +891,8 @@ export default function Editor2() {
                     </div>
                   </div>
                   
-                  {/* Código + Precio al lado de la foto - alineados con altura de foto */}
-                  <div className="flex-1 h-24 flex flex-col justify-between">
+                  {/* Código + Precio + Estado al lado de la foto - alineados con altura de foto */}
+                  <div className="flex-1 h-32 flex flex-col justify-between">
                     {/* Código - label e input en misma línea */}
                     <div className="flex items-center gap-3">
                       <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Código:</label>
@@ -855,7 +900,7 @@ export default function Editor2() {
                         type="text"
                         value={modalData.code || ''}
                         readOnly
-                        className="flex-1 p-2 bg-gray-600 border border-gray-500 rounded text-gray-300 cursor-not-allowed text-sm"
+                        className="w-36 p-2 bg-gray-600 border border-gray-500 rounded text-gray-300 cursor-not-allowed text-sm"
                         placeholder={modalData.code ? modalData.code : "Automático"}
                       />
                     </div>
@@ -865,17 +910,38 @@ export default function Editor2() {
                       <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Precio:</label>
                       <input
                         name="price"
-                        type="text"
-                        required
+                    type="text"
+                    required
                         value={modalData.price}
                         onChange={(e) => setModalData(prev => ({ ...prev, price: e.target.value }))}
-                        className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-36 p-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         placeholder="Ej: $9000"
-                      />
+                  />
+                </div>
+                
+                    {/* Estado - debajo del Precio */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Estado:</label>
+                      <button
+                        type="button"
+                        onClick={() => setModalData(prev => ({ ...prev, isAvailable: !prev.isAvailable }))}
+                        className={`relative inline-flex h-8 w-36 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          modalData.isAvailable ? 'bg-green-300' : 'bg-red-500'
+                        }`}
+                      >
+                        <span className={`absolute left-2 text-xs font-medium ${
+                          modalData.isAvailable ? 'text-gray-800' : 'text-white'
+                        }`}>
+                          {modalData.isAvailable ? 'Disponible' : 'Agotado'}
+                        </span>
+                        <span
+                          className={`absolute right-1 top-1 inline-block h-6 w-6 transform rounded-full bg-white transition-transform`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Combo de categorías */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Categoría *</label>
@@ -922,28 +988,6 @@ export default function Editor2() {
                   />
                 </div>
 
-                {/* Estado Disponible/Agotado */}
-                <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg border border-gray-600">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300">Estado del plato</label>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {modalData.isAvailable ? '✅ Disponible para pedidos' : '❌ Agotado - No disponible'}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setModalData(prev => ({ ...prev, isAvailable: !prev.isAvailable }))}
-                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      modalData.isAvailable ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                        modalData.isAvailable ? 'translate-x-7' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
               </div>
               
               <div className="flex gap-3 mt-6">
@@ -959,30 +1003,13 @@ export default function Editor2() {
                   Cancelar
                 </button>
                 
-                {editingItem && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm('¿Estás seguro de eliminar este plato?')) {
-                        handleDeleteItem(editingItem.id || '');
-                        setShowAddItem(false);
-                        setEditingItem(null);
-                        setSelectedCategoryForItem('');
-                      }
-                    }}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition-colors"
-                    title="Eliminar plato"
-                  >
-                    🗑️
-                  </button>
-                )}
                 
-                <button
+                  <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors font-medium"
                 >
                   {editingItem ? 'Guardar' : 'Agregar'}
-                </button>
+                  </button>
               </div>
             </form>
           </div>
@@ -1003,14 +1030,36 @@ export default function Editor2() {
               </button>
             </div>
             
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.target as HTMLFormElement);
               const categoryName = formData.get('name') as string;
+              const description = formData.get('description') as string;
               
-              // TODO: Implementar creación de categoría via API
-              console.log('Creando categoría:', categoryName);
-              alert('✅ Categoría "' + categoryName + '" creada (demo)');
+              try {
+                const response = await fetch('/api/menu/esquina-pompeya/categories', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    name: categoryName,
+                    description: description
+                  })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                  alert('✅ Categoría "' + categoryName + '" creada exitosamente');
+                  await loadMenuFromAPI();
+                } else {
+                  alert('❌ Error: ' + result.error);
+                }
+              } catch (error) {
+                console.error('Error creando categoría:', error);
+                alert('❌ Error al crear categoría');
+              }
               
               setShowAddCategory(false);
             }}>

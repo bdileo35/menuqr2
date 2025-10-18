@@ -2025,3 +2025,557 @@ Este documento contiene **TODA** la información del proyecto MenuQR:
 ---
 
 **✨ MenuQR - Digitaliza tu carta en minutos, sin costo inicial ✨**
+
+      ]
+    }
+  ]
+}
+```
+
+#### **Order ejemplo (SALON):**
+
+```json
+{
+  "id": "order_1",
+  "orderNumber": 42,
+  "mode": "SALON",
+  "status": "CONFIRMED",
+  "tableNumber": "12",
+  "customerName": null,
+  "items": [
+    {
+      "id": "orderitem_1",
+      "itemName": "Milanesas al horno c/ Puré",
+      "itemPrice": 9000,
+      "quantity": 2,
+      "subtotal": 18000
+    }
+  ],
+  "subtotal": 18000,
+  "deliveryFee": 0,
+  "total": 18000,
+  "createdAt": "2025-10-03T12:45:00Z",
+  "confirmedAt": "2025-10-03T12:45:30Z"
+}
+```
+
+#### **Order ejemplo (DELIVERY):**
+
+```json
+{
+  "id": "order_2",
+  "orderNumber": 43,
+  "mode": "DELIVERY",
+  "status": "PREPARING",
+  "tableNumber": null,
+  "customerName": "Juan Pérez",
+  "customerPhone": "11-2345-6789",
+  "customerAddress": "Av. Directorio 123",
+  "deliveryNotes": "Timbre 3B",
+  "items": [
+    {
+      "itemName": "Vacío a la parrilla",
+      "itemPrice": 15000,
+      "quantity": 1,
+      "subtotal": 15000
+    }
+  ],
+  "subtotal": 15000,
+  "deliveryFee": 1500,
+  "total": 16500,
+  "createdAt": "2025-10-03T13:20:00Z"
+}
+```
+
+---
+
+### D. Glosario Técnico
+
+| Término | Definición |
+|---------|-----------|
+| **App Router** | Sistema de routing de Next.js 14 basado en carpetas |
+| **CRUD** | Create, Read, Update, Delete (operaciones básicas DB) |
+| **ORM** | Object-Relational Mapping (Prisma mapea objetos a SQL) |
+| **OCR** | Optical Character Recognition (extrae texto de imágenes) |
+| **Seed** | Datos iniciales para poblar la DB |
+| **Multi-tenant** | Múltiples clientes en la misma instancia de software |
+| **Serverless** | Funciones que se ejecutan bajo demanda sin servidor dedicado |
+| **Snapshot** | Copia de datos en un momento específico (OrderItem guarda precio) |
+| **Middleware** | Código que se ejecuta antes de procesar requests |
+| **Migration** | Cambio versionado en el schema de la DB |
+
+---
+
+### E. Enlaces y Referencias
+
+**Repositorio:**
+- GitHub: `github.com/bdileo35/MenuQR`
+- Branch principal: `master`
+
+**Deploy:**
+- Producción: `menu-qr-beta.vercel.app`
+- Preview: Auto-deploy por branch
+
+**Documentación:**
+- Next.js: https://nextjs.org/docs
+- Prisma: https://www.prisma.io/docs
+- Tailwind: https://tailwindcss.com/docs
+
+**Tools:**
+- Prisma Studio: http://localhost:5555
+- Dev Server: http://localhost:3000
+
+---
+
+## 🎓 GUÍA PARA PROGRAMADORES
+
+### Para Desarrolladores Nuevos:
+
+1. **Clonar repo:**
+   ```bash
+   git clone https://github.com/bdileo35/MenuQR.git
+   cd MenuQR
+   ```
+
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+
+3. **Setup DB:**
+   ```bash
+   npx prisma migrate dev
+   npx tsx scripts/seed-esquina-pompeya.ts
+   ```
+
+4. **Levantar dev:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Explorar:**
+   - Carta: http://localhost:3000/carta-menu
+   - Editor: http://localhost:3000/editor-clean
+   - DB: npx prisma studio
+
+---
+
+### Para IAs (Claude, GPT, etc.):
+
+**Este documento contiene TODO el contexto necesario para:**
+- ✅ Entender la arquitectura completa
+- ✅ Modificar cualquier parte del código
+- ✅ Agregar nuevas features
+- ✅ Debuggear problemas
+- ✅ Explicar el proyecto a otros
+- ✅ Tomar decisiones de diseño consistentes
+
+**NO necesitas:**
+- ❌ Leer otros archivos de documentación (están desactualizados)
+- ❌ Buscar en internet (toda la info está aquí)
+- ❌ Adivinar el contexto (está explícito)
+
+**Cuando trabajes:**
+1. Referencia este documento como fuente de verdad
+2. Mantén consistencia con decisiones aquí documentadas
+3. Actualiza este documento si haces cambios mayores
+
+---
+
+## ✅ CHECKLIST DE IMPLEMENTACIÓN
+
+Para validar que todo esté funcionando:
+
+### Base de Datos:
+- [ ] `npx prisma studio` abre correctamente
+- [ ] Tablas: users, menus, categories, menu_items, orders, order_items existen
+- [ ] Seed cargó 73 productos en 9 categorías
+- [ ] Usuario esquina@pompeya.com existe
+
+### APIs:
+- [ ] GET /api/menu/esquina-pompeya devuelve menú completo
+- [ ] GET /api/menu/esquina-pompeya/items devuelve items
+- [ ] POST /api/menu/esquina-pompeya/items crea producto
+- [ ] PUT /api/menu/esquina-pompeya/items actualiza producto
+- [ ] DELETE /api/menu/esquina-pompeya/items elimina producto
+
+### Frontend:
+- [ ] /carta-menu carga 73 productos desde DB
+- [ ] /editor-clean muestra categorías y productos
+- [ ] Doble click en producto abre modal edición
+- [ ] Guardar cambio actualiza DB
+- [ ] Cambio se refleja en /carta-menu
+
+### Integración:
+- [ ] Cambio en editor-clean → guardado en DB → visible en carta-menu
+- [ ] Logo visible y responsive
+- [ ] Links clickeables funcionan (Maps, WA, MP)
+- [ ] Modo oscuro/claro funciona
+
+---
+
+## 📝 NOTAS FINALES
+
+### Decisiones de Diseño Clave:
+
+1. **¿Por qué Next.js App Router?**
+   - SSR para SEO de cartas públicas
+   - API Routes integradas (no backend separado)
+   - Deployment simple en Vercel
+
+2. **¿Por qué Prisma?**
+   - Type-safety con TypeScript
+   - Migraciones automáticas
+   - Multi-database support (SQLite → PostgreSQL)
+
+3. **¿Por qué SQLite en dev?**
+   - Zero config
+   - File-based (fácil reset)
+   - Suficiente para MVP
+   - PostgreSQL en producción
+
+4. **¿Por qué 3 editores?**
+   - `/editor` - Original con wizard (backward compat)
+   - `/editor-v2` - Mobile optimizado (menú ⋮)
+   - `/editor-clean` - Desktop optimizado (doble-click) ⭐
+
+5. **¿Por qué snapshot en OrderItem?**
+   - Si cambias precio de "Milanesa" de $9000 a $10000
+   - Pedidos viejos deben mostrar $9000 (precio al momento)
+   - Evita inconsistencias en reportes históricos
+
+---
+
+### Contacto y Soporte:
+
+**Repositorio:** github.com/bdileo35/MenuQR  
+**Creador:** bdileo35  
+**Fecha última actualización:** Octubre 2025  
+
+---
+
+## 🎉 FIN DEL DOCUMENTO
+
+**Este documento es la única fuente de verdad del proyecto MenuQR.**
+
+Toda la información necesaria para entender, desarrollar y extender el proyecto está aquí documentada.
+
+---
+
+**Versión:** 2.0.0  
+**Última modificación:** 2025-10-13  
+**Próxima revisión:** Después de implementar Fase 1 (Demo Funcional Add/Edit)
+
+---
+
+## 🎓 PARA CUALQUIER IA QUE LEA ESTO
+
+Este documento contiene **TODA** la información del proyecto MenuQR:
+- ✅ Stack tecnológico completo (Fullstack Next.js + Supabase)
+- ✅ Arquitectura y decisiones de diseño
+- ✅ Estado actual (Demo funcional con 190 platos reales)
+- ✅ Roadmap detallado por fases
+- ✅ Código de ejemplo y APIs
+- ✅ Principio: TODO GRATUITO en etapa inicial
+
+**NO necesitas:**
+- ❌ Buscar en otros documentos (están desactualizados)
+- ❌ Adivinar el contexto (está todo aquí)
+- ❌ Proponer soluciones pagas (solo gratuitas por ahora)
+
+**Cuando trabajes en MenuQR:**
+1. Este documento es la fuente de verdad
+2. Mantén consistencia con lo documentado
+3. Actualiza este documento si haces cambios importantes
+4. Respeta el principio de "Quick Wins" (cambios < 2h)
+5. Usa la metodología: Commit → Push → Test → Siguiente
+
+---
+
+## 📞 CONTACTO
+
+**Repositorio:** https://github.com/bdileo35/menuqr2  
+**Deploy Vercel:** https://menuqr-nine.vercel.app  
+**Supabase Project:** [Configurado y activo]  
+**Creador:** bdileo35  
+
+---
+
+**✨ MenuQR - Digitaliza tu carta en minutos, sin costo inicial ✨**
+
+      ]
+    }
+  ]
+}
+```
+
+#### **Order ejemplo (SALON):**
+
+```json
+{
+  "id": "order_1",
+  "orderNumber": 42,
+  "mode": "SALON",
+  "status": "CONFIRMED",
+  "tableNumber": "12",
+  "customerName": null,
+  "items": [
+    {
+      "id": "orderitem_1",
+      "itemName": "Milanesas al horno c/ Puré",
+      "itemPrice": 9000,
+      "quantity": 2,
+      "subtotal": 18000
+    }
+  ],
+  "subtotal": 18000,
+  "deliveryFee": 0,
+  "total": 18000,
+  "createdAt": "2025-10-03T12:45:00Z",
+  "confirmedAt": "2025-10-03T12:45:30Z"
+}
+```
+
+#### **Order ejemplo (DELIVERY):**
+
+```json
+{
+  "id": "order_2",
+  "orderNumber": 43,
+  "mode": "DELIVERY",
+  "status": "PREPARING",
+  "tableNumber": null,
+  "customerName": "Juan Pérez",
+  "customerPhone": "11-2345-6789",
+  "customerAddress": "Av. Directorio 123",
+  "deliveryNotes": "Timbre 3B",
+  "items": [
+    {
+      "itemName": "Vacío a la parrilla",
+      "itemPrice": 15000,
+      "quantity": 1,
+      "subtotal": 15000
+    }
+  ],
+  "subtotal": 15000,
+  "deliveryFee": 1500,
+  "total": 16500,
+  "createdAt": "2025-10-03T13:20:00Z"
+}
+```
+
+---
+
+### D. Glosario Técnico
+
+| Término | Definición |
+|---------|-----------|
+| **App Router** | Sistema de routing de Next.js 14 basado en carpetas |
+| **CRUD** | Create, Read, Update, Delete (operaciones básicas DB) |
+| **ORM** | Object-Relational Mapping (Prisma mapea objetos a SQL) |
+| **OCR** | Optical Character Recognition (extrae texto de imágenes) |
+| **Seed** | Datos iniciales para poblar la DB |
+| **Multi-tenant** | Múltiples clientes en la misma instancia de software |
+| **Serverless** | Funciones que se ejecutan bajo demanda sin servidor dedicado |
+| **Snapshot** | Copia de datos en un momento específico (OrderItem guarda precio) |
+| **Middleware** | Código que se ejecuta antes de procesar requests |
+| **Migration** | Cambio versionado en el schema de la DB |
+
+---
+
+### E. Enlaces y Referencias
+
+**Repositorio:**
+- GitHub: `github.com/bdileo35/MenuQR`
+- Branch principal: `master`
+
+**Deploy:**
+- Producción: `menu-qr-beta.vercel.app`
+- Preview: Auto-deploy por branch
+
+**Documentación:**
+- Next.js: https://nextjs.org/docs
+- Prisma: https://www.prisma.io/docs
+- Tailwind: https://tailwindcss.com/docs
+
+**Tools:**
+- Prisma Studio: http://localhost:5555
+- Dev Server: http://localhost:3000
+
+---
+
+## 🎓 GUÍA PARA PROGRAMADORES
+
+### Para Desarrolladores Nuevos:
+
+1. **Clonar repo:**
+   ```bash
+   git clone https://github.com/bdileo35/MenuQR.git
+   cd MenuQR
+   ```
+
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+
+3. **Setup DB:**
+   ```bash
+   npx prisma migrate dev
+   npx tsx scripts/seed-esquina-pompeya.ts
+   ```
+
+4. **Levantar dev:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Explorar:**
+   - Carta: http://localhost:3000/carta-menu
+   - Editor: http://localhost:3000/editor-clean
+   - DB: npx prisma studio
+
+---
+
+### Para IAs (Claude, GPT, etc.):
+
+**Este documento contiene TODO el contexto necesario para:**
+- ✅ Entender la arquitectura completa
+- ✅ Modificar cualquier parte del código
+- ✅ Agregar nuevas features
+- ✅ Debuggear problemas
+- ✅ Explicar el proyecto a otros
+- ✅ Tomar decisiones de diseño consistentes
+
+**NO necesitas:**
+- ❌ Leer otros archivos de documentación (están desactualizados)
+- ❌ Buscar en internet (toda la info está aquí)
+- ❌ Adivinar el contexto (está explícito)
+
+**Cuando trabajes:**
+1. Referencia este documento como fuente de verdad
+2. Mantén consistencia con decisiones aquí documentadas
+3. Actualiza este documento si haces cambios mayores
+
+---
+
+## ✅ CHECKLIST DE IMPLEMENTACIÓN
+
+Para validar que todo esté funcionando:
+
+### Base de Datos:
+- [ ] `npx prisma studio` abre correctamente
+- [ ] Tablas: users, menus, categories, menu_items, orders, order_items existen
+- [ ] Seed cargó 73 productos en 9 categorías
+- [ ] Usuario esquina@pompeya.com existe
+
+### APIs:
+- [ ] GET /api/menu/esquina-pompeya devuelve menú completo
+- [ ] GET /api/menu/esquina-pompeya/items devuelve items
+- [ ] POST /api/menu/esquina-pompeya/items crea producto
+- [ ] PUT /api/menu/esquina-pompeya/items actualiza producto
+- [ ] DELETE /api/menu/esquina-pompeya/items elimina producto
+
+### Frontend:
+- [ ] /carta-menu carga 73 productos desde DB
+- [ ] /editor-clean muestra categorías y productos
+- [ ] Doble click en producto abre modal edición
+- [ ] Guardar cambio actualiza DB
+- [ ] Cambio se refleja en /carta-menu
+
+### Integración:
+- [ ] Cambio en editor-clean → guardado en DB → visible en carta-menu
+- [ ] Logo visible y responsive
+- [ ] Links clickeables funcionan (Maps, WA, MP)
+- [ ] Modo oscuro/claro funciona
+
+---
+
+## 📝 NOTAS FINALES
+
+### Decisiones de Diseño Clave:
+
+1. **¿Por qué Next.js App Router?**
+   - SSR para SEO de cartas públicas
+   - API Routes integradas (no backend separado)
+   - Deployment simple en Vercel
+
+2. **¿Por qué Prisma?**
+   - Type-safety con TypeScript
+   - Migraciones automáticas
+   - Multi-database support (SQLite → PostgreSQL)
+
+3. **¿Por qué SQLite en dev?**
+   - Zero config
+   - File-based (fácil reset)
+   - Suficiente para MVP
+   - PostgreSQL en producción
+
+4. **¿Por qué 3 editores?**
+   - `/editor` - Original con wizard (backward compat)
+   - `/editor-v2` - Mobile optimizado (menú ⋮)
+   - `/editor-clean` - Desktop optimizado (doble-click) ⭐
+
+5. **¿Por qué snapshot en OrderItem?**
+   - Si cambias precio de "Milanesa" de $9000 a $10000
+   - Pedidos viejos deben mostrar $9000 (precio al momento)
+   - Evita inconsistencias en reportes históricos
+
+---
+
+### Contacto y Soporte:
+
+**Repositorio:** github.com/bdileo35/MenuQR  
+**Creador:** bdileo35  
+**Fecha última actualización:** Octubre 2025  
+
+---
+
+## 🎉 FIN DEL DOCUMENTO
+
+**Este documento es la única fuente de verdad del proyecto MenuQR.**
+
+Toda la información necesaria para entender, desarrollar y extender el proyecto está aquí documentada.
+
+---
+
+**Versión:** 2.0.0  
+**Última modificación:** 2025-10-13  
+**Próxima revisión:** Después de implementar Fase 1 (Demo Funcional Add/Edit)
+
+---
+
+## 🎓 PARA CUALQUIER IA QUE LEA ESTO
+
+Este documento contiene **TODA** la información del proyecto MenuQR:
+- ✅ Stack tecnológico completo (Fullstack Next.js + Supabase)
+- ✅ Arquitectura y decisiones de diseño
+- ✅ Estado actual (Demo funcional con 190 platos reales)
+- ✅ Roadmap detallado por fases
+- ✅ Código de ejemplo y APIs
+- ✅ Principio: TODO GRATUITO en etapa inicial
+
+**NO necesitas:**
+- ❌ Buscar en otros documentos (están desactualizados)
+- ❌ Adivinar el contexto (está todo aquí)
+- ❌ Proponer soluciones pagas (solo gratuitas por ahora)
+
+**Cuando trabajes en MenuQR:**
+1. Este documento es la fuente de verdad
+2. Mantén consistencia con lo documentado
+3. Actualiza este documento si haces cambios importantes
+4. Respeta el principio de "Quick Wins" (cambios < 2h)
+5. Usa la metodología: Commit → Push → Test → Siguiente
+
+---
+
+## 📞 CONTACTO
+
+**Repositorio:** https://github.com/bdileo35/menuqr2  
+**Deploy Vercel:** https://menuqr-nine.vercel.app  
+**Supabase Project:** [Configurado y activo]  
+**Creador:** bdileo35  
+
+---
+
+**✨ MenuQR - Digitaliza tu carta en minutos, sin costo inicial ✨**

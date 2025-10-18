@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getDemoMenuData } from '@/lib/demo-data';
 
 const prisma = new PrismaClient();
 
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
         name: cat.name,
         description: cat.description,
         position: cat.position,
-        code: cat.code,  // ✅ AGREGAR CÓDIGO DE CATEGORÍA
+        code: cat.code || '01',  // ✅ FALLBACK SI NO EXISTE
         items: cat.items.map(item => ({
           id: item.id,
           name: item.name,
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
           isPopular: item.isPopular,
           isPromo: item.isPromo,
           isAvailable: item.isAvailable,
-          code: item.code  // ✅ AGREGAR CÓDIGO DE PLATO
+          code: item.code || '0101'  // ✅ FALLBACK SI NO EXISTE
         }))
       }))
     };
@@ -95,10 +96,15 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error obteniendo menú de Esquina Pompeya:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener el menú' },
-      { status: 500 }
-    );
+    console.log('🔄 Usando datos demo como fallback...');
+    
+    // Fallback a datos demo
+    const demoMenu = getDemoMenuData();
+    return NextResponse.json({
+      success: true,
+      menu: demoMenu,
+      isDemo: true
+    });
   } finally {
     await prisma.$disconnect();
   }

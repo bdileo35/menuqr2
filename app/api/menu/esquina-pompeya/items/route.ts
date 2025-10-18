@@ -95,19 +95,26 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { itemId, name, price, description, isAvailable, code, imageFileName } = body;
+    const { itemId, name, price, description, isAvailable, code, imageFileName, categoryId } = body;
 
     // Actualizar el item
+    const updateData: any = {
+      name,
+      price: parseFloat(price.toString().replace(/[^0-9.]/g, '')),
+      description,
+      isAvailable: isAvailable !== false,
+      code,
+      imageUrl: imageFileName ? `/platos/${imageFileName}` : undefined
+    };
+
+    // Si se proporciona categoryId, actualizar la categoría
+    if (categoryId) {
+      updateData.categoryId = categoryId;
+    }
+
     const updatedItem = await prisma.menuItem.update({
       where: { id: itemId },
-      data: {
-        name,
-        price: parseFloat(price.toString().replace(/[^0-9.]/g, '')),
-        description,
-        isAvailable: isAvailable !== false,
-        code,
-        imageUrl: imageFileName ? `/platos/${imageFileName}` : undefined
-      }
+      data: updateData
     });
 
     return NextResponse.json({ 
