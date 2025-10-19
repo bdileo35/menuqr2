@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -41,6 +42,9 @@ export default function CartaMenuPage() {
   const [showSearch, setShowSearch] = useState(true);
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [showMencionesModal, setShowMencionesModal] = useState(false);
+  const [showHorariosDropdown, setShowHorariosDropdown] = useState(false);
+  const [showArrowAnimation, setShowArrowAnimation] = useState(false);
+  const [arrowDirection, setArrowDirection] = useState<'next' | 'prev' | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [cartItems, setCartItems] = useState<Array<{item: MenuItem, quantity: number, code: string}>>([]);
   const [showCart, setShowCart] = useState(false);
@@ -53,6 +57,46 @@ export default function CartaMenuPage() {
   const [showTelon, setShowTelon] = useState(false);
   const [telonContent, setTelonContent] = useState<'productos' | 'entrega' | 'pagos'>('productos');
   const [animationActive, setAnimationActive] = useState(false);
+
+  // Horarios del restaurante
+  const horarios = {
+    lunes: { abierto: '6:00', cerrado: '17:00' },
+    martes: { abierto: '6:00', cerrado: '17:00' },
+    miercoles: { abierto: '6:00', cerrado: '17:00' },
+    jueves: { abierto: '6:00', cerrado: '17:00' },
+    viernes: { abierto: '6:00', cerrado: '17:00' },
+    sabado: { abierto: '6:00', cerrado: '17:00' },
+    domingo: { abierto: 'Cerrado', cerrado: 'Cerrado' }
+  };
+
+  // Función para verificar si está abierto
+  const isOpenNow = () => {
+    const now = new Date();
+    const day = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'][now.getDay()];
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const horario = horarios[day as keyof typeof horarios];
+    if (horario.abierto === 'Cerrado') return false;
+    
+    const [openHour, openMin] = horario.abierto.split(':').map(Number);
+    const [closeHour, closeMin] = horario.cerrado.split(':').map(Number);
+    
+    const openTime = openHour * 60 + openMin;
+    const closeTime = closeHour * 60 + closeMin;
+    
+    return currentTime >= openTime && currentTime <= closeTime;
+  };
+
+  // Función para animar flechas
+  const animateArrows = (direction: 'next' | 'prev') => {
+    setArrowDirection(direction);
+    setShowArrowAnimation(true);
+    
+    setTimeout(() => {
+      setShowArrowAnimation(false);
+      setArrowDirection(null);
+    }, 2200); // 2.2 segundos (8 × 0.2s delay + 0.3s animation + 0.3s extra)
+  };
 
   // Función para generar link de Mercado Pago
   const generateMPLink = async () => {
@@ -237,9 +281,9 @@ export default function CartaMenuPage() {
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 relative ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 py-0 pb-0.5">
+        <div className="max-w-4xl mx-auto px-4 -pt-12 pb-0.5">
           {/* HEADER: LOGO + BOTONES EN LÍNEA */}
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-between gap-4">
             
             {/* LOGO A LA IZQUIERDA */}
             <div className="flex-shrink-0">
@@ -257,16 +301,17 @@ export default function CartaMenuPage() {
             </div>
 
             {/* COLUMNA DERECHA: BOTONES + BUSCADOR */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 ml-auto">
+
               {/* FILA 1: DOS BOTONES */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full">
                 {/* Botón 1: Reseñas */}
                 <button
                   onClick={() => setShowMencionesModal(true)}
-                  className={`h-10 px-4 rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                     isDarkMode
                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                      : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                   }`}
                   title="Ver Reseñas"
                 >
@@ -281,15 +326,15 @@ export default function CartaMenuPage() {
                     e.stopPropagation();
                     setIsDarkMode(!isDarkMode);
                   }}
-                  className={`h-10 px-4 rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                      : 'bg-blue-100 hover:bg-blue-200 text-gray-600'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                   }`}
                   title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
                 >
                   <span className="text-lg">{isDarkMode ? '☀️' : '🌙'}</span>
-                  <span className="text-sm font-medium">{isDarkMode ? 'Claro' : 'Oscuro'}</span>
+                  <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{isDarkMode ? 'Claro' : 'Oscuro'}</span>
                 </button>
               </div>
 
@@ -301,10 +346,10 @@ export default function CartaMenuPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar platos..."
-                    className={`w-full pl-3 pr-10 py-2 text-sm rounded-lg transition-colors duration-300 ${
+                    className={`w-full h-8 pl-3 pr-10 text-sm rounded-lg transition-colors duration-300 ${
                       isDarkMode 
                         ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
-                        : 'bg-blue-50 border border-blue-300 text-gray-900 placeholder-blue-400 focus:outline-none focus:border-blue-500'
+                        : 'bg-gray-200 border border-gray-300 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-500'
                     }`}
                     autoFocus
                   />
@@ -313,7 +358,7 @@ export default function CartaMenuPage() {
                     className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded flex items-center justify-center transition-colors text-sm ${
                       isDarkMode 
                         ? 'hover:bg-gray-600 text-gray-300' 
-                        : 'hover:bg-blue-200 text-blue-700'
+                        : 'hover:bg-gray-300 text-gray-800'
                     }`}
                     title="Limpiar filtro"
                   >
@@ -321,18 +366,18 @@ export default function CartaMenuPage() {
                   </button>
                 </div>
               ) : (
-                <button
+              <button
                   onClick={() => setShowSearch(true)}
-                  className={`w-full h-10 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                    isDarkMode
+                  className={`w-full h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                  isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                      : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
-                  }`}
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                }`}
                   title="Buscar platos"
-                >
+              >
                   <span className="text-lg">🔍</span>
                   <span className="text-sm font-medium">Buscar platos...</span>
-                </button>
+              </button>
               )}
             </div>
           </div>
@@ -347,10 +392,10 @@ export default function CartaMenuPage() {
                     onClick={() => setSelectedCategory('ALL')}
                     className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                       selectedCategory === 'ALL'
-                        ? 'bg-blue-600 text-white shadow-sm'
+                        ? 'bg-gray-600 text-white shadow-sm'
                         : isDarkMode 
                           ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
-                          : 'bg-blue-100/90 hover:bg-blue-200 text-blue-800 backdrop-blur-sm'
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-800 backdrop-blur-sm'
                     }`}
                   >
                     Todas
@@ -368,10 +413,10 @@ export default function CartaMenuPage() {
                       }}
                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                         selectedCategory === category.id
-                          ? 'bg-blue-600 text-white shadow-sm'
+                          ? 'bg-gray-600 text-white shadow-sm'
                           : isDarkMode 
                             ? 'bg-gray-700/90 hover:bg-gray-600 text-gray-300 backdrop-blur-sm' 
-                            : 'bg-blue-100/90 hover:bg-blue-200 text-blue-800 backdrop-blur-sm'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-800 backdrop-blur-sm'
                       }`}
                     >
                       {category.name}
@@ -387,7 +432,7 @@ export default function CartaMenuPage() {
       </div>
 
       {/* Contenido del Menú */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="max-w-6xl mx-auto px-4 py-4">
         
         {menuData.categories.length === 0 ? (
           <div className="text-center py-12">
@@ -442,18 +487,18 @@ export default function CartaMenuPage() {
               return true;
             })
             .map((category, index) => (
-            <div key={category.id || index} className={`mb-4 rounded-lg border transition-colors duration-300 ${
+            <div key={category.id || index}             className={`mb-4 rounded-lg border transition-colors duration-300 ${
 
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-blue-300'
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'
             }`}>
               
               {/* Header de Categoría */}
               <div className={`px-4 py-2 border-b rounded-t-lg transition-colors duration-300 ${
 
-                isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-100 border-blue-300'
+                isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'
               }`}>
                 <h2 className={`text-base font-bold text-center transition-colors duration-300 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
+                  isDarkMode ? 'text-white' : 'text-gray-800'
                 }`}>
                   {category.name}
                 </h2>
@@ -467,15 +512,15 @@ export default function CartaMenuPage() {
                   ? 'pt-3 flex flex-wrap justify-evenly gap-2' 
                   : 'pt-0 space-y-0'
               }`}>
-
+                  
                 {filterItems(category.items).map((item, itemIndex) => (
                   
-                  // DISEÑO ESPECIAL PARA PROMOS - MERGED COMO PLATOS
+                  // DISEÑO ESPECIAL PARA PROMOS - ESTILO ENCABEZADO DE CATEGORÍA
                   category.name.toUpperCase().includes('PROMO') ? (
                     <div 
                       key={item.id || itemIndex}
-
-                      className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full"
+                      className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full rounded-lg overflow-hidden"
+                      style={{ minHeight: '140px' }}
                       onClick={() => {
                         setModalItem(item);
                         const promoImages = ['/platos/milanesa-completa.jpg', '/platos/vacio-papas.jpg', '/platos/rabas.jpg'];
@@ -483,11 +528,19 @@ export default function CartaMenuPage() {
                       }}
                       title="Click para ver detalles"
                     >
-                      {/* Imagen merged con borde superior */}
-                      <div className={`h-28 rounded-t-lg overflow-hidden border-2 border-b-0 ${
-
-                        isDarkMode ? 'border-blue-400' : 'border-blue-300'
+                      {/* Encabezado estilo categoría */}
+                      <div className={`px-3 py-2 border-b transition-colors duration-300 ${
+                        isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'
                       }`}>
+                        <h3 className={`text-sm font-bold text-center transition-colors duration-300 ${
+                          isDarkMode ? 'text-white' : 'text-gray-800'
+                        }`}>
+                          {item.name}
+                        </h3>
+                      </div>
+                      
+                      {/* Imagen */}
+                      <div className="h-24 overflow-hidden">
                         <img 
                           src={(() => {
                             const promoImages = ['/platos/milanesa-completa.jpg', '/platos/vacio-papas.jpg', '/platos/rabas.jpg'];
@@ -500,8 +553,7 @@ export default function CartaMenuPage() {
                             const parent = e.currentTarget.parentElement;
                             if (parent) {
                               parent.innerHTML = `
-
-                                <div class="w-full h-full flex items-center justify-center bg-blue-100">
+                                <div class="w-full h-full flex items-center justify-center bg-gray-700">
                                   <span class="text-lg">🎯</span>
                                 </div>
                               `;
@@ -510,35 +562,23 @@ export default function CartaMenuPage() {
                         />
                       </div>
                       
-                      {/* Contenido merged con borde inferior */}
-                      <div className={`p-2 rounded-b-lg border-2 border-t-0 transition-colors duration-300 ${
+                      {/* Contenido */}
+                      <div className={`p-2 flex-1 flex flex-col justify-between transition-colors duration-300 ${
                         isDarkMode 
-                          ? 'border-blue-400 bg-gradient-to-b from-blue-900/30 to-blue-800/20' 
-
-                          : 'border-blue-300 bg-gradient-to-b from-blue-50 to-blue-100'
+                          ? 'bg-gray-700' 
+                          : 'bg-gray-200'
                       }`}>
-                        <h3 className={`font-bold text-xs mb-1 text-center transition-colors duration-300 ${
-                          isDarkMode ? 'text-blue-200' : 'text-blue-800'
-                        }`}>
-                          🔥 {item.name}
-                        </h3>
-                        
                         {item.description && (
-                          <p className={`text-xs mb-2 text-center transition-colors duration-300 ${
-                            isDarkMode ? 'text-blue-300' : 'text-blue-600'
+                          <p className={`text-xs text-center transition-colors duration-300 min-h-[2rem] flex items-center justify-center ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-800'
                           }`}>
                             {item.description}
                           </p>
                         )}
                         
-                        {/* Precio destacado */}
-                        <div className={`text-xs font-bold px-2 py-1 rounded text-center transition-colors duration-300 ${
-                          isDarkMode 
-                            ? 'text-blue-100 bg-blue-600 border border-blue-400' 
-
-                            : 'text-blue-700 bg-blue-100 border border-blue-400'
-                        }`}>
-                          {item.price}
+                        {/* Precio centrado */}
+                        <div className={`text-sm font-bold text-center transition-colors duration-300 mt-2 text-blue-500`}>
+                          {item.price.replace('$$', '$')}
                         </div>
                       </div>
                     </div>
@@ -563,7 +603,7 @@ export default function CartaMenuPage() {
                       }}
                     >
                       {/* Imagen más grande sin marco */}
-                      <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mx-2 my-1`}>
+                      <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1`}>
                           <img 
                             src={(() => {
                               const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20250926-WA0005.jpg'];
@@ -594,7 +634,7 @@ export default function CartaMenuPage() {
                       <div className={`flex-1 flex items-center justify-between px-2 py-1 transition-colors duration-300 ${
                         item.isAvailable === false 
                           ? 'text-gray-400' 
-                          : isDarkMode ? 'text-white' : 'text-gray-900'
+                          : isDarkMode ? 'text-white' : 'text-black'
                         }`}>
                           
                           {/* Texto del plato */}
@@ -603,12 +643,9 @@ export default function CartaMenuPage() {
 
                             item.isAvailable === false 
                               ? 'text-gray-400' 
-                              : isDarkMode ? 'text-white' : 'text-gray-900'
+                              : isDarkMode ? 'text-white' : 'text-black'
                             }`}>
 
-                            {category.name.toUpperCase().includes('PLATOS DEL DÍA') && (
-                              <span className="text-yellow-400 mr-1">⭐</span>
-                            )}
                             {item.name}
                             </h3>
                           </div>
@@ -625,14 +662,12 @@ export default function CartaMenuPage() {
                           )}
                           
                           {/* Precio sin marco */}
-                          <div className={`text-xs font-bold transition-colors duration-300 ${
+                          <div className={`text-sm font-bold transition-colors duration-300 ${
                             item.isAvailable === false 
                               ? 'text-gray-400' 
-                              : isDarkMode 
-                                ? 'text-blue-300' 
-                                : 'text-blue-700'
+                              : 'text-blue-500'
                           }`}>
-                            {item.price}
+                            {item.price.replace('$$', '$')}
                           </div>
                           </div>
                         </div>
@@ -645,12 +680,6 @@ export default function CartaMenuPage() {
         )}
 
         {/* Footer */}
-        <div className={`text-center py-6 text-xs transition-colors duration-300 ${
-          isDarkMode ? 'text-gray-500' : 'text-gray-400'
-        }`}>
-          <p>💡 Carta digital generada con MenuQR</p>
-          <p className="mt-1">Actualizada automáticamente</p>
-        </div>
       </div>
 
       {/* MODAL PARA PLATOS */}
@@ -745,12 +774,10 @@ export default function CartaMenuPage() {
               </div>
             
             {/* Precio destacado */}
-              <div className={`text-xl font-bold px-4 py-2 rounded-lg transition-colors duration-300 ${
-              isDarkMode 
-                ? 'text-blue-300 bg-blue-900 border-2 border-blue-500' 
-                : 'text-blue-700 bg-blue-100 border-2 border-blue-300'
-            }`}>
-              {modalItem.price}
+              <div className={`text-xl font-bold px-4 py-2 rounded-lg transition-colors duration-300 text-blue-500 ${
+                isDarkMode ? 'bg-gray-700 border-2 border-gray-600' : 'bg-transparent'
+              }`}>
+              {modalItem.price.replace('$$', '$')}
               </div>
             </div>
             
@@ -775,7 +802,7 @@ export default function CartaMenuPage() {
                 // setShowCart(true);
               }}
               className={`w-full py-3 rounded-lg font-bold text-lg transition-colors ${
-                isDarkMode 
+              isDarkMode 
                   ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                   : 'bg-blue-500 hover:bg-blue-600 text-white'
               }`}
@@ -820,16 +847,15 @@ export default function CartaMenuPage() {
       )}
 
       {/* Carrito flotante - SIEMPRE VISIBLE */}
-      <div className="fixed bottom-4 left-4 right-4 z-50">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="w-[95%] mx-auto">
+      <div className="fixed bottom-2 left-0 right-0 z-50">
+        <div className="max-w-6xl mx-auto px-4">
           
           {/* TELÓN UNIFICADO - SE DIBUJA ARRIBA DEL FOOTER */}
           {showTelon && (
-            <div className={`mb-1 transition-all duration-300 ${
+            <div className={`mb-1 transition-all duration-300 border-t border-gray-300 ${
               isDarkMode 
-                ? 'bg-gray-800/60 border border-white/15' 
-                : 'bg-white/60 border border-gray-200/25'
+                ? 'bg-gray-800/60 border-white/15' 
+                : 'bg-white/60 border-gray-200/25'
             } backdrop-blur-sm shadow-2xl rounded-t-2xl`}>
               
               {/* CONTENIDO PRODUCTOS */}
@@ -845,10 +871,26 @@ export default function CartaMenuPage() {
                       isDarkMode ? 'bg-gray-700/50' : 'bg-gray-100/50'
                     }`}>
                       <div className="flex items-center gap-2 flex-1">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'
-                        }`}>
-                          {cartItem.code}
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                          <img 
+                            src={(() => {
+                              const promoImages = ['/platos/milanesa-completa.jpg', '/platos/vacio-papas.jpg', '/platos/rabas.jpg'];
+                              return promoImages[index % promoImages.length];
+                            })()}
+                            alt={cartItem.item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="w-full h-full flex items-center justify-center bg-gray-200 rounded-full">
+                                    <span class="text-xs">🍽️</span>
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
                         </div>
                         <div className="flex-1">
                           <div className={`font-medium text-xs ${
@@ -857,10 +899,10 @@ export default function CartaMenuPage() {
                             {cartItem.item.name}
                           </div>
                         </div>
-                      </div>
-                      
+            </div>
+            
                       <div className="flex items-center gap-1">
-                        <button
+            <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             if (cartItem.quantity > 1) {
@@ -1036,20 +1078,22 @@ export default function CartaMenuPage() {
             </div>
           )}
 
+
+
+
           {/* FOOTER PÍLDORA - SIEMPRE EN EL MISMO LUGAR FIJO */}
           <div 
-            onClick={() => setShowCart(!showCart)}
-            className={`cursor-pointer transition-all duration-300 ${
+            className={`transition-all duration-300 rounded-lg border ${
               isDarkMode 
-                ? 'bg-gray-800/60 border border-white/15' 
-                : 'bg-white/60 border border-gray-200/25'
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-gray-300'
             } backdrop-blur-sm shadow-2xl ${
-              showCart ? 'rounded-b-2xl' : 'rounded-2xl'
+              showTelon ? 'rounded-b-none border-b-0' : 'rounded-2xl'
             }`}
           >
-            <div className="px-3 py-1">
-              <div className="flex items-center justify-between gap-5 w-full">
-                {/* Botón 1: Productos */}
+            <div className="py-1">
+              <div className="flex items-center w-full px-3" style={{ gap: 'calc((100% - 81%) / 6)' }}>
+                {/* Botón 1: Productos (27%) */}
                 <div 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1057,72 +1101,138 @@ export default function CartaMenuPage() {
                       if (showTelon && telonContent === 'productos') {
                         setShowTelon(false);
                         setProductosClicked(true);
+                        animateArrows('next');
                       } else {
                         setTelonContent('productos');
                         setShowTelon(true);
                       }
                     }
                   }}
-                  className={`flex items-center justify-between h-8 px-2.5 rounded-full w-[27%] cursor-pointer transition-all ${
+                  className={`flex items-center justify-between h-8 px-2.5 rounded-full cursor-pointer transition-all bg-transparent border-2 ${
                     cartItems.length > 0 
-                      ? (isDarkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600')
-                      : (isDarkMode ? 'bg-gray-600' : 'bg-gray-400')
+                      ? 'border-blue-500' 
+                      : (isDarkMode ? 'border-gray-600' : 'border-gray-300')
                   }`}
+                  style={{ width: '27%' }}
                 >
-                  <span className="text-white text-sm">🛒</span>
-                  <span className="text-white text-xs font-medium whitespace-nowrap">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm -ml-4 ${
+                    cartItems.length > 0 
+                      ? 'bg-blue-500 text-white border-2 border-blue-500' 
+                      : (isDarkMode ? 'bg-gray-600 text-white border-2 border-gray-600' : 'bg-gray-400 text-white border-2 border-gray-300')
+                  }`}>🛒</span>
+                  <span className={`text-xs font-medium whitespace-nowrap ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {cartItems.length > 0 ? `${cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0)} prod` : '0 prod'}
                   </span>
                 </div>
                 
-                {/* Botón 2: Entrega */}
+                {/* Espacio + Animación AZUL (Productos → Entrega) */}
+                <div className="flex items-center justify-center flex-shrink-0" style={{ minWidth: '0' }}>
+                  {showArrowAnimation && arrowDirection === 'next' && telonContent === 'productos' && (
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div
+                          key={i}
+                          className="text-xs font-bold text-blue-500"
+                          style={{
+                            opacity: 0,
+                            animation: `fadeInSlide 1.5s ease-in-out forwards`,
+                            animationDelay: `${i * 0.15}s`
+                          }}
+                        >
+                          &gt;
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Botón 2: Entrega (27%) */}
                 <div 
                   onClick={(e) => {
                     e.stopPropagation();
                     if (cartItems.length > 0 && productosClicked) {
                       if (showTelon && telonContent === 'entrega') {
                         setShowTelon(false);
+                        animateArrows('next');
                       } else {
                         setTelonContent('entrega');
                         setShowTelon(true);
                       }
                     }
                   }}
-                  className={`flex items-center justify-between h-8 px-2.5 rounded-full w-[27%] transition-all ${
+                  className={`flex items-center justify-between h-8 px-2.5 rounded-full transition-all bg-transparent border-2 ${
                     cartItems.length > 0 && productosClicked
-                      ? (isDarkMode ? 'bg-orange-500 hover:bg-orange-600 cursor-pointer' : 'bg-orange-500 hover:bg-orange-600 cursor-pointer')
-                      : (isDarkMode ? 'bg-gray-600 cursor-not-allowed' : 'bg-gray-400 cursor-not-allowed')
+                      ? 'border-orange-500 cursor-pointer'
+                      : (isDarkMode ? 'border-gray-600 cursor-not-allowed' : 'border-gray-300 cursor-not-allowed')
                   }`}
+                  style={{ width: '27%' }}
                 >
-                  <span className="text-white text-sm">🚚</span>
-                  <span className="text-white text-xs font-medium whitespace-nowrap">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm -ml-4 ${
+                    cartItems.length > 0 && productosClicked
+                      ? 'bg-orange-500 text-white border-2 border-orange-500'
+                      : (isDarkMode ? 'bg-gray-600 text-white border-2 border-gray-600' : 'bg-gray-400 text-white border-2 border-gray-300')
+                  }`}>🚚</span>
+                  <span className={`text-xs font-medium whitespace-nowrap ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {cartItems.length > 0 
                       ? (modalidad === 'salon' ? 'Local' : modalidad === 'retiro' ? 'Mostrador' : modalidad === 'delivery' ? 'Delivery' : 'Entrega')
                       : 'Entrega'}
                   </span>
                 </div>
                 
-                {/* Botón 3: Pagos */}
+                {/* Espacio + Animación NARANJA (Entrega → Pagos) */}
+                <div className="flex items-center justify-center flex-shrink-0" style={{ minWidth: '0' }}>
+                  {showArrowAnimation && arrowDirection === 'next' && telonContent === 'entrega' && (
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div
+                          key={i}
+                          className="text-xs font-bold text-orange-500"
+                          style={{
+                            opacity: 0,
+                            animation: `fadeInSlide 1.5s ease-in-out forwards`,
+                            animationDelay: `${i * 0.15}s`
+                          }}
+                        >
+                          &gt;
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Botón 3: Pagos (27%) */}
                 <div 
                   onClick={(e) => {
                     e.stopPropagation();
                     if (cartItems.length > 0 && modalidad) {
                       if (showTelon && telonContent === 'pagos') {
                         setShowTelon(false);
+                        animateArrows('prev');
                       } else {
                         setTelonContent('pagos');
                         setShowTelon(true);
                       }
                     }
                   }}
-                  className={`flex items-center justify-between h-8 px-2.5 rounded-full w-[27%] transition-all ${
+                  className={`flex items-center justify-between h-8 px-2.5 rounded-full transition-all bg-transparent border-2 ${
                     cartItems.length > 0 && modalidad
-                      ? (isDarkMode ? 'bg-purple-500 hover:bg-purple-600 cursor-pointer' : 'bg-purple-500 hover:bg-purple-600 cursor-pointer')
-                      : (isDarkMode ? 'bg-gray-600 cursor-not-allowed' : 'bg-gray-400 cursor-not-allowed')
+                      ? 'border-purple-500 cursor-pointer'
+                      : (isDarkMode ? 'border-gray-600 cursor-not-allowed' : 'border-gray-300 cursor-not-allowed')
                   }`}
+                  style={{ width: '27%' }}
                 >
-                  <span className="text-white text-sm">💲</span>
-                  <span className="text-white text-xs font-medium whitespace-nowrap">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm -ml-4 ${
+                    cartItems.length > 0 && modalidad
+                      ? 'bg-purple-500 text-white border-2 border-purple-500'
+                      : (isDarkMode ? 'bg-gray-600 text-white border-2 border-gray-600' : 'bg-gray-400 text-white border-2 border-gray-300')
+                  }`}>💲</span>
+                  <span className={`text-xs font-medium whitespace-nowrap ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {cartItems.length > 0 
                       ? (formaPago === 'efectivo' ? 'Efectivo' : formaPago === 'mp' ? 'Mercado Pago' : cartItems.reduce((total, cartItem) => {
                           const priceStr = cartItem.item.price.replace(/[$,\s]/g, '');
@@ -1134,7 +1244,6 @@ export default function CartaMenuPage() {
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
@@ -1257,13 +1366,13 @@ export default function CartaMenuPage() {
                 <button
                   onClick={() => setShowMencionesModal(false)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                  }`}
-                >
+              }`}
+            >
                   ✕
-                </button>
+            </button>
               </div>
 
               {/* Resumen de opiniones de Google */}
@@ -1342,7 +1451,7 @@ export default function CartaMenuPage() {
                   <button className={`px-3 py-1 rounded-full text-sm ${
                     isDarkMode 
                       ? 'bg-blue-600 text-white' 
-                      : 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-700 text-white'
                   }`}>
                     Todas
                   </button>
@@ -1411,7 +1520,7 @@ export default function CartaMenuPage() {
                   <button className={`px-3 py-1 rounded text-sm ${
                     isDarkMode 
                       ? 'bg-blue-600 text-white' 
-                      : 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-700 text-white'
                   }`}>
                     Más relevantes
                   </button>
@@ -1537,6 +1646,26 @@ export default function CartaMenuPage() {
           </div>
         </div>
       )}
+
+
+      {/* Estilos CSS para animaciones */}
+      <style jsx>{`
+        @keyframes fadeInSlide {
+          0% { 
+            opacity: 0; 
+            transform: translateX(-20px); 
+          }
+          50% { 
+            opacity: 1; 
+            transform: translateX(0); 
+          }
+          100% { 
+            opacity: 0; 
+            transform: translateX(0); 
+          }
+        }
+      `}</style>
+
 
     </div>
   );
