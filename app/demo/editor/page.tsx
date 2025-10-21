@@ -262,7 +262,7 @@ export default function Editor2() {
             onClick={() => router.push('/setup-comercio')}
             className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors"
           >
-            Ir a Configuración →
+            Guardar
           </button>
         </div>
       </div>

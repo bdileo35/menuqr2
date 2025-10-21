@@ -92,14 +92,14 @@ function ExitoContent() {
                 onClick={() => router.push(`/editor?success=true&idUnico=${idUnico}`)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
               >
-                Ir al Panel de Control
+                Guardar
               </button>
 
               <button
                 onClick={() => router.push('/')}
                 className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
               >
-                Volver al inicio
+                Guardar
               </button>
             </div>
 

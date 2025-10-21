@@ -73,7 +73,7 @@ export default function HomePage() {
                   onClick={() => router.push('/editor')}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
-                  Ir
+                  Guardar
                 </button>
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function HomePage() {
                 disabled={isLoading}
               >
                 <span>💎</span>
-                <span>Ver Demo Carta/Menu</span>
+                <span>Guardar</span>
               </button>
 
               <button

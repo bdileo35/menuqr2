@@ -141,7 +141,7 @@ export default function ComprarPage() {
               ) : (
                 <>
                   <span>💳</span>
-                  <span>Comprar con Mercado Pago</span>
+                  <span>Guardar</span>
                 </>
               )}
             </button>

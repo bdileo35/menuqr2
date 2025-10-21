@@ -2,7 +2,7 @@
 
 
 
-## 📄 DOCUMENTO MAESTRO> **MenuQR modernizado con Next.js 15 + TypeScript siguiendo la arquitectura de QRing**
+## 📄 DOCUMENTO MAESTRO> **MenuQR modernizado con Next.js 15 + TypeScript **
 
 
 

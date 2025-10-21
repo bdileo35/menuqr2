@@ -1,15 +1,15 @@
 | Código | Categoría              | Plato                                              | Precio | Imagen |
 |--------|------------------------|----------------------------------------------------|--------|--------|
-| 0101 | Platos del Día         | Riñoncitos al jerez c/ puré                        | 9000   | rinoncitos-jerez.jpg |
-| 0102 | Platos del Día         | Croquetas de carne c/ ensalada                     | 9000   | croquetas-carne.jpg |
-| 0103 | Platos del Día         | Chupín de merluza c/ papa natural                  | 10000  | chupin-merluza.jpg |
-| 0104 | Platos del Día         | Pechuga rellena c/ f. españolas                    | 12000  | pechuga-rellena.jpg |
-| 0105 | Platos del Día         | Mejillones c/ fettuccinis                          | 12000  | mejillones-fettuccini.jpg |
-| 0106 | Platos del Día         | Vacío a la parrilla c/ fritas                      | 14000  | vacio-parrilla.jpg |
-| 0107 | Platos del Día         | Peceto al verdeo c/ puré                           | 15000  | peceto-verdeo.jpg |
-| 0108 | Platos del Día         | Correntinos caseros a la Vangoli                   | 13000  | correntinos-vangoli.jpg |
-| 0201 | Promos de la Semana    | Promo 1 (Entraña c/ arroz + postre + bebida)        | 12000  | promo-entrana.jpg |
-| 0202 | Promos de la Semana    | Promo 2 (Salpicón de ave + postre + bebida)        | 12000  | promo-salpicon.jpg |
+| 0101   | Platos del Día         | Riñoncitos al jerez c/ puré                        | 9000   | rinoncitos-jerez.jpg |
+| 0102   | Platos del Día         | Croquetas de carne c/ ensalada                     | 9000   | croquetas-carne.jpg |
+| 0103   | Platos del Día         | Chupín de merluza c/ papa natural                  | 10000  | chupin-merluza.jpg |
+| 0104   | Platos del Día         | Pechuga rellena c/ f. españolas                    | 12000  | pechuga-rellena.jpg |
+| 0105   | Platos del Día         | Mejillones c/ fettuccinis                          | 12000  | mejillones-fettuccini.jpg |
+| 0106   | Platos del Día         | Vacío a la parrilla c/ fritas                      | 14000  | vacio-parrilla.jpg |
+| 0107   | Platos del Día         | Peceto al verdeo c/ puré                           | 15000  | peceto-verdeo.jpg |
+| 0108   | Platos del Día         | Correntinos caseros a la Vangoli                   | 13000  | correntinos-vangoli.jpg |
+| 0201   | Promos de la Semana    | Promo 1 (Entraña c/ arroz + postre + bebida)       | 12000  | promo-entrana.jpg |
+| 0202   | Promos de la Semana    | Promo 2 (Salpicón de ave + postre + bebida)        | 12000  | promo-salpicon.jpg |
 | Cocina                 | 1/4 Pollo al horno c/ papas                        | 9000   |
 | Cocina                 | 1/4 Pollo provenzal c/ fritas                      | 10000  |
 | Cocina                 | Matambre al verdeo c/ fritas                       | 12000  |

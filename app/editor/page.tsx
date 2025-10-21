@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getDemoMenuData } from '@/lib/demo-data';
+import { useAppTheme } from '../hooks/useAppTheme';
 
 interface MenuItem {
   id?: string;
@@ -56,7 +57,7 @@ export default function Editor2() {
   };
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -379,9 +380,13 @@ export default function Editor2() {
           <p className="text-gray-400 mb-6">Completa el proceso de configuración primero</p>
           <button 
             onClick={() => router.push('/setup-comercio')}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors"
+            className={`px-6 py-3 rounded-lg transition-colors border ${
+              isDarkMode 
+                ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-gray-300' 
+                : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
+            }`}
           >
-            Ir a Configuración →
+            Guardar
           </button>
         </div>
       </div>
@@ -418,7 +423,7 @@ export default function Editor2() {
                   <div className="w-4 h-0.5 bg-current"></div>
                 </div>
               </button>
-              <h1 className="text-xl font-bold">📝 Panel de Control</h1>
+              <h1 className="text-xl font-bold">📝 Administrar Menú</h1>
             {saving && (
                 <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
                   <span className="animate-pulse">●</span>
@@ -432,10 +437,10 @@ export default function Editor2() {
               {/* Botón Carta Menu - Icono + Texto */}
           <button 
             onClick={() => router.push('/carta-menu')}
-                className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors ${
+                className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors border ${
                   isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                    : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                    ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-gray-300' 
+                    : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
                 }`}
                 title="Ver Carta Menu"
               >
@@ -445,11 +450,11 @@ export default function Editor2() {
 
               {/* Botón modo claro/oscuro */}
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                onClick={toggleTheme}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg border ${
                   isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-yellow-400' 
+                    : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
                 }`}
                 title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
               >
@@ -465,14 +470,14 @@ export default function Editor2() {
               {/* TAB Categorías - Izquierda */}
               <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
                 isDarkMode 
-                  ? 'bg-gray-700 border-gray-600' 
-                  : 'bg-blue-100 border-blue-200'
+                  ? 'bg-gray-100 border-gray-300 text-gray-800' 
+                  : 'bg-gray-700 border-gray-600 text-gray-200'
               }`}>
                 {/* Contador con ícono dentro */}
-                <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium ${
+                <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
-                    ? 'bg-blue-600 text-blue-100' 
-                    : 'bg-blue-100 text-blue-800'
+                    ? 'bg-transparent border-gray-400 text-gray-700' 
+                    : 'bg-transparent border-gray-500 text-gray-300'
                 }`}>
                   <span className="text-base">📂</span>
                   <span>{menuData?.categories.length || 0}</span>
@@ -512,14 +517,14 @@ export default function Editor2() {
               {/* TAB Platos + Buscador - Derecha */}
               <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
                 isDarkMode 
-                  ? 'bg-gray-700 border-gray-600' 
-                  : 'bg-blue-100 border-blue-200'
+                  ? 'bg-gray-100 border-gray-300 text-gray-800' 
+                  : 'bg-gray-700 border-gray-600 text-gray-200'
               }`}>
                 {/* Contador con ícono dentro */}
-                <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium ${
+                <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
-                    ? 'bg-blue-600 text-blue-100' 
-                    : 'bg-blue-100 text-blue-800'
+                    ? 'bg-transparent border-gray-400 text-gray-700' 
+                    : 'bg-transparent border-gray-500 text-gray-300'
                 }`}>
                   <span className="text-base">🍽️</span>
                   <span>{menuData?.categories.reduce((total, cat) => total + cat.items.length, 0) || 0}</span>
@@ -598,48 +603,45 @@ export default function Editor2() {
               📋 Datos del comercio
                       </button>
                       <button
-              onClick={() => router.push('/generar-menu')}
+              onClick={() => router.push('/editor')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-blue-100 text-blue-700'
               }`}
             >
-              📝 Generar menú (TXT/Scanner/Manual)
+              📝 Administrar menú
                       </button>
             <button 
-              onClick={() => router.push('/qr-opciones')}
+              onClick={() => router.push('/opciones-qr')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
                   : 'hover:bg-blue-100 text-blue-700'
               }`}
             >
-              🖨️ Opciones QR (Imprimir/Compartir/Probar)
+              🖨️ Opciones QR
             </button>
             <button 
-              onClick={() => router.push('/scanner')}
+              onClick={() => router.push('/carta-menu')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
                   : 'hover:bg-blue-100 text-blue-700'
               }`}
             >
-              📷 Scanner OCR
+              👁️ Ver carta
             </button>
-                      <button
-              onClick={() => {
-                // TODO: Implementar configuraciones
-                alert('Configuraciones próximamente');
-              }}
+            <button
+              onClick={() => router.push('/configuracion')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
                   : 'hover:bg-blue-100 text-blue-700'
               }`}
             >
-              ⚙️ Configuraciones
-                      </button>
+              ⚙️ Configuración
+            </button>
                       </div>
                     </div>
       )}
@@ -667,15 +669,15 @@ export default function Editor2() {
               className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-gray-100 border-blue-400'
+                  : 'bg-gray-100 border-gray-300'
               }`}
             >
               {/* Header de Categoría - Compacto como carta */}
               <div 
-                className={`px-4 py-2 cursor-pointer transition-colors duration-300 ${
+                className={`px-4 py-2 cursor-pointer transition-colors duration-300 border ${
                   isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600' 
-                    : 'bg-blue-100 hover:bg-blue-200'
+                    ? 'bg-transparent border-gray-600 hover:bg-gray-700' 
+                    : 'bg-transparent border-gray-300 hover:bg-gray-100'
                 }`}
                 onClick={() => toggleCategory(categoryId)}
                 onTouchStart={(e) => handleTouchStart(e, 'category', category)}
@@ -683,15 +685,15 @@ export default function Editor2() {
                 onDoubleClick={(e) => handleDoubleClick(e, 'category', category)}
               >
                 <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 pl-3">
-                  <h3 className="text-lg font-bold">{category.name}</h3>
-                  <span className={`text-sm px-2 py-1 rounded-full ${
+                <div className="flex items-center gap-2 pl-2">
+                  <span className={`text-sm px-2 py-1 rounded-full border ${
                     isDarkMode 
-                      ? 'bg-blue-600 text-blue-100' 
-                      : 'bg-blue-100 text-blue-800'
+                      ? 'bg-transparent border-gray-600 text-gray-300' 
+                      : 'bg-transparent border-gray-300 text-gray-700'
                   }`}>
                     {filteredItems.length}
                   </span>
+                  <h3 className="text-lg font-bold">{category.name}</h3>
                 </div>
                   <div className="flex items-center justify-end gap-3">
                     
@@ -1006,7 +1008,11 @@ export default function Editor2() {
                 
                   <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors font-medium"
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors font-medium border ${
+                    isDarkMode 
+                      ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-gray-300' 
+                      : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
+                  }`}
                 >
                   {editingItem ? 'Guardar' : 'Agregar'}
                   </button>
