@@ -14,7 +14,7 @@ export async function GET(
 
     const menu = await prisma.menu.findFirst({
       where: {
-        idUnico: idUnico
+        restaurantId: idUnico
       },
       include: {
         categories: {
@@ -39,7 +39,7 @@ export async function GET(
     // Formatear respuesta
     const formattedMenu = {
       id: menu.id,
-      idUnico: menu.idUnico,
+      idUnico: menu.restaurantId,
       restaurantName: menu.restaurantName,
       contactPhone: menu.contactPhone,
       contactAddress: menu.contactAddress,
