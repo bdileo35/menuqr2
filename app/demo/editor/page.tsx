@@ -67,6 +67,8 @@ export default function Editor2() {
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState<string>('');
   const [allCategoriesExpanded, setAllCategoriesExpanded] = useState(true);
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
+  const [showEditCategory, setShowEditCategory] = useState(false);
 
   // Cargar datos desde API
   useEffect(() => {
@@ -198,6 +200,18 @@ export default function Editor2() {
     }
   };
 
+  // Función para manejar pulsación larga (hold) en categorías
+  const handleCategoryHold = (category: MenuCategory) => {
+    setEditingCategory(category);
+    setShowEditCategory(true);
+  };
+
+  // Función para manejar pulsación larga (hold) en platos
+  const handleItemHold = (item: MenuItem) => {
+    setEditingItem(item);
+    setShowAddItem(true);
+  };
+
   // Guardar item
   const handleSaveItem = async (item: MenuItem) => {
     try {
@@ -291,7 +305,7 @@ export default function Editor2() {
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 pt-1 pb-2">
+        <div className="w-full px-2 sm:px-4 pt-1 pb-2">
           
           {/* LÍNEA 1: Título Panel de Control */}
           <div className="flex items-center justify-between mb-3">
@@ -336,24 +350,24 @@ export default function Editor2() {
 
           {/* LÍNEA 2: Configuración de Categorías + Funciones */}
           <div className="flex items-center justify-between">
-            {/* Info Categorías */}
-            <div className="flex items-center gap-2">
-              <span className="text-lg">📂</span>
-              <span className="font-medium">
-                Categorías ({menuData?.categories.length || 0})
+            {/* Info Categorías - Más compacto en móvil */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span className="text-sm sm:text-lg">📂</span>
+              <span className="text-sm sm:text-base font-medium">
+                <span className="hidden sm:inline">Categorías </span>({menuData?.categories.length || 0})
               </span>
             </div>
             
             {/* Botones unificados: Buscar + Agregar + Expandir - Buscador siempre activo */}
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-0.5 sm:gap-3">
               {/* 1. Buscador siempre activo */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar..."
-                  className={`px-2 py-1 text-xs rounded-lg transition-colors duration-300 w-24 ${
+                  className={`px-1 sm:px-2 py-1 text-xs rounded-lg transition-colors duration-300 w-14 sm:w-24 ${
                     isDarkMode 
                       ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
                       : 'bg-white border border-blue-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
@@ -363,7 +377,7 @@ export default function Editor2() {
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className={`w-6 h-6 flex items-center justify-center transition-colors text-xs ${
+                    className={`w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center transition-colors text-xs ${
                       isDarkMode 
                         ? 'text-gray-400 hover:text-gray-300' 
                         : 'text-blue-600 hover:text-blue-700'
@@ -378,7 +392,7 @@ export default function Editor2() {
               {/* 2. Botón Agregar - Sin fondo ni marco */}
               <button
                 onClick={() => setShowAddCategory(true)}
-                className="w-9 h-9 flex items-center justify-center transition-colors text-lg text-green-400 hover:text-green-300"
+                className="w-6 h-6 sm:w-9 sm:h-9 flex items-center justify-center transition-colors text-sm sm:text-lg text-green-400 hover:text-green-300"
                 title="Agregar categoría"
               >
                 +
@@ -387,7 +401,7 @@ export default function Editor2() {
               {/* 3. Botón Expandir/Contraer TODAS las categorías */}
               <button
                 onClick={toggleAllCategories}
-                className={`w-9 h-9 flex items-center justify-center transition-colors text-lg ${
+                className={`w-6 h-6 sm:w-9 sm:h-9 flex items-center justify-center transition-colors text-sm sm:text-lg ${
                   isDarkMode 
                     ? 'text-gray-400 hover:text-gray-300' 
                     : 'text-blue-600 hover:text-blue-700'
@@ -463,7 +477,7 @@ export default function Editor2() {
       )}
 
       {/* Contenido Principal */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="w-full px-2 sm:px-4 py-6">
 
         {/* Lista de Categorías */}
         {menuData.categories
@@ -482,7 +496,7 @@ export default function Editor2() {
           return (
             <div 
               key={categoryId}
-              className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
+              className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden w-full ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700' 
                   : 'bg-gray-100 border-blue-400'
@@ -490,16 +504,43 @@ export default function Editor2() {
             >
               {/* Header de Categoría - Compacto como carta */}
               <div 
-                className={`px-4 py-2 cursor-pointer transition-colors duration-300 ${
+                className={`px-3 sm:px-4 py-2 cursor-pointer transition-colors duration-300 ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600' 
                     : 'bg-blue-100 hover:bg-blue-200'
                 }`}
                 onClick={() => toggleCategory(categoryId)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  const timer = setTimeout(() => {
+                    handleCategoryHold(category);
+                  }, 500); // 500ms para hold
+                  
+                  const handleTouchEnd = () => {
+                    clearTimeout(timer);
+                    document.removeEventListener('touchend', handleTouchEnd);
+                  };
+                  
+                  document.addEventListener('touchend', handleTouchEnd);
+                }}
+                onMouseDown={(e) => {
+                  if (e.button === 0) { // Solo botón izquierdo
+                    const timer = setTimeout(() => {
+                      handleCategoryHold(category);
+                    }, 500);
+                    
+                    const handleMouseUp = () => {
+                      clearTimeout(timer);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 pl-3">
-                  <h3 className="text-lg font-bold">{category.name}</h3>
+                <div className="flex items-center gap-2 pl-0 sm:pl-3">
+                  <h3 className="text-base sm:text-lg font-bold">{category.name}</h3>
                   <span className={`text-sm px-2 py-1 rounded-full ${
                     isDarkMode 
                       ? 'bg-blue-600 text-blue-100' 
@@ -508,22 +549,9 @@ export default function Editor2() {
                     {filteredItems.length}
                   </span>
                 </div>
-                  <div className="flex items-center justify-end gap-3">
-                    {/* 1. Botón Lupa (placeholder para futura funcionalidad) */}
+                  <div className="flex items-center justify-end gap-2">
+                    {/* Botón Agregar - Sin fondo ni marco */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // TODO: Implementar búsqueda específica en esta categoría
-                        alert('Búsqueda en ' + category.name + ' próximamente...');
-                      }}
-                      className="w-9 h-9 flex items-center justify-center transition-colors text-lg text-gray-400 hover:text-gray-300"
-                      title="Buscar en esta categoría"
-                    >
-                      🔎
-                    </button>
-                    
-                    {/* 2. Botón Agregar - Sin fondo ni marco */}
-                      <button
                       onClick={(e) => {
                         e.stopPropagation();
                         // Pre-seleccionar la categoría actual
@@ -531,13 +559,13 @@ export default function Editor2() {
                         setEditingItem(null); // Asegurar que es un nuevo item
                         setShowAddItem(true);
                       }}
-                      className="w-9 h-9 flex items-center justify-center transition-colors text-lg text-green-400 hover:text-green-300"
+                      className="w-8 h-8 flex items-center justify-center transition-colors text-lg text-green-400 hover:text-green-300"
                       title="Agregar plato a esta categoría"
                     >
                       +
-                      </button>
+                    </button>
                     
-                    {/* 3. Triangulito de expandir/colapsar esta categoría */}
+                    {/* Triangulito de expandir/colapsar esta categoría */}
                     <span 
                       className="text-lg cursor-pointer text-gray-400 hover:text-gray-300 transition-colors"
                       onClick={(e) => {
@@ -554,7 +582,7 @@ export default function Editor2() {
 
               {/* Items de la Categoría */}
               {isExpanded && (
-                <div className="p-3 space-y-2">
+                <div className="p-2 sm:p-3 space-y-2">
                   {filteredItems.map((item, itemIndex) => (
                     <div 
                       key={item.id || itemIndex}
@@ -564,9 +592,38 @@ export default function Editor2() {
                           : 'hover:opacity-90 cursor-pointer border-gray-700'
                       }`}
                       onClick={() => item.isAvailable !== false && setEditingItem(item) && setShowAddItem(true)}
+                      onTouchStart={(e) => {
+                        if (item.isAvailable !== false) {
+                          e.preventDefault();
+                          const timer = setTimeout(() => {
+                            handleItemHold(item);
+                          }, 500); // 500ms para hold
+                          
+                          const handleTouchEnd = () => {
+                            clearTimeout(timer);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          document.addEventListener('touchend', handleTouchEnd);
+                        }
+                      }}
+                      onMouseDown={(e) => {
+                        if (item.isAvailable !== false && e.button === 0) {
+                          const timer = setTimeout(() => {
+                            handleItemHold(item);
+                          }, 500);
+                          
+                          const handleMouseUp = () => {
+                            clearTimeout(timer);
+                            document.removeEventListener('mouseup', handleMouseUp);
+                          };
+                          
+                          document.addEventListener('mouseup', handleMouseUp);
+                        }
+                      }}
                     >
                       {/* Imagen sin marco */}
-                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 mr-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden flex-shrink-0 mr-2 sm:mr-3">
                         <img 
                           src={(() => {
                             const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20251002-WA0005.jpg'];
@@ -594,8 +651,8 @@ export default function Editor2() {
                       <div className="flex-1 flex items-center justify-between">
                         
                         {/* Texto del plato */}
-                        <div className="flex-1">
-                          <h4 className={`font-medium text-sm leading-tight transition-colors duration-300 ${
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-medium text-xs sm:text-sm leading-tight transition-colors duration-300 ${
                             item.isAvailable === false 
                               ? 'text-gray-400' 
                               : isDarkMode ? 'text-white' : 'text-gray-900'
@@ -608,7 +665,7 @@ export default function Editor2() {
                             </div>
                             
                         {/* Estado + Precio sin marco */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                           {/* Checkbox Disponible */}
                               <label className="cursor-pointer">
                                 <input
@@ -625,7 +682,7 @@ export default function Editor2() {
                               </label>
                           
                           {/* Precio sin marco */}
-                          <span className={`text-sm font-bold transition-colors duration-300 ${
+                          <span className={`text-xs sm:text-sm font-bold transition-colors duration-300 ${
                             item.isAvailable === false 
                               ? 'text-gray-400' 
                               : isDarkMode 
@@ -859,6 +916,102 @@ export default function Editor2() {
                   className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition-colors font-medium"
                 >
                   Crear Categoría
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal editar categoría */}
+      {showEditCategory && editingCategory && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xl font-bold">Editar Categoría</h3>
+              <button
+                onClick={() => {
+                  setShowEditCategory(false);
+                  setEditingCategory(null);
+                }}
+                className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target as HTMLFormElement);
+              const categoryName = formData.get('name') as string;
+              
+              // TODO: Implementar actualización de categoría via API
+              console.log('Actualizando categoría:', editingCategory.name, '->', categoryName);
+              alert('✅ Categoría actualizada (demo)');
+              
+              setShowEditCategory(false);
+              setEditingCategory(null);
+            }}>
+              <div className="space-y-4">
+                {/* Nombre de la categoría */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Nombre de la categoría *</label>
+                  <input
+                    name="name"
+                    type="text"
+                    required
+                    defaultValue={editingCategory.name}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: Platos del Día, Promos, Bebidas..."
+                  />
+                </div>
+                
+                {/* Descripción opcional */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Descripción (opcional)</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Descripción de la categoría..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditCategory(false);
+                    setEditingCategory(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('¿Estás seguro de eliminar esta categoría?')) {
+                      // TODO: Implementar eliminación de categoría via API
+                      console.log('Eliminando categoría:', editingCategory.name);
+                      alert('✅ Categoría eliminada (demo)');
+                      setShowEditCategory(false);
+                      setEditingCategory(null);
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition-colors"
+                  title="Eliminar categoría"
+                >
+                  🗑️
+                </button>
+                
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors font-medium"
+                >
+                  Guardar
                 </button>
               </div>
             </form>

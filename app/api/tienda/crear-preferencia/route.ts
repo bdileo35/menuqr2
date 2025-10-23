@@ -1,101 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MercadoPagoConfig, Preference } from 'mercadopago';
-
-// Configurar MercadoPago
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
-  options: {
-    timeout: 10000
-  }
-});
-
-// Verificar que estamos en modo de pruebas
-console.log('🔍 MP Config:', {
-  token: process.env.MERCADOPAGO_ACCESS_TOKEN?.substring(0, 20) + '...',
-  isTest: process.env.MERCADOPAGO_ACCESS_TOKEN?.includes('TEST') || 
-          process.env.MERCADOPAGO_ACCESS_TOKEN?.includes('APP_USR'),
-  appUrl: process.env.NEXT_PUBLIC_APP_URL
-});
-
-const preference = new Preference(client);
-
-// Función para generar ID único alfanumérico de 8 caracteres (como QRing)
-function generateIdUnico(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
 
 export async function POST(request: NextRequest) {
   try {
-    const { plan, precio, descripcion, idUnico } = await request.json();
+    const body = await request.json();
+    const { plan, precio, descripcion, cantidadTimbres, idUnico } = body;
 
-    // Validar datos
-    if (!plan || !precio) {
-      return NextResponse.json(
-        { error: 'Faltan datos requeridos' },
-        { status: 400 }
-      );
-    }
+    console.log('🔔 Creando preferencia de pago:', { plan, precio, descripcion, cantidadTimbres, idUnico });
 
-    // Generar ID único si no se proporciona
-    const finalIdUnico = idUnico || generateIdUnico();
-
-    console.log('🔍 CREANDO PREFERENCIA MP REAL:', {
-      plan,
-      precio,
-      finalIdUnico,
-      timestamp: new Date().toISOString()
-    });
-
-    // Crear preferencia real de MercadoPago
-    const preferenceData = {
-      items: [
-        {
-          id: `menuqr-${plan}`,
-          title: `MenuQR - Plan ${plan === 'mensual' ? 'Mensual' : 'Anual'}`,
-          quantity: 1,
-          unit_price: precio,
-          currency_id: 'ARS'
-        }
-      ],
-      external_reference: finalIdUnico,
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/tienda/webhook`,
-      back_urls: {
-        success: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/tienda/exito?idUnico=${finalIdUnico}&plan=${plan}&monto=${precio}`,
-        failure: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/comprar?error=payment_failed`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/comprar?status=pending`
-      }
+    // 🔧 TEMPORAL: Simular respuesta de Mercado Pago
+    // En producción, aquí iría la integración real con MP
+    const mockPreference = {
+      id: `pref_${Date.now()}`,
+      init_point: `/tienda/exito?plan=${plan}&precio=${precio}&idUnico=${idUnico || 'DEMO_ID'}&descripcion=${encodeURIComponent(descripcion)}`,
+      // En producción sería: data.init_point (URL real de MP)
     };
 
-    const result = await preference.create({ body: preferenceData });
+    console.log('✅ Preferencia simulada creada:', mockPreference);
 
     return NextResponse.json({
-      preferenceId: result.id,
-      init_point: result.init_point,
-      simulation: false,
-      message: 'Preferencia MP creada exitosamente',
-      idUnico: finalIdUnico,
-      montoTotal: precio,
-      plan
+      success: true,
+      preference: mockPreference,
+      init_point: mockPreference.init_point
     });
 
-  } catch (error: any) {
-    console.error('❌ ERROR CREANDO PREFERENCIA MP:', {
-      message: error.message,
-      details: error.message,
-      status: error.status
-    });
-    
+  } catch (error) {
+    console.error('❌ Error creando preferencia:', error);
     return NextResponse.json(
-      { 
-        error: 'Error al crear preferencia de pago',
-        details: error.message,
-        status: error.status
-      },
+      { success: false, error: 'Error interno del servidor' },
       { status: 500 }
     );
   }

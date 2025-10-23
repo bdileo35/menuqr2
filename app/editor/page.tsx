@@ -470,14 +470,14 @@ export default function Editor2() {
               {/* TAB Categorías - Izquierda */}
               <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
                 isDarkMode 
-                  ? 'bg-gray-100 border-gray-300 text-gray-800' 
-                  : 'bg-gray-700 border-gray-600 text-gray-200'
+                  ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                  : 'bg-gray-300 border-gray-400 text-gray-800'
               }`}>
                 {/* Contador con ícono dentro */}
                 <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
-                    ? 'bg-transparent border-gray-400 text-gray-700' 
-                    : 'bg-transparent border-gray-500 text-gray-300'
+                    ? 'bg-transparent border-gray-400 text-white' 
+                    : 'bg-transparent border-gray-500 text-gray-800'
                 }`}>
                   <span className="text-base">📂</span>
                   <span>{menuData?.categories.length || 0}</span>
@@ -517,14 +517,14 @@ export default function Editor2() {
               {/* TAB Platos + Buscador - Derecha */}
               <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
                 isDarkMode 
-                  ? 'bg-gray-100 border-gray-300 text-gray-800' 
-                  : 'bg-gray-700 border-gray-600 text-gray-200'
+                  ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                  : 'bg-gray-300 border-gray-400 text-gray-800'
               }`}>
                 {/* Contador con ícono dentro */}
                 <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
-                    ? 'bg-transparent border-gray-400 text-gray-700' 
-                    : 'bg-transparent border-gray-500 text-gray-300'
+                    ? 'bg-transparent border-gray-400 text-white' 
+                    : 'bg-transparent border-gray-500 text-gray-800'
                 }`}>
                   <span className="text-base">🍽️</span>
                   <span>{menuData?.categories.reduce((total, cat) => total + cat.items.length, 0) || 0}</span>
@@ -676,8 +676,8 @@ export default function Editor2() {
               <div 
                 className={`px-4 py-2 cursor-pointer transition-colors duration-300 border ${
                   isDarkMode 
-                    ? 'bg-transparent border-gray-600 hover:bg-gray-700' 
-                    : 'bg-transparent border-gray-300 hover:bg-gray-100'
+                    ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                    : 'bg-gray-300 border-gray-400 hover:bg-gray-400'
                 }`}
                 onClick={() => toggleCategory(categoryId)}
                 onTouchStart={(e) => handleTouchStart(e, 'category', category)}
@@ -688,8 +688,8 @@ export default function Editor2() {
                 <div className="flex items-center gap-2 pl-2">
                   <span className={`text-sm px-2 py-1 rounded-full border ${
                     isDarkMode 
-                      ? 'bg-transparent border-gray-600 text-gray-300' 
-                      : 'bg-transparent border-gray-300 text-gray-700'
+                      ? 'bg-transparent border-gray-500 text-white' 
+                      : 'bg-transparent border-gray-500 text-gray-800'
                   }`}>
                     {filteredItems.length}
                   </span>

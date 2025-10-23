@@ -10,7 +10,23 @@ export default function ComprarPage() {
   const handleComprar = async () => {
     setLoading(true);
     try {
-      // Integración real con Mercado Pago
+      console.log('🛒 Iniciando proceso de compra...');
+      
+      // Generar ID único para esta compra
+      const generarIdUnico = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 8; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+      };
+
+      const idUnico = generarIdUnico();
+      const precio = plan === 'mensual' ? 14999 : 149990;
+      const descripcion = `MenuQR - Plan ${plan === 'mensual' ? 'Mensual' : 'Anual'}`;
+
+      // Crear preferencia de pago
       const response = await fetch('/api/tienda/crear-preferencia', {
         method: 'POST',
         headers: {
@@ -18,14 +34,17 @@ export default function ComprarPage() {
         },
         body: JSON.stringify({
           plan,
-          precio: plan === 'mensual' ? 14999 : 149990,
-          descripcion: `MenuQR - Plan ${plan === 'mensual' ? 'Mensual' : 'Anual'}`,
+          precio,
+          descripcion,
+          idUnico
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Redirigir a Mercado Pago
+        console.log('✅ Preferencia creada, redirigiendo a:', data.init_point);
+        
+        // Redirigir a la página de éxito (simulando MP)
         window.location.href = data.init_point;
       } else {
         const errorData = await response.json();
