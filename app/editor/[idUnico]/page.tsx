@@ -19,6 +19,7 @@ interface MenuCategory {
   name: string;
   items: MenuItem[];
   code?: string;
+  description?: string;
 }
 
 interface RestaurantData {
