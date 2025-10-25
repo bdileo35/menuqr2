@@ -705,13 +705,13 @@ export default function Editor2() {
                       key={item.id || itemIndex}
                       className={`flex items-center transition-opacity duration-300 py-1 border-b ${
                         item.isAvailable === false 
-                          ? 'opacity-50 cursor-not-allowed border-gray-600' 
-                          : 'hover:opacity-90 cursor-pointer border-gray-700'
-                      }`}
-                      onClick={() => item.isAvailable !== false && setEditingItem(item) && setShowAddItem(true)}
-                      onTouchStart={(e) => item.isAvailable !== false && handleTouchStart(e, 'item', { item, categoryId })}
+                          ? 'opacity-50 border-gray-600' 
+                          : 'hover:opacity-90 border-gray-700'
+                      } cursor-pointer`}
+                      onClick={() => openEditPlateModal(item, categoryId)}
+                      onTouchStart={(e) => handleTouchStart(e, 'item', { item, categoryId })}
                       onTouchEnd={handleTouchEnd}
-                      onDoubleClick={(e) => item.isAvailable !== false && handleDoubleClick(e, 'item', { item, categoryId })}
+                      onDoubleClick={(e) => handleDoubleClick(e, 'item', { item, categoryId })}
                     >
                       {/* Imagen sin marco */}
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mr-2">
