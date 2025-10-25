@@ -74,7 +74,7 @@ export default function Editor2() {
     console.log('🔍 Cargando menú desde la base de datos...');
     
     try {
-      const response = await fetch('/api/menu/esquina-pompeya');
+      const response = await fetch('/api/menu/5XJ1J37F');
       const data = await response.json();
       
       if (data.success && data.menu) {
