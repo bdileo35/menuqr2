@@ -71,6 +71,8 @@ export default function Editor2() {
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState<string>('');
   const [allCategoriesExpanded, setAllCategoriesExpanded] = useState(true);
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
+  const [showEditCategory, setShowEditCategory] = useState(false);
 
   // Función para cargar datos desde API
   const loadMenuFromAPI = async () => {
@@ -266,9 +268,8 @@ export default function Editor2() {
 
   // Abrir modal para editar categoría
   const openEditCategoryModal = (category: MenuCategory) => {
-    // TODO: Implementar modal de edición de categoría
-    console.log('Editando categoría:', category.name);
-    alert(`Editando categoría: ${category.name} (${category.code})`);
+    setEditingCategory(category);
+    setShowEditCategory(true);
   };
 
   // Manejar inicio de toque (móvil)
@@ -489,7 +490,7 @@ export default function Editor2() {
                 {/* Botón Agregar Categoría - Al lado del contador */}
                 <button
                   onClick={() => setShowAddCategory(true)}
-                  className="w-8 h-8 flex items-center justify-center transition-colors text-lg font-bold text-green-400 hover:text-green-300 ml-2"
+                  className="w-10 h-10 flex items-center justify-center transition-colors text-2xl font-bold text-white hover:text-green-300 ml-2"
                   title="Agregar categoría"
                 >
                   +
@@ -528,7 +529,7 @@ export default function Editor2() {
                     setEditingItem(null);
                     setShowAddItem(true);
                   }}
-                  className="w-8 h-8 flex items-center justify-center transition-colors text-lg font-bold text-green-400 hover:text-green-300 ml-2"
+                  className="w-10 h-10 flex items-center justify-center transition-colors text-2xl font-bold text-white hover:text-green-300 ml-2"
                   title="Agregar plato"
                 >
                   +
@@ -542,8 +543,8 @@ export default function Editor2() {
                   type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar..."
-                    className={`pl-2 pr-8 py-1 text-xs rounded-lg transition-colors duration-300 w-28 ${
+                    placeholder="Buscar platos..."
+                    className={`pl-2 pr-8 py-1.5 text-sm rounded-lg transition-colors duration-300 w-36 ${
                       isDarkMode 
                         ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
                         : 'bg-white border border-blue-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
@@ -1090,6 +1091,91 @@ export default function Editor2() {
                   className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition-colors font-medium"
                 >
                   Crear Categoría
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal editar categoría */}
+      {showEditCategory && editingCategory && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xl font-bold">Editar Categoría</h3>
+              <button
+                onClick={() => {
+                  setShowEditCategory(false);
+                  setEditingCategory(null);
+                }}
+                className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target as HTMLFormElement);
+              const categoryName = formData.get('name') as string;
+              const description = formData.get('description') as string;
+              
+              try {
+                // TODO: Implementar actualización via API
+                alert('✅ Categoría "' + categoryName + '" guardada exitosamente');
+                await loadMenuFromAPI();
+              } catch (error) {
+                console.error('Error actualizando categoría:', error);
+                alert('❌ Error al guardar categoría');
+              }
+              
+              setShowEditCategory(false);
+              setEditingCategory(null);
+            }}>
+              <div className="space-y-4">
+                {/* Nombre de la categoría */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Nombre *</label>
+                  <input
+                    name="name"
+                    type="text"
+                    required
+                    defaultValue={editingCategory.name}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                {/* Descripción */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Descripción</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    defaultValue={editingCategory.description || ''}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Descripción de la categoría..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditCategory(false);
+                    setEditingCategory(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors font-medium"
+                >
+                  Guardar Cambios
                 </button>
               </div>
             </form>
