@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QRGenerator from '../../components/QRGenerator';
 
-export default function TiendaExitoPage() {
+function TiendaExitoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [idUnico, setIdUnico] = useState<string>('');
@@ -155,5 +155,17 @@ export default function TiendaExitoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TiendaExitoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">Cargando...</div>
+      </div>
+    }>
+      <TiendaExitoContent />
+    </Suspense>
   );
 }
