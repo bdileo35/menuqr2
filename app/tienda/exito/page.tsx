@@ -1,10 +1,9 @@
 'use client';
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import QRGenerator from '../../components/QRGenerator';
+import { useSearchParams } from 'next/navigation';
+import QRWithActions from '../../components/QRWithActions';
 
 function TiendaExitoContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [idUnico, setIdUnico] = useState<string>('');
   const [plan, setPlan] = useState<string>('');
@@ -41,18 +40,6 @@ function TiendaExitoContent() {
   };
 
   const qrUrl = `https://menuqrep.vercel.app/carta-menu/${idUnico}`;
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(qrUrl);
-    alert('¡Link copiado al portapapeles!');
-  };
-
-  const handleTestLink = () => {
-    window.open(qrUrl, '_blank');
-  };
-
-  const handleGoToMenu = () => {
-    router.push(`/carta-menu/${idUnico}`);
-  };
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -63,10 +50,12 @@ function TiendaExitoContent() {
           
           {/* Header verde de éxito */}
           <div className="bg-green-600 p-6 text-center">
-            <div className="text-6xl mb-4">🎉</div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              ¡Pago Exitoso!
-            </h1>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <span className="text-4xl">🎉</span>
+              <h1 className="text-2xl font-bold text-white">
+                ¡Pago Exitoso!
+              </h1>
+            </div>
             <p className="text-green-100 text-sm">
               Tu {descripcion || 'MenuQR'} está listo
             </p>
@@ -78,7 +67,7 @@ function TiendaExitoContent() {
             {/* Información del plan */}
             <div className="mb-6">
               <div className="bg-gray-700 rounded-lg p-4 mb-4">
-                <h3 className="text-white font-semibold mb-2">📋 Detalles del pedido:</h3>
+                <h3 className="text-white font-semibold mb-2">📋 Detalles del Plan:</h3>
                 <div className="text-sm text-gray-300 space-y-1">
                   <div className="flex justify-between">
                     <span>Plan:</span>
@@ -96,50 +85,9 @@ function TiendaExitoContent() {
               </div>
             </div>
 
-            {/* QR Code */}
+            {/* QR Code y Botones lado a lado */}
             <div className="mb-6">
-              <h3 className="text-white font-semibold mb-3 text-center">🔗 Tu QR Code:</h3>
-              <div className="flex justify-center mb-4">
-                <QRGenerator 
-                  value={qrUrl} 
-                  size={200}
-                  className="border-2 border-gray-600 rounded-lg"
-                />
-              </div>
-              
-              <div className="bg-gray-700 rounded-lg p-3 mb-4">
-                <p className="text-xs text-gray-400 mb-2">URL del menú:</p>
-                <p className="text-xs text-blue-400 break-all font-mono">
-                  {qrUrl}
-                </p>
-              </div>
-            </div>
-
-            {/* Botones de acción */}
-            <div className="space-y-3">
-              <button
-                onClick={handleCopyLink}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <span>📋</span>
-                <span>Copiar Link</span>
-              </button>
-              
-              <button
-                onClick={handleTestLink}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <span>🔗</span>
-                <span>Probar Link</span>
-              </button>
-              
-              <button
-                onClick={handleGoToMenu}
-                className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <span>🍽️</span>
-                <span>Ver Mi Menú</span>
-              </button>
+              <QRWithActions qrUrl={qrUrl} isDarkMode={true} />
             </div>
 
             {/* Información adicional */}

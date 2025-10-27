@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { getDemoMenuData } from '@/lib/demo-data';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useParams } from 'next/navigation';
+import QRWithActions from '../../components/QRWithActions';
 
 interface MenuItem {
   id?: string;
@@ -80,7 +81,7 @@ export default function Editor2() {
     console.log('🔍 Cargando menú desde la base de datos...');
     
     try {
-      const response = await fetch('/api/menu/esquina-pompeya/items');
+      const response = await fetch(`/api/menu/${idUnico}`);
       const data = await response.json();
       
       if (data.success && data.menu) {
@@ -192,53 +193,60 @@ export default function Editor2() {
     try {
       setSaving(true);
       
+      if (!menuData) {
+        alert('❌ No hay datos del menú');
+        return;
+      }
+      
+      // TODO: Implementar guardado en base de datos
       if (editingItem) {
         // Actualizar item existente
-        const response = await fetch('/api/menu/esquina-pompeya/items', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            itemId: editingItem.id,
-            name: item.name,
-            price: item.price,
-            description: item.description,
-            isAvailable: item.isAvailable,
-            code: item.code,
-            categoryId: modalData.categoryId // ✅ INCLUIR CAMBIO DE CATEGORÍA
-          })
+        const updatedCategories = menuData.categories.map(cat => {
+          if ((cat.id || cat.name) === modalData.categoryId) {
+            return {
+              ...cat,
+              items: cat.items.map(i => i.id === editingItem.id ? item : i)
+            };
+          }
+          return cat;
         });
-        const result = await response.json();
-        if (result.success) {
-          await loadMenuFromAPI();
-          alert('✅ Producto actualizado correctamente');
-        } else {
-          alert(`❌ Error: ${result.error || 'Error desconocido'}`);
-        }
+        
+        const updatedData = { ...menuData, categories: updatedCategories };
+        setMenuData(updatedData);
+        localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
+        
+        alert('✅ Producto actualizado correctamente');
       } else {
         // Crear nuevo item
-        const response = await fetch('/api/menu/esquina-pompeya/items', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: item.name,
-            price: item.price,
-            description: item.description,
-            isAvailable: item.isAvailable,
-            code: item.code,
-            categoryId: modalData.categoryId
-          })
+        const updatedCategories = menuData.categories.map(cat => {
+          if ((cat.id || cat.name) === modalData.categoryId) {
+            return {
+              ...cat,
+              items: [...cat.items, { ...item, id: Date.now().toString() }]
+            };
+          }
+          return cat;
         });
-        const result = await response.json();
-        if (result.success) {
-          await loadMenuFromAPI();
-          alert('✅ Producto agregado correctamente');
-        } else {
-          alert(`❌ Error: ${result.error || 'Error desconocido'}`);
-        }
+        
+        const updatedData = { ...menuData, categories: updatedCategories };
+        setMenuData(updatedData);
+        localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
+        
+        alert('✅ Producto agregado correctamente');
       }
       
       setEditingItem(null);
       setShowAddItem(false);
+      setModalData({
+        name: '',
+        code: '',
+        price: '',
+        description: '',
+        categoryId: '',
+        imageFile: null,
+        imagePreview: '',
+        isAvailable: true
+      });
     } catch (error) {
       console.error('Error guardando producto:', error);
       alert('❌ Error al guardar. Intenta nuevamente.');
@@ -577,7 +585,10 @@ export default function Editor2() {
         <div className="fixed top-16 left-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-lg min-w-64">
           <div className="p-2">
                       <button
-              onClick={() => router.push('/datos-comercio')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/datos-comercio/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -587,7 +598,10 @@ export default function Editor2() {
               📋 Datos del comercio
                       </button>
                       <button
-              onClick={() => router.push('/editor')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/editor/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'bg-blue-600 text-white' 
@@ -597,7 +611,10 @@ export default function Editor2() {
               📝 Administrar menú
                       </button>
             <button 
-              onClick={() => router.push('/opciones-qr')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/opciones-qr/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -607,7 +624,10 @@ export default function Editor2() {
               🖨️ Opciones QR
             </button>
             <button 
-              onClick={() => router.push('/carta-menu')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/carta-menu/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -617,7 +637,10 @@ export default function Editor2() {
               👁️ Ver carta
             </button>
             <button
-              onClick={() => router.push('/configuracion')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/configuracion/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -795,6 +818,42 @@ export default function Editor2() {
           </div>
           );
         })}
+        
+        {/* Componente QR con acciones */}
+        <div className="mt-6">
+          <div className={`rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-gray-100 border-gray-300'
+          }`}>
+            {/* Header de Categoría */}
+            <div className={`px-4 py-2 transition-colors duration-300 border ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600' 
+                : 'bg-gray-300 border-gray-400'
+            }`}>
+              <h3 className="text-lg font-bold">🖨️ QR de tu menú</h3>
+            </div>
+            
+            {/* Contenido - QR con acciones */}
+            <div className="p-6">
+              <QRWithActions 
+                qrUrl={`https://menuqrep.vercel.app/carta-menu/${idUnico}`} 
+                isDarkMode={isDarkMode} 
+              />
+              
+              {/* Información adicional */}
+              <div className="text-center mt-4">
+                <p className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  💡 Guarda este QR para acceder a tu menú digital
+                </p>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Comparte este código QR con tus clientes
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
 
       {/* Modal agregar/editar plato */}
@@ -1026,25 +1085,23 @@ export default function Editor2() {
               const categoryName = formData.get('name') as string;
               const description = formData.get('description') as string;
               
+              // TODO: Implementar guardado en base de datos
               try {
-                const response = await fetch('/api/menu/esquina-pompeya/categories', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
+                alert('✅ Categoría "' + categoryName + '" creada exitosamente (guardada en localStorage)');
+                // Guardar en localStorage como fallback
+                if (menuData) {
+                  const newCategory = {
+                    id: Date.now().toString(),
                     name: categoryName,
-                    description: description
-                  })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                  alert('✅ Categoría "' + categoryName + '" creada exitosamente');
-                  await loadMenuFromAPI();
-                } else {
-                  alert('❌ Error: ' + result.error);
+                    description: description || '',
+                    items: []
+                  };
+                  const updatedData = {
+                    ...menuData,
+                    categories: [...menuData.categories, newCategory]
+                  };
+                  setMenuData(updatedData);
+                  localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
                 }
               } catch (error) {
                 console.error('Error creando categoría:', error);

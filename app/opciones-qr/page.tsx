@@ -1,12 +1,16 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
+import QRWithActions from '../components/QRWithActions';
 
 export default function OpcionesQR() {
   const router = useRouter();
+  const params = useParams();
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
+  const idUnico = (params?.idUnico as string) || '5XJ1J37F'; // Por defecto
+  const qrUrl = `https://menuqrep.vercel.app/carta-menu/${idUnico}`;
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
@@ -86,7 +90,10 @@ export default function OpcionesQR() {
         <div className="fixed top-16 left-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-lg min-w-64">
           <div className="p-2">
             <button
-              onClick={() => router.push('/datos-comercio')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/datos-comercio/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -96,7 +103,10 @@ export default function OpcionesQR() {
               📋 Datos del comercio
             </button>
             <button
-              onClick={() => router.push('/editor')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/editor/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -106,7 +116,10 @@ export default function OpcionesQR() {
               📝 Administrar menú
             </button>
             <button 
-              onClick={() => router.push('/opciones-qr')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/opciones-qr/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'bg-blue-600 text-white' 
@@ -116,7 +129,10 @@ export default function OpcionesQR() {
               🖨️ Opciones QR
             </button>
             <button 
-              onClick={() => router.push('/carta-menu')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/carta-menu/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -126,7 +142,10 @@ export default function OpcionesQR() {
               👁️ Ver carta
             </button>
             <button
-              onClick={() => router.push('/configuracion')}
+              onClick={() => {
+                setShowMenuHamburguesa(false);
+                router.push(`/configuracion/${idUnico}`);
+              }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
@@ -161,39 +180,20 @@ export default function OpcionesQR() {
             </div>
           </div>
           
-          {/* Contenido de la card */}
+          {/* Contenido de la card - QR y Botones */}
           <div className="p-6 space-y-6">
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">🖨️</div>
-              <h2 className="text-xl font-bold mb-2">Opciones de QR</h2>
-              <p className="text-gray-400 mb-4">
-                Aquí podrás configurar las opciones de tu código QR: imprimir, compartir, probar y más.
-              </p>
-              <div className="text-sm text-gray-500">
-                Próximamente disponible...
-              </div>
-            </div>
+            
+            {/* QR Code y Botones lado a lado */}
+            <QRWithActions qrUrl={qrUrl} isDarkMode={isDarkMode} />
 
-            {/* Botones de acción */}
-            <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-600">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className={`px-6 py-3 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                    : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                }`}
-              >
-                Volver
-              </button>
-              <button
-                type="button"
-                onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
-              >
-                Guardar
-              </button>
+            {/* Información adicional */}
+            <div className="text-center">
+              <p className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                💡 Guarda este QR para acceder a tu menú digital
+              </p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                Puedes personalizar tu menú desde el editor
+              </p>
             </div>
           </div>
         </div>

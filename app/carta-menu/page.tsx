@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -287,115 +286,115 @@ export default function CartaMenuPage() {
       
       {/* <DevBanner /> */} {/* Moved to _unused */}
       
-      {/* Header con info del restaurante - COMPACTO */}
-      <div className={`border-b sticky top-0 z-40 transition-colors duration-300 relative ${
-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-      }`}>
-        <div className="max-w-4xl mx-auto px-4 pt-2 pb-1">
+             {/* Header con info del restaurante - COMPACTO */}
+       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 relative ${
+         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+       }`}>
+         <div className="max-w-4xl mx-auto px-2 py-1">
           {/* HEADER: LOGO + BOTONES EN LÍNEA */}
           <div className="flex items-center justify-between gap-4">
             
-            {/* LOGO A LA IZQUIERDA */}
-            <div className="flex-shrink-0">
-              <img 
-                src="/demo-images/logo.png?v=2" 
-                alt="Logo Esquina Pompeya"
-                className="w-[180px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setShowMapsModal(true)}
-                title="Ver ubicación en Google Maps"
-                onError={(e) => {
-                  console.log('Error cargando logo.png, intentando Logo.jpg');
-                  e.currentTarget.src = '/demo-images/Logo.jpg?v=2';
-                }}
-              />
-            </div>
+                         {/* LOGO A LA IZQUIERDA */}
+             <div className="flex-shrink-0">
+               <img 
+                 src="/demo-images/logo.png?v=2" 
+                 alt="Logo Esquina Pompeya"
+                 className="w-[120px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                 onClick={() => setShowMapsModal(true)}
+                 title="Ver ubicación en Google Maps"
+                 onError={(e) => {
+                   console.log('Error cargando logo.png, intentando Logo.jpg');
+                   e.currentTarget.src = '/demo-images/Logo.jpg?v=2';
+                 }}
+               />
+             </div>
 
-            {/* COLUMNA DERECHA: BOTONES + BUSCADOR */}
-            <div className="flex flex-col gap-2 ml-auto">
+                         {/* COLUMNA DERECHA: BOTONES + BUSCADOR */}
+             <div className="flex flex-col gap-1 ml-auto">
 
-              {/* FILA 1: DOS BOTONES */}
-              <div className="flex items-center gap-2 w-full">
-                {/* Botón 1: Reseñas */}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('🔍 Botón Reseñas clickeado');
-                    console.log('Estado actual showMencionesModal:', showMencionesModal);
-                    setShowMencionesModal(true);
-                    console.log('setShowMencionesModal(true) ejecutado');
-                  }}
-                  className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer ${
-                    isDarkMode
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                  }`}
-                  title="Ver Reseñas"
-                >
-                  <span className="text-lg">🔍</span>
-                  <span className="text-sm font-medium">Reseñas</span>
-                </button>
+                             {/* FILA 1: DOS BOTONES */}
+               <div className="flex items-center gap-1 w-full">
+                 {/* Botón 1: Reseñas */}
+                 <button
+                   onClick={(e) => {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     console.log('🔍 Botón Reseñas clickeado');
+                     console.log('Estado actual showMencionesModal:', showMencionesModal);
+                     setShowMencionesModal(true);
+                     console.log('setShowMencionesModal(true) ejecutado');
+                   }}
+                   className={`flex-1 h-7 px-2 rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                     isDarkMode
+                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                       : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                   }`}
+                   title="Ver Reseñas"
+                 >
+                   <span className="text-sm">🔍</span>
+                   <span className="text-xs font-medium">Reseñas</span>
+                 </button>
 
-                {/* Botón 2: Toggle sol/luna */}
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleTheme();
-                  }}
-                  className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                  }`}
-                  title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                >
-                  <span className="text-lg">{isDarkMode ? '☀️' : '🌙'}</span>
-                  <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{isDarkMode ? 'Claro' : 'Oscuro'}</span>
-                </button>
-              </div>
+                 {/* Botón 2: Toggle sol/luna */}
+                 <button 
+                   onClick={(e) => {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     toggleTheme();
+                   }}
+                   className={`flex-1 h-7 px-2 rounded-lg flex items-center justify-center gap-1 transition-colors ${
+                     isDarkMode 
+                       ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                       : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                   }`}
+                   title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                 >
+                   <span className="text-sm">{isDarkMode ? '☀️' : '🌙'}</span>
+                   <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{isDarkMode ? 'Claro' : 'Oscuro'}</span>
+                 </button>
+               </div>
 
-              {/* FILA 2: BUSCADOR (ANCHO) */}
-              {showSearch ? (
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar platos..."
-                    className={`w-full h-8 pl-3 pr-10 text-sm rounded-lg transition-colors duration-300 ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
-                        : 'bg-gray-200 border border-gray-300 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-500'
-                    }`}
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded flex items-center justify-center transition-colors text-sm ${
-                      isDarkMode 
-                        ? 'hover:bg-gray-600 text-gray-300' 
-                        : 'hover:bg-gray-300 text-gray-800'
-                    }`}
-                    title="Limpiar filtro"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-              <button
-                  onClick={() => setShowSearch(true)}
-                  className={`w-full h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                  isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                }`}
-                  title="Buscar platos"
-              >
-                  <span className="text-lg">🔍</span>
-                  <span className="text-sm font-medium">Buscar platos...</span>
-              </button>
-              )}
+                             {/* FILA 2: BUSCADOR (ANCHO) */}
+               {showSearch ? (
+                 <div className="relative w-full">
+                   <input
+                     type="text"
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     placeholder="Buscar platos..."
+                     className={`w-full h-7 pl-2 pr-8 text-xs rounded-lg transition-colors duration-300 ${
+                       isDarkMode 
+                         ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
+                         : 'bg-gray-200 border border-gray-300 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-500'
+                     }`}
+                     autoFocus
+                   />
+                   <button
+                     onClick={() => setSearchTerm('')}
+                     className={`absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded flex items-center justify-center transition-colors text-xs ${
+                       isDarkMode 
+                         ? 'hover:bg-gray-600 text-gray-300' 
+                         : 'hover:bg-gray-300 text-gray-800'
+                     }`}
+                     title="Limpiar filtro"
+                   >
+                     ✕
+                   </button>
+                 </div>
+               ) : (
+               <button
+                   onClick={() => setShowSearch(true)}
+                   className={`w-full h-7 px-2 rounded-lg flex items-center justify-center gap-1 transition-colors ${
+                   isDarkMode 
+                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                       : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                 }`}
+                   title="Buscar platos"
+               >
+                   <span className="text-sm">🔍</span>
+                   <span className="text-xs font-medium">Buscar platos...</span>
+               </button>
+               )}
             </div>
           </div>
 

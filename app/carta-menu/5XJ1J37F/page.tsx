@@ -1,16 +1,10 @@
 
 "use client";
-export default function CartaMenuPage() {
-  return (
-    <div>
-      <h1>Funciona!</h1>
-    </div>
-  );
-}
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { getDemoMenuData } from '@/lib/demo-data'; // Fallback para desarrollo
-import { useAppTheme } from '../hooks/useAppTheme';
+import { useAppTheme } from '../../hooks/useAppTheme';
 // import DevBanner from '../components/DevBanner'; // Moved to _unused
 
 interface MenuItem {
