@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDemoMenuData } from '@/lib/demo-data'; // Fallback para desarrollo
-import { useAppTheme } from '../hooks/useAppTheme';
+import { useAppTheme } from '../../hooks/useAppTheme';
 // import DevBanner from '../components/DevBanner'; // Moved to _unused
 
 interface MenuItem {
