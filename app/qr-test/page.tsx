@@ -6,7 +6,7 @@ export default function QRTestPage() {
   const [idUnico, setIdUnico] = useState('5XJ1J37F');
   const [baseUrl, setBaseUrl] = useState('menuqrep.vercel.app');
   
-  const qrValue = `https://${baseUrl}/carta-menu/${idUnico}`;
+  const qrValue = `https://${baseUrl}/carta/${idUnico}`;
   
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -89,7 +89,7 @@ export default function QRTestPage() {
           <h3 className="text-lg font-semibold text-yellow-800 mb-2">📝 Notas del Test:</h3>
           <ul className="text-yellow-700 space-y-1">
             <li>• Este es un simulacro para probar el flujo QR</li>
-            <li>• El QR apunta a: <code>menuqrep.vercel.app/carta-menu/{idUnico}</code></li>
+            <li>• El QR apunta a: <code>menuqrep.vercel.app/carta/{idUnico}</code></li>
             <li>• Una vez funcional, se integrará al Shop con Mercado Pago</li>
             <li>• El IDUnico se generará después del pago exitoso</li>
           </ul>

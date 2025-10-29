@@ -3,18 +3,20 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// GET - Obtener todas las categorías
-export async function GET(request: NextRequest) {
+// GET - Obtener categorías por idUnico
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { idUnico: string } }
+) {
+  const { idUnico } = params;
   try {
     const menu = await prisma.menu.findFirst({
-      where: { restaurantId: '5XJ1J37F' },
+      where: { restaurantId: idUnico },
       include: {
         categories: {
           where: { isActive: true },
           orderBy: { position: 'asc' },
-          include: {
-            items: true
-          }
+          include: { items: true }
         }
       }
     });
@@ -34,7 +36,6 @@ export async function GET(request: NextRequest) {
         itemCount: cat.items.length
       }))
     });
-
   } catch (error) {
     console.error('Error obteniendo categorías:', error);
     return NextResponse.json({ error: 'Error al obtener categorías' }, { status: 500 });
@@ -44,7 +45,11 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Crear nueva categoría
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { idUnico: string } }
+) {
+  const { idUnico } = params;
   try {
     const body = await request.json();
     const { name, description } = body;
@@ -53,30 +58,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El nombre es obligatorio' }, { status: 400 });
     }
 
-    // Buscar el menú
     const menu = await prisma.menu.findFirst({
-      where: { restaurantId: '5XJ1J37F' },
-      include: {
-        categories: {
-          where: { isActive: true },
-          orderBy: { position: 'asc' }
-        }
-      }
+      where: { restaurantId: idUnico },
+      include: { categories: { where: { isActive: true }, orderBy: { position: 'asc' } } }
     });
 
     if (!menu) {
       return NextResponse.json({ error: 'Menú no encontrado' }, { status: 404 });
     }
 
-    // Generar código automático
     const categoryCode = generateCategoryCode(name.trim(), menu.categories.length);
-
-    // Calcular siguiente posición
     const nextPosition = menu.categories.length > 0
       ? Math.max(...menu.categories.map(c => c.position || 0)) + 1
       : 0;
 
-    // Crear la categoría
     const newCategory = await prisma.category.create({
       data: {
         name: name.trim(),
@@ -88,8 +83,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    console.log('✅ Categoría creada:', newCategory);
-
     return NextResponse.json({
       success: true,
       category: {
@@ -100,7 +93,6 @@ export async function POST(request: NextRequest) {
         position: newCategory.position
       }
     }, { status: 201 });
-
   } catch (error) {
     console.error('❌ Error creando categoría:', error);
     return NextResponse.json({ error: 'Error al crear categoría' }, { status: 500 });
@@ -118,12 +110,10 @@ export async function PUT(request: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'ID de categoría es obligatorio' }, { status: 400 });
     }
-
     if (!name || name.trim() === '') {
       return NextResponse.json({ error: 'El nombre es obligatorio' }, { status: 400 });
     }
 
-    // Actualizar la categoría
     const updatedCategory = await prisma.category.update({
       where: { id },
       data: {
@@ -131,8 +121,6 @@ export async function PUT(request: NextRequest) {
         description: description?.trim() || null
       }
     });
-
-    console.log('✅ Categoría actualizada:', updatedCategory);
 
     return NextResponse.json({
       success: true,
@@ -144,7 +132,6 @@ export async function PUT(request: NextRequest) {
         position: updatedCategory.position
       }
     });
-
   } catch (error) {
     console.error('❌ Error actualizando categoría:', error);
     return NextResponse.json({ error: 'Error al actualizar categoría' }, { status: 500 });
@@ -163,32 +150,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID de categoría es obligatorio' }, { status: 400 });
     }
 
-    // Verificar que la categoría no tenga items
-    const category = await prisma.category.findUnique({
-      where: { id },
-      include: { items: true }
-    });
-
+    const category = await prisma.category.findUnique({ where: { id }, include: { items: true } });
     if (!category) {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
     }
-
     if (category.items.length > 0) {
       return NextResponse.json({
         error: 'No se puede eliminar una categoría con platos. Elimina primero los platos.'
       }, { status: 400 });
     }
 
-    // Soft delete
-    await prisma.category.update({
-      where: { id },
-      data: { isActive: false }
-    });
-
-    console.log('✅ Categoría eliminada (soft):', id);
-
+    await prisma.category.update({ where: { id }, data: { isActive: false } });
     return NextResponse.json({ success: true, message: 'Categoría eliminada correctamente' });
-
   } catch (error) {
     console.error('❌ Error eliminando categoría:', error);
     return NextResponse.json({ error: 'Error al eliminar categoría' }, { status: 500 });
@@ -197,26 +170,19 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// Función auxiliar para generar código de categoría
 function generateCategoryCode(categoryName: string, currentCount: number): string {
-  // Categorías fijas en orden específico
   const fixedCategories = [
     { name: 'Platos del Día', code: '01' },
     { name: 'Promociones', code: '02' },
     { name: 'Cocina', code: '03' },
     { name: 'Parrilla', code: '04' }
   ];
-
-  // Buscar si es una categoría fija
   const fixedCategory = fixedCategories.find(cat =>
     categoryName.toLowerCase().includes(cat.name.toLowerCase())
   );
-
-  if (fixedCategory) {
-    return fixedCategory.code;
-  }
-
-  // Si no es fija, usar índice + 5 (después de las fijas)
+  if (fixedCategory) return fixedCategory.code;
   return String(currentCount + 5).padStart(2, '0');
 }
+
+
 

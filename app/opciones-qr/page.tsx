@@ -10,7 +10,35 @@ export default function OpcionesQR() {
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
   const idUnico = (params?.idUnico as string) || '5XJ1J37F'; // Por defecto
-  const qrUrl = `https://menuqrep.vercel.app/carta-menu/${idUnico}`;
+  const qrUrl = `https://menuqrep.vercel.app/carta/${idUnico}`;
+
+  // Controles de vista previa
+  const [variant, setVariant] = useState<'plain' | 'framed'>('framed');
+  const [showTitle, setShowTitle] = useState(true);
+  const [title, setTitle] = useState('');
+  const [showLegend, setShowLegend] = useState(true);
+  const [legendText, setLegendText] = useState('Escanear para ver la Carta');
+
+  // Cargar nombre del comercio por idUnico y validar id
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/menu/${idUnico}`);
+        const data = await res.json();
+        if (active && data?.success && data.menu?.restaurantName) {
+          setTitle(data.menu.restaurantName);
+        } else {
+          // ID no válido: usar demo y avisar en título
+          if (active) setTitle('Mi Comercio');
+        }
+      } catch {
+        if (active) setTitle('Mi Comercio');
+      }
+    };
+    load();
+    return () => { active = false; };
+  }, [idUnico]);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
@@ -31,7 +59,7 @@ export default function OpcionesQR() {
                 className={`p-2 border rounded-lg transition-all ${
                   isDarkMode 
                     ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-blue-300 hover:bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:bg-gray-200 text-gray-800'
                 }`}
                 title="Menú de funciones"
               >
@@ -48,11 +76,11 @@ export default function OpcionesQR() {
             <div className="flex items-center gap-2">
               {/* Botón Carta Menu */}
               <button 
-                onClick={() => router.push('/carta-menu')}
+                onClick={() => router.push(`/carta/${idUnico}`)}
                 className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                    : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                 }`}
                 title="Ver Carta Menu"
               >
@@ -66,7 +94,7 @@ export default function OpcionesQR() {
                 className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
                 }`}
                 title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
               >
@@ -79,7 +107,7 @@ export default function OpcionesQR() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-400">Solicito:</span>
-              <span className="text-sm font-medium text-blue-400">Configurar opciones de QR</span>
+              <span className="text-sm font-medium text-gray-500">Configurar opciones de QR</span>
             </div>
           </div>
         </div>
@@ -87,7 +115,9 @@ export default function OpcionesQR() {
 
       {/* Menu Hamburguesa Desplegable */}
       {showMenuHamburguesa && (
-        <div className="fixed top-16 left-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-lg min-w-64">
+        <div className={`fixed top-16 left-4 z-50 rounded-lg shadow-lg min-w-64 border ${
+          isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-200 border-gray-300'
+        }`}>
           <div className="p-2">
             <button
               onClick={() => {
@@ -97,7 +127,7 @@ export default function OpcionesQR() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               📋 Datos del comercio
@@ -110,7 +140,7 @@ export default function OpcionesQR() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               📝 Administrar menú
@@ -122,8 +152,8 @@ export default function OpcionesQR() {
               }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-100 text-blue-700'
+                  ? 'bg-gray-700 text-white' 
+                  : 'bg-gray-200 text-gray-800'
               }`}
             >
               🖨️ Opciones QR
@@ -131,12 +161,12 @@ export default function OpcionesQR() {
             <button 
               onClick={() => {
                 setShowMenuHamburguesa(false);
-                router.push(`/carta-menu/${idUnico}`);
+                router.push(`/carta/${idUnico}`);
               }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               👁️ Ver carta
@@ -149,7 +179,7 @@ export default function OpcionesQR() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               ⚙️ Configuración
@@ -165,13 +195,13 @@ export default function OpcionesQR() {
         <div className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
           isDarkMode 
             ? 'bg-gray-800 border-gray-700' 
-            : 'bg-gray-100 border-blue-400'
+            : 'bg-gray-100 border-gray-300'
         }`}>
-          {/* Header de Categoría - Estilo como "Platos del Día" */}
+          {/* Header */}
           <div className={`px-4 py-2 cursor-pointer transition-colors duration-300 ${
             isDarkMode 
               ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-blue-100 hover:bg-blue-200'
+              : 'bg-gray-200 hover:bg-gray-300'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 pl-3">
@@ -183,8 +213,65 @@ export default function OpcionesQR() {
           {/* Contenido de la card - QR y Botones */}
           <div className="p-6 space-y-6">
             
-            {/* QR Code y Botones lado a lado */}
-            <QRWithActions qrUrl={qrUrl} isDarkMode={isDarkMode} />
+            {/* Controles de vista previa */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm mb-1">Variante</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setVariant('plain')}
+                    className={`px-3 py-1 rounded border ${variant==='plain' ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white') : 'bg-transparent'} ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}
+                  >
+                    Plano
+                  </button>
+                  <button
+                    onClick={() => setVariant('framed')}
+                    className={`px-3 py-1 rounded border ${variant==='framed' ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white') : 'bg-transparent'} ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}
+                  >
+                    En soporte
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <input id="showTitle" type="checkbox" checked={showTitle} onChange={(e)=>setShowTitle(e.target.checked)} />
+                  <label htmlFor="showTitle" className="text-sm">Mostrar nombre</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e)=>setTitle(e.target.value)}
+                    className={`ml-2 px-2 py-1 rounded text-sm ${isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'}`}
+                    placeholder="Nombre del comercio"
+                  />
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <input id="showLegend" type="checkbox" checked={showLegend} onChange={(e)=>setShowLegend(e.target.checked)} />
+                  <label htmlFor="showLegend" className="text-sm">Mostrar leyenda</label>
+                  <input
+                    type="text"
+                    value={legendText}
+                    onChange={(e)=>setLegendText(e.target.value)}
+                    className={`ml-2 px-2 py-1 rounded text-sm ${isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'}`}
+                    placeholder="Escanear para ver la Carta"
+                  />
+                </div>
+
+                {/* sin color acento (siempre negro) */}
+              </div>
+
+              {/* Vista previa */}
+              <div className="flex items-center justify-center">
+                <QRWithActions
+                  qrUrl={qrUrl}
+                  isDarkMode={isDarkMode}
+                  title={title}
+                  showTitle={showTitle}
+                  showLegend={showLegend}
+                  legendText={legendText}
+                  variant={variant}
+                />
+              </div>
+            </div>
 
             {/* Información adicional */}
             <div className="text-center">

@@ -134,7 +134,7 @@ export default function DatosComercio() {
                 className={`p-2 border rounded-lg transition-all ${
                   isDarkMode 
                     ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-blue-300 hover:bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:bg-gray-200 text-gray-800'
                 }`}
                 title="Menú de funciones"
               >
@@ -155,7 +155,7 @@ export default function DatosComercio() {
                 className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
                 }`}
                 title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
               >
@@ -175,8 +175,8 @@ export default function DatosComercio() {
                 placeholder="Buscar restaurante en Google..."
                 className={`w-full pl-4 pr-20 py-2 rounded-lg border transition-colors ${
                   isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-gray-500' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-500'
                 }`}
               />
               <button
@@ -185,7 +185,7 @@ export default function DatosComercio() {
                 className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 rounded text-xs transition-colors ${
                   searching || !searchTerm.trim()
                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-800 hover:bg-gray-900 text-white'
                 }`}
               >
                 {searching ? 'Buscando...' : 'Buscar'}
@@ -203,8 +203,8 @@ export default function DatosComercio() {
               onClick={() => router.push('/datos-comercio')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-100 text-blue-700'
+                  ? 'bg-gray-700 text-white' 
+                  : 'bg-gray-200 text-gray-800'
               }`}
             >
               📋 Datos del comercio
@@ -214,7 +214,7 @@ export default function DatosComercio() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               📝 Administrar menú
@@ -224,7 +224,7 @@ export default function DatosComercio() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               🖨️ Opciones QR
@@ -234,7 +234,7 @@ export default function DatosComercio() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               👁️ Ver carta
@@ -244,7 +244,7 @@ export default function DatosComercio() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               ⚙️ Configuración
@@ -270,13 +270,13 @@ export default function DatosComercio() {
         <div className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
           isDarkMode 
             ? 'bg-gray-800 border-gray-700' 
-            : 'bg-gray-100 border-blue-400'
+            : 'bg-gray-100 border-gray-300'
         }`}>
           {/* Header de Categoría - Estilo como "Platos del Día" */}
           <div className={`px-4 py-2 cursor-pointer transition-colors duration-300 ${
             isDarkMode 
               ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-blue-100 hover:bg-blue-200'
+              : 'bg-gray-200 hover:bg-gray-300'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 pl-3">
@@ -299,8 +299,8 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('restaurantName', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="ej: Esquina Pompeya"
                 />
@@ -317,8 +317,8 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="ej: Av. Corrientes 1234, CABA"
                 />
@@ -335,8 +335,8 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="ej: +54 11 4567-8900"
                 />
@@ -353,8 +353,8 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="ej: contacto@restaurante.com"
                 />
@@ -430,7 +430,7 @@ export default function DatosComercio() {
                   <button
                     type="button"
                     onClick={() => document.getElementById('logoInput')?.click()}
-                    className="mt-2 text-sm text-blue-400 hover:text-blue-300 underline"
+                    className="mt-2 text-sm text-gray-600 hover:text-gray-700 underline"
                   >
                     Cambiar logo
                   </button>
@@ -448,8 +448,8 @@ export default function DatosComercio() {
                   rows={4}
                   className={`w-full p-3 rounded-lg border transition-colors resize-none ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="Breve descripción del restaurante"
                 />
@@ -466,8 +466,8 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('instagram', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="@usuario"
                 />
@@ -508,7 +508,7 @@ export default function DatosComercio() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors font-medium"
+                  className="px-6 py-3 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-500 text-white rounded-lg transition-colors font-medium"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>

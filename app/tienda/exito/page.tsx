@@ -39,7 +39,7 @@ function TiendaExitoContent() {
     return result;
   };
 
-  const qrUrl = `https://menuqrep.vercel.app/carta-menu/${idUnico}`;
+  const qrUrl = `https://menuqrep.vercel.app/carta/${idUnico}`;
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">

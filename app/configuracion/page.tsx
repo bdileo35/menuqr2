@@ -27,7 +27,7 @@ export default function Configuracion() {
                 className={`p-2 border rounded-lg transition-all ${
                   isDarkMode 
                     ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-blue-300 hover:bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:bg-gray-200 text-gray-800'
                 }`}
                 title="Menú de funciones"
               >
@@ -44,11 +44,11 @@ export default function Configuracion() {
             <div className="flex items-center gap-2">
               {/* Botón Carta Menu */}
               <button 
-                onClick={() => router.push('/carta-menu')}
+                onClick={() => router.push('/carta/5XJ1J37F')}
                 className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                    : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                 }`}
                 title="Ver Carta Menu"
               >
@@ -62,7 +62,7 @@ export default function Configuracion() {
                 className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
                 }`}
                 title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
               >
@@ -75,7 +75,7 @@ export default function Configuracion() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-400">Solicito:</span>
-              <span className="text-sm font-medium text-blue-400">Configurar opciones generales</span>
+              <span className="text-sm font-medium text-gray-500">Configurar opciones generales</span>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function Configuracion() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               📋 Datos del comercio
@@ -100,7 +100,7 @@ export default function Configuracion() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               📝 Administrar menú
@@ -110,17 +110,17 @@ export default function Configuracion() {
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               🖨️ Opciones QR
             </button>
             <button 
-              onClick={() => router.push('/carta-menu')}
+              onClick={() => router.push('/carta/5XJ1J37F')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
+                  : 'hover:bg-gray-200 text-gray-800'
               }`}
             >
               👁️ Ver carta
@@ -129,8 +129,8 @@ export default function Configuracion() {
               onClick={() => router.push('/configuracion')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-100 text-blue-700'
+                  ? 'bg-gray-700 text-white' 
+                  : 'bg-gray-200 text-gray-800'
               }`}
             >
               ⚙️ Configuración
@@ -146,13 +146,13 @@ export default function Configuracion() {
         <div className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
           isDarkMode 
             ? 'bg-gray-800 border-gray-700' 
-            : 'bg-gray-100 border-blue-400'
+            : 'bg-gray-100 border-gray-300'
         }`}>
           {/* Header de Categoría - Estilo como "Platos del Día" */}
           <div className={`px-4 py-2 cursor-pointer transition-colors duration-300 ${
             isDarkMode 
               ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-blue-100 hover:bg-blue-200'
+              : 'bg-gray-200 hover:bg-gray-300'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 pl-3">
@@ -190,7 +190,7 @@ export default function Configuracion() {
               <button
                 type="button"
                 onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                className="px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors font-medium"
               >
                 Guardar
               </button>

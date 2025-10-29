@@ -92,6 +92,8 @@ export default function Editor2() {
           categories: data.menu.categories.map((cat: any) => ({
           id: cat.id,
           name: cat.name,
+          description: cat.description,
+          code: cat.code,
           items: cat.items.map((item: any) => ({
             id: item.id,
             name: item.name,
@@ -626,7 +628,7 @@ export default function Editor2() {
             <button 
               onClick={() => {
                 setShowMenuHamburguesa(false);
-                router.push(`/carta-menu/${idUnico}`);
+                router.push(`/carta/${idUnico}`);
               }}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
@@ -681,7 +683,7 @@ export default function Editor2() {
             >
               {/* Header de Categoría - Compacto como carta */}
               <div 
-                className={`px-4 py-2 cursor-pointer transition-colors duration-300 border ${
+                className={`px-3 py-1 cursor-pointer transition-colors duration-300 border ${
                   isDarkMode 
                     ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
                     : 'bg-gray-300 border-gray-400 hover:bg-gray-400'
@@ -691,16 +693,21 @@ export default function Editor2() {
                 onTouchEnd={handleTouchEnd}
                 onDoubleClick={(e) => handleDoubleClick(e, 'category', category)}
               >
-                <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 pl-2">
-                  <span className={`text-sm px-2 py-1 rounded-full border ${
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-2 pl-2">
+                  <span className={`w-6 h-6 flex items-center justify-center text-xs rounded-full border ${
                     isDarkMode 
                       ? 'bg-transparent border-gray-500 text-white' 
                       : 'bg-transparent border-gray-500 text-gray-800'
                   }`}>
                     {filteredItems.length}
                   </span>
-                  <h3 className="text-lg font-bold">{category.name}</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-base font-bold leading-tight">{category.name}</h3>
+                    {category.description && (
+                      <span className={`text-[11px] leading-tight ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{category.description}</span>
+                    )}
+                  </div>
                 </div>
                   <div className="flex items-center justify-end gap-3">
                     
@@ -838,7 +845,7 @@ export default function Editor2() {
             {/* Contenido - QR con acciones */}
             <div className="p-6">
               <QRWithActions 
-                qrUrl={`https://menuqrep.vercel.app/carta-menu/${idUnico}`} 
+                qrUrl={`https://menuqrep.vercel.app/carta/${idUnico}`} 
                 isDarkMode={isDarkMode} 
               />
               
@@ -1180,7 +1187,13 @@ export default function Editor2() {
               const description = formData.get('description') as string;
               
               try {
-                // TODO: Implementar actualización via API
+                // Actualizar categoría en la API dinámicamente por idUnico
+                const res = await fetch(`/api/menu/${idUnico}/categories`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: editingCategory?.id, name: categoryName, description })
+                });
+                if (!res.ok) throw new Error('Error HTTP ' + res.status);
                 alert('✅ Categoría "' + categoryName + '" guardada exitosamente');
                 await loadMenuFromAPI();
               } catch (error) {
