@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
+import dynamic from 'next/dynamic';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,10 +18,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const DevClick = dynamic(() => import('./components/DevClickToComponent'), { ssr: false });
   return (
     <html lang="es">
       <body className={`${inter.variable} antialiased`}>
         {children}
+        <DevClick />
       </body>
     </html>
   );
