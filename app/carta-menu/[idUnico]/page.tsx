@@ -1,7 +1,7 @@
 
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { getDemoMenuData } from '@/lib/demo-data'; // Fallback para desarrollo
 import { useAppTheme } from '../../hooks/useAppTheme';
 // import DevBanner from '../components/DevBanner'; // Moved to _unused
@@ -18,6 +18,7 @@ interface MenuItem {
 interface MenuCategory {
   id?: string;
   name: string;
+  description?: string;
   items: MenuItem[];
 }
 
@@ -30,6 +31,8 @@ interface RestaurantData {
 
 export default function CartaMenuPage() {
   const router = useRouter();
+  const params = useParams();
+  const idUnico = (params?.idUnico as string) || '5XJ1J37F';
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
@@ -59,11 +62,36 @@ export default function CartaMenuPage() {
   const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
   const [animationActive, setAnimationActive] = useState(false);
 
+  // POC: Carrito Pro (FAB + Modal tipo ticket)
+  const [showProCart, setShowProCart] = useState(true);
+  const [showProCartModal, setShowProCartModal] = useState(false);
+  const [proName, setProName] = useState('');
+  const [proAddress, setProAddress] = useState('');
+  const [proPayment, setProPayment] = useState<'efectivo' | 'mp' | null>(null);
+
+  // Util: generar texto de ticket para WhatsApp
+  const buildTicketMessage = () => {
+    const lines: string[] = [];
+    lines.push(`Pedido - ${menuData?.restaurantName || 'Mi Restaurante'}`);
+    if (proName) lines.push(`Nombre: ${proName}`);
+    if (proAddress) lines.push(`Dirección: ${proAddress}`);
+    lines.push('---');
+    cartItems.forEach(ci => {
+      const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
+      lines.push(`${ci.quantity} x ${ci.item.name} - ${price.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}`);
+    });
+    const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
+    lines.push('---');
+    lines.push(`Total: ${total.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}`);
+    if (proPayment) lines.push(`Pago: ${proPayment === 'mp' ? 'Mercado Pago' : 'Efectivo'}`);
+    return lines.join('\n');
+  };
+
   // Función para toggle de categorías
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => ({
       ...prev,
-      [categoryId]: !prev[categoryId]
+      [categoryId]: prev[categoryId] === undefined ? false : !prev[categoryId]
     }));
   };
 
@@ -152,8 +180,8 @@ export default function CartaMenuPage() {
       console.log('🔍 Cargando menú desde la base de datos...');
       
       try {
-        // Llamar a la API para obtener el menú de Esquina Pompeya
-        const response = await fetch('/api/menu/esquina-pompeya');
+        // Llamar a la API dinámica por idUnico
+        const response = await fetch(`/api/menu/${idUnico}`);
         const data = await response.json();
         
         if (data.success && data.menu) {
@@ -170,13 +198,14 @@ export default function CartaMenuPage() {
           }
           
           // Formatear datos para el componente
-          const restaurantInfo: RestaurantData = {
+          let restaurantInfo: RestaurantData = {
             restaurantName: data.menu.restaurantName,
             address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
             phone: data.menu.contactPhone || '+54 11 1234-5678',
             categories: data.menu.categories.map((cat: any) => ({
               id: cat.id,
               name: cat.name,
+              description: cat.description,
               items: cat.items.map((item: any) => ({
                 id: item.id,
                 name: item.name,
@@ -188,7 +217,57 @@ export default function CartaMenuPage() {
             }))
           };
           
+          // Fusionar con cambios locales (editor)
+          try {
+            const savedStr = localStorage.getItem('editor-menu-data');
+            if (savedStr) {
+              const saved = JSON.parse(savedStr) as RestaurantData;
+              const savedCatMap = new Map<string, any>();
+              saved.categories.forEach(sc => savedCatMap.set(sc.id || sc.name, sc));
+              restaurantInfo = {
+                ...restaurantInfo,
+                categories: restaurantInfo.categories.map(rc => {
+                  const sc = savedCatMap.get(rc.id || rc.name);
+                  if (!sc) return rc;
+                  const savedItemMap = new Map<string, any>();
+                  sc.items.forEach((si: any) => savedItemMap.set(si.id || si.name, si));
+                  return {
+                    ...rc,
+                    description: (typeof sc.description === 'string' && sc.description.length > 0) ? sc.description : rc.description,
+                    items: rc.items.map(ri => {
+                      const si = savedItemMap.get(ri.id || ri.name);
+                      if (!si) return ri;
+                      const hasLocalImageProp = Object.prototype.hasOwnProperty.call(si, 'imageBase64');
+                      return {
+                        ...ri,
+                        name: si.name || ri.name,
+                        description: si.description ?? ri.description,
+                        price: si.price || ri.price,
+                        isAvailable: typeof si.isAvailable === 'boolean' ? si.isAvailable : ri.isAvailable,
+                        imageBase64: hasLocalImageProp ? si.imageBase64 : ri.imageBase64,
+                      };
+                    })
+                  };
+                })
+              };
+            }
+          } catch (mergeErr) {
+            console.warn('⚠️ No se pudo fusionar datos locales en Carta:', mergeErr);
+          }
+
           setMenuData(restaurantInfo);
+          // Activación Pro desde base de datos (allowOrdering)
+          try {
+            if (data?.menu?.allowOrdering === true) {
+              setShowProCart(true);
+            }
+          } catch {}
+          // Inicializar como expandidas todas las categorías
+          const initialExpanded: {[key: string]: boolean} = {};
+          restaurantInfo.categories.forEach(cat => {
+            initialExpanded[cat.id || cat.name] = true;
+          });
+          setExpandedCategories(initialExpanded);
           console.log('📋 Total categorías:', restaurantInfo.categories.length);
           console.log('📋 Total productos:', restaurantInfo.categories.reduce((total, cat) => total + cat.items.length, 0));
         } else {
@@ -232,6 +311,16 @@ export default function CartaMenuPage() {
         setLoading(false);
       }
     };
+
+    // Habilitar FAB por query (?procart=1 o ?pro=1) o flag de entorno
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('procart') === '1' || sp.get('pro') === '1' || process.env.NEXT_PUBLIC_CART_PRO === '1') {
+        setShowProCart(true);
+      } else if (sp.get('procart') === '0' || sp.get('pro') === '0') {
+        setShowProCart(false);
+      }
+    } catch {}
 
     loadMenuFromAPI();
   }, []);
@@ -507,30 +596,35 @@ export default function CartaMenuPage() {
               
               {/* Header de Categoría - Clickeable */}
               <div 
-                className={`px-4 py-2 border-b rounded-t-lg transition-colors duration-300 cursor-pointer hover:opacity-80 ${
+                className={`px-3 py-1 border-b rounded-t-lg transition-colors duration-300 cursor-pointer hover:opacity-80 ${
                   isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'
                 }`}
                 onClick={() => toggleCategory(category.id || category.name)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center justify-start gap-2">
-                    <span className={`text-sm px-2 py-1 rounded-full border ${
+                  <div className="flex items-start gap-2 pl-2">
+                    <span className={`w-8 h-8 flex items-center justify-center text-sm font-semibold rounded-full border ${
                       isDarkMode 
-                        ? 'bg-transparent border-gray-600 text-gray-300' 
-                        : 'bg-transparent border-gray-300 text-gray-700'
+                        ? 'bg-transparent border-gray-500 text-white' 
+                        : 'bg-transparent border-gray-500 text-gray-800'
                     }`}>
                       {filterItems(category.items).length}
                     </span>
-                    <h2 className={`text-base font-bold transition-colors duration-300 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      {category.name}
-                    </h2>
+                    <div className="flex flex-col">
+                      <h2 className={`text-base font-bold leading-tight ${
+                        isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
+                        {category.name}
+                      </h2>
+                      {category.description && (
+                        <span className={`text-[11px] leading-tight ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{category.description}</span>
+                      )}
+                    </div>
                   </div>
                   
                   {/* Triangulito */}
                   <button className="text-gray-400 hover:text-gray-300 transition-colors">
-                    {expandedCategories[category.id || category.name] ? '▲' : '▼'}
+                    {expandedCategories[category.id || category.name] ? '▼' : '▲'}
                   </button>
                 </div>
               </div>
@@ -628,37 +722,39 @@ export default function CartaMenuPage() {
                       onClick={() => {
                         if (item.isAvailable !== false) {
                           setModalItem(item);
-                          const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20250926-WA0005.jpg'];
-                          setModalItemImage(platosImages[itemIndex % platosImages.length]);
+                          const fallbacks = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20250926-WA0005.jpg'];
+                          setModalItemImage(item.imageBase64 || fallbacks[itemIndex % fallbacks.length]);
                         }
                       }}
                     >
                       {/* Imagen más grande sin marco */}
                       <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1`}>
+                        {item.imageBase64 ? (
+                          <img
+                            src={item.imageBase64}
+                            alt={item.name}
+                            className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`}
+                          />
+                        ) : (
                           <img 
                             src={(() => {
                               const platosImages = ['/platos/albondigas.jpg', '/platos/rabas.jpg', '/platos/IMG-20250926-WA0005.jpg'];
                               return platosImages[itemIndex % platosImages.length];
                             })()}
                             alt={item.name}
-
-                          className={`w-full h-full object-cover ${
-                            item.isAvailable === false ? 'grayscale' : ''
-                          }`}
+                            className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`}
                             onError={(e) => {
-                              // Fallback si no carga la imagen
                               e.currentTarget.style.display = 'none';
                               const parent = e.currentTarget.parentElement;
                               if (parent) {
                                 parent.innerHTML = `
-                                  <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                    <span class="text-xs">🍽️</span>
-                                  </div>
+                                  <div class=\"w-full h-full flex items-center justify-center bg-gray-200\">\n                                    <span class=\"text-xs\">🍽️</span>\n                                  </div>
                                 `;
                               }
                             }}
                           />
-                        </div>
+                        )}
+                      </div>
                         
 
                       {/* Contenido sin marco */}
@@ -878,7 +974,8 @@ export default function CartaMenuPage() {
         </div>
       )}
 
-      {/* Carrito flotante - SIEMPRE VISIBLE */}
+      {/* Carrito flotante clásico - oculto si Pro activo */}
+      {!showProCart && (
       <div className="fixed bottom-2 left-0 right-0 z-50">
         <div className="max-w-6xl mx-auto px-4">
           
@@ -1270,7 +1367,7 @@ export default function CartaMenuPage() {
                           const priceStr = cartItem.item.price.replace(/[$,\s]/g, '');
                           const price = parseFloat(priceStr) || 0;
                           return total + (price * cartItem.quantity);
-                        }, 0).toLocaleString('es-AR', {style: 'currency', currency: 'ARS'}))
+                        }, 0).toLocaleString('es-AR', {style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0}))
                       : '$0'}
                   </span>
                 </div>
@@ -1279,6 +1376,144 @@ export default function CartaMenuPage() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* FAB POC Carrito Pro */}
+      {showProCart && (
+        <button
+          onClick={() => setShowProCartModal(true)}
+          className={`fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full shadow-lg border-2 flex items-center justify-center transition-colors ${
+            isDarkMode ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-100'
+          }`}
+          title="Ver carrito (POC)"
+        >
+          <span className="text-2xl">🛒</span>
+          {cartItems.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+              {cartItems.reduce((t, it) => t + it.quantity, 0)}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* Modal POC Carrito Pro */}
+      {showProCart && showProCartModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowProCartModal(false)} />
+          <div className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-300'}`}>
+            <div className={`px-4 py-3 border-b ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'}`}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold">Resumen del Pedido</h3>
+                <button onClick={() => setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>✕</button>
+              </div>
+            </div>
+
+            <div className="p-4 max-h-[70vh] overflow-y-auto">
+              {/* Ticket */}
+              <div className={`rounded-lg mb-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <div className="p-3 space-y-2">
+                  {cartItems.length === 0 ? (
+                    <div className={`text-center py-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Carrito vacío</div>
+                  ) : (
+                    cartItems.map((ci, index) => {
+                      const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
+                      const subtotal = price * ci.quantity;
+                      return (
+                        <div key={index} className="flex items-center justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">{ci.item.name} <span className={`ml-1 text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>({ci.code})</span></div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className={`inline-flex items-center rounded-full overflow-hidden border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'}`}>
+                              <button onClick={() => setCartItems(prev => prev.map((it, i) => i === index ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it))} className={`w-7 h-7 text-sm ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`}>-</button>
+                              <span className="w-7 text-center text-sm font-semibold select-none">{ci.quantity}</span>
+                              <button onClick={() => setCartItems(prev => prev.map((it, i) => i === index ? { ...it, quantity: it.quantity + 1 } : it))} className={`w-7 h-7 text-sm ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`}>+</button>
+                            </div>
+                            <div className="w-20 text-right text-sm font-semibold">{subtotal.toLocaleString('es-AR',{style:'currency',currency:'ARS'})}</div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <div className={`px-3 py-2 border-t flex items-center justify-between ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                  <div className="text-sm font-medium">Total</div>
+                  <div className="text-base font-bold">
+                    {(() => {
+                      const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
+                      return total.toLocaleString('es-AR',{style:'currency',currency:'ARS'});
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Formulario simple: cada fila label + control */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="w-32 text-sm">Nombre</label>
+                  <input value={proName} onChange={(e)=>setProName(e.target.value)} className={`flex-1 rounded-lg px-3 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`} placeholder="Nombre y apellido" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="w-32 text-sm">Dirección <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}` }>(Delivery)</span></label>
+                  <input value={proAddress} onChange={(e)=>setProAddress(e.target.value)} className={`flex-1 rounded-lg px-3 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`} placeholder="Calle y número" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="w-32 text-sm">Pago</label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="pago" checked={proPayment==='efectivo'} onChange={()=>setProPayment('efectivo')} /> Efectivo</label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="pago" checked={proPayment==='mp'} onChange={()=>setProPayment('mp')} /> MP</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={`px-4 py-3 border-t flex gap-3 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+              <button onClick={()=>setShowProCartModal(false)} className={`flex-1 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'}`}>Cancelar</button>
+              <button
+                onClick={() => {
+                  if (cartItems.length === 0) { alert('Carrito vacío'); return; }
+                  const mod = proAddress.trim() ? 'delivery' : 'retiro';
+                  if (mod === 'delivery') {
+                    if (!proName.trim()) { alert('Ingresá tu nombre para delivery'); return; }
+                    if (!proAddress.trim()) { alert('Ingresá la dirección para delivery'); return; }
+                    if (!proPayment) { alert('Seleccioná forma de pago'); return; }
+                  }
+                  setModalidad(mod as any);
+                  setFormaPago((proPayment || 'efectivo') as any);
+                  if (proPayment === 'mp') {
+                    // Explicar y enviar ticket por WhatsApp, luego redirigir a MP
+                    try {
+                      const phone = '5491165695648';
+                      const msg = buildTicketMessage() + '\nPago: Mercado Pago (pendiente)';
+                      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                    } catch {}
+                    alert('Te redirigimos a Mercado Pago para completar el pago. Al finalizar, tendrás el comprobante.');
+                    setTimeout(()=>{ generateMPLink(); }, 300);
+                  } else {
+                    alert(`Pedido confirmado!\nNombre: ${proName || 'Cliente'}\nModalidad: ${mod.toUpperCase()}\nPago: ${proPayment || 'efectivo'}`);
+                  }
+                  setShowProCartModal(false);
+                }}
+                className={`flex-1 py-2 rounded-lg text-white ${proPayment==='mp' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}
+              >
+                {proPayment==='mp' ? 'Pagar con MP' : 'Confirmar pedido'}
+              </button>
+              <button
+                onClick={() => {
+                  if (cartItems.length === 0) { alert('Carrito vacío'); return; }
+                  const phone = '5491165695648';
+                  const text = encodeURIComponent(buildTicketMessage());
+                  window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+                }}
+                className={`px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900'}`}
+                title="Enviar ticket por WhatsApp"
+              >
+                📤 WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Animación de flecha */}
       {animationActive && (
