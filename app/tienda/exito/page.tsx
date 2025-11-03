@@ -11,6 +11,7 @@ function TiendaExitoContent() {
   const [descripcion, setDescripcion] = useState<string>('');
   const [mpPaymentId, setMpPaymentId] = useState<string>('');
   const [mpStatus, setMpStatus] = useState<string>('');
+  const [waPhone, setWaPhone] = useState<string>(process.env.NEXT_PUBLIC_ORDER_WHATSAPP || '5491165695648');
 
   useEffect(() => {
     // Obtener parámetros de la URL
@@ -20,6 +21,8 @@ function TiendaExitoContent() {
     const descripcionParam = searchParams?.get('descripcion') || '';
     const paymentId = searchParams?.get('payment_id') || '';
     const paymentStatus = searchParams?.get('status') || '';
+    const wa = searchParams?.get('wa') || '';
+    const auto = searchParams?.get('auto') || '';
 
     setIdUnico(idUnicoParam);
     setPlan(planParam);
@@ -27,12 +30,21 @@ function TiendaExitoContent() {
     setDescripcion(decodeURIComponent(descripcionParam));
     setMpPaymentId(paymentId);
     setMpStatus(paymentStatus);
+    if (wa) setWaPhone(wa);
 
     // Generar ID único si no viene en los parámetros
     if (!idUnicoParam) {
       const nuevoIdUnico = generarIdUnico();
       setIdUnico(nuevoIdUnico);
       console.log('🆔 ID único generado:', nuevoIdUnico);
+    }
+
+    // Auto-WhatsApp de demo si viene auto=1 y hay datos de MP
+    if ((paymentId || paymentStatus) && auto === '1') {
+      try {
+        const text = encodeURIComponent(`Pago recibido\nIDU: ${idUnicoParam || '-'}\nMP: ${paymentId || '-'} ${paymentStatus ? `(${paymentStatus})` : ''}\nPlan: ${planParam || '-'}\nMonto: $${precioParam || '-'}`);
+        window.open(`https://wa.me/${wa || waPhone}?text=${text}`, '_blank');
+      } catch {}
     }
   }, [searchParams]);
 
@@ -108,7 +120,7 @@ function TiendaExitoContent() {
                 <button
                   onClick={() => {
                     const text = encodeURIComponent(`Pago recibido\nIDU: ${idUnico}\nMP: ${mpPaymentId || '-'} ${mpStatus ? `(${mpStatus})` : ''}\nPlan: ${plan || '-'}\nMonto: $${precio || '-'}`);
-                    window.open(`https://wa.me/5491165695648?text=${text}`, '_blank');
+                    window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank');
                   }}
                   className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
                 >

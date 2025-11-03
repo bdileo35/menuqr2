@@ -230,7 +230,7 @@ export default function DatosComercio() {
               🖨️ Opciones QR
             </button>
             <button 
-              onClick={() => router.push('/carta-menu')}
+              onClick={() => router.push('/carta')}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 
