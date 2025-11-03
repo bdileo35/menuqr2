@@ -9,18 +9,24 @@ function TiendaExitoContent() {
   const [plan, setPlan] = useState<string>('');
   const [precio, setPrecio] = useState<string>('');
   const [descripcion, setDescripcion] = useState<string>('');
+  const [mpPaymentId, setMpPaymentId] = useState<string>('');
+  const [mpStatus, setMpStatus] = useState<string>('');
 
   useEffect(() => {
     // Obtener parámetros de la URL
-    const idUnicoParam = searchParams.get('idUnico') || '';
-    const planParam = searchParams.get('plan') || '';
-    const precioParam = searchParams.get('precio') || '';
-    const descripcionParam = searchParams.get('descripcion') || '';
+    const idUnicoParam = searchParams?.get('idUnico') || '';
+    const planParam = searchParams?.get('plan') || '';
+    const precioParam = searchParams?.get('precio') || '';
+    const descripcionParam = searchParams?.get('descripcion') || '';
+    const paymentId = searchParams?.get('payment_id') || '';
+    const paymentStatus = searchParams?.get('status') || '';
 
     setIdUnico(idUnicoParam);
     setPlan(planParam);
     setPrecio(precioParam);
     setDescripcion(decodeURIComponent(descripcionParam));
+    setMpPaymentId(paymentId);
+    setMpStatus(paymentStatus);
 
     // Generar ID único si no viene en los parámetros
     if (!idUnicoParam) {
@@ -39,7 +45,7 @@ function TiendaExitoContent() {
     return result;
   };
 
-  const qrUrl = `https://menuqrep.vercel.app/carta/${idUnico}`;
+  const qrUrl = `https://menuqr.vercel.app/carta/${idUnico}`;
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -81,6 +87,12 @@ function TiendaExitoContent() {
                     <span>ID Único:</span>
                     <span className="text-blue-400 font-mono text-xs">{idUnico}</span>
                   </div>
+                  {(mpPaymentId || mpStatus) && (
+                    <div className="flex justify-between">
+                      <span>MP:</span>
+                      <span className="text-green-300 font-mono text-xs">{mpPaymentId || '-'} {mpStatus ? `(${mpStatus})` : ''}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -89,6 +101,21 @@ function TiendaExitoContent() {
             <div className="mb-6">
               <QRWithActions qrUrl={qrUrl} isDarkMode={true} />
             </div>
+
+            {/* Enviar comprobante por WhatsApp (si hay MP) */}
+            {(mpPaymentId || mpStatus) && (
+              <div className="mb-4 text-center">
+                <button
+                  onClick={() => {
+                    const text = encodeURIComponent(`Pago recibido\nIDU: ${idUnico}\nMP: ${mpPaymentId || '-'} ${mpStatus ? `(${mpStatus})` : ''}\nPlan: ${plan || '-'}\nMonto: $${precio || '-'}`);
+                    window.open(`https://wa.me/5491165695648?text=${text}`, '_blank');
+                  }}
+                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Enviar comprobante por WhatsApp
+                </button>
+              </div>
+            )}
 
             {/* Información adicional */}
             <div className="mt-6 text-center">

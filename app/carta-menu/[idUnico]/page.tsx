@@ -13,6 +13,7 @@ interface MenuItem {
   description?: string;
 
   isAvailable?: boolean;
+  imageBase64?: string | null;
 }
 
 interface MenuCategory {
@@ -231,22 +232,31 @@ export default function CartaMenuPage() {
                   if (!sc) return rc;
                   const savedItemMap = new Map<string, any>();
                   sc.items.forEach((si: any) => savedItemMap.set(si.id || si.name, si));
+
+                  // Merge de items existentes
+                  const mergedExisting = rc.items.map(ri => {
+                    const si = savedItemMap.get(ri.id || ri.name);
+                    if (!si) return ri;
+                    const hasLocalImageProp = Object.prototype.hasOwnProperty.call(si, 'imageBase64');
+                    return {
+                      ...ri,
+                      name: si.name || ri.name,
+                      description: si.description ?? ri.description,
+                      price: si.price || ri.price,
+                      isAvailable: typeof si.isAvailable === 'boolean' ? si.isAvailable : ri.isAvailable,
+                      imageBase64: hasLocalImageProp ? si.imageBase64 : ri.imageBase64,
+                    };
+                  });
+
+                  // Agregar items que sólo existen en localStorage (nuevos)
+                  const existingIdOrName = new Set(mergedExisting.map(i => (i as any).id || (i as any).name));
+                  const onlyLocal = sc.items.filter((si: any) => !existingIdOrName.has(si.id || si.name));
+                  const mergedAll = [...mergedExisting, ...onlyLocal];
+
                   return {
                     ...rc,
                     description: (typeof sc.description === 'string' && sc.description.length > 0) ? sc.description : rc.description,
-                    items: rc.items.map(ri => {
-                      const si = savedItemMap.get(ri.id || ri.name);
-                      if (!si) return ri;
-                      const hasLocalImageProp = Object.prototype.hasOwnProperty.call(si, 'imageBase64');
-                      return {
-                        ...ri,
-                        name: si.name || ri.name,
-                        description: si.description ?? ri.description,
-                        price: si.price || ri.price,
-                        isAvailable: typeof si.isAvailable === 'boolean' ? si.isAvailable : ri.isAvailable,
-                        imageBase64: hasLocalImageProp ? si.imageBase64 : ri.imageBase64,
-                      };
-                    })
+                    items: mergedAll
                   };
                 })
               };
@@ -1252,7 +1262,14 @@ export default function CartaMenuPage() {
                   <span className={`text-xs font-medium whitespace-nowrap ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    {cartItems.length > 0 ? `${cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0)} prod` : '0 prod'}
+                    {(() => {
+                      const count = cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0);
+                      return (
+                        <span className={`px-1.5 py-0.5 rounded ${isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-900'}`}>
+                          {count}
+                        </span>
+                      );
+                    })()}
                   </span>
                 </div>
                 
@@ -1307,8 +1324,8 @@ export default function CartaMenuPage() {
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
                     {cartItems.length > 0 
-                      ? (modalidad === 'salon' ? 'Local' : modalidad === 'retiro' ? 'Mostrador' : modalidad === 'delivery' ? 'Delivery' : 'Entrega')
-                      : 'Entrega'}
+                      ? (modalidad === 'salon' ? '🍽️' : modalidad === 'retiro' ? '🏬' : modalidad === 'delivery' ? '🚚' : '📦')
+                      : '📦'}
                   </span>
                 </div>
                 
@@ -1363,12 +1380,8 @@ export default function CartaMenuPage() {
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
                     {cartItems.length > 0 
-                      ? (formaPago === 'efectivo' ? 'Efectivo' : formaPago === 'mp' ? 'Mercado Pago' : cartItems.reduce((total, cartItem) => {
-                          const priceStr = cartItem.item.price.replace(/[$,\s]/g, '');
-                          const price = parseFloat(priceStr) || 0;
-                          return total + (price * cartItem.quantity);
-                        }, 0).toLocaleString('es-AR', {style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0}))
-                      : '$0'}
+                      ? (formaPago === 'efectivo' ? '💵' : formaPago === 'mp' ? '💳' : '💲')
+                      : '💲'}
                   </span>
                 </div>
               </div>
@@ -1400,20 +1413,20 @@ export default function CartaMenuPage() {
       {showProCart && showProCartModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowProCartModal(false)} />
-          <div className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-300'}`}>
-            <div className={`px-4 py-3 border-b ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'}`}>
+          <div className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden bg-white border border-gray-300 text-gray-900`}>
+            <div className={`px-4 py-2 border-b bg-white border-gray-300`}>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold">Resumen del Pedido</h3>
-                <button onClick={() => setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>✕</button>
+                <h3 className="text-lg font-bold">Pedido/Comanda</h3>
+                <button onClick={() => setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300`}>✕</button>
               </div>
             </div>
 
             <div className="p-4 max-h-[70vh] overflow-y-auto">
               {/* Ticket */}
-              <div className={`rounded-lg mb-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+              <div className={`rounded-lg mb-4 bg-white border border-gray-300`}>
                 <div className="p-3 space-y-2">
                   {cartItems.length === 0 ? (
-                    <div className={`text-center py-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Carrito vacío</div>
+                    <div className={`text-center py-6 text-gray-600`}>Carrito vacío</div>
                   ) : (
                     cartItems.map((ci, index) => {
                       const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
@@ -1421,44 +1434,44 @@ export default function CartaMenuPage() {
                       return (
                         <div key={index} className="flex items-center justify-between gap-2">
                           <div className="flex-1">
-                            <div className="text-sm font-medium">{ci.item.name} <span className={`ml-1 text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>({ci.code})</span></div>
+                            <div className="text-sm font-medium">{ci.item.name} <span className={`ml-1 text-xs text-gray-600`}>({ci.code})</span></div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className={`inline-flex items-center rounded-full overflow-hidden border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'}`}>
-                              <button onClick={() => setCartItems(prev => prev.map((it, i) => i === index ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it))} className={`w-7 h-7 text-sm ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`}>-</button>
+                            <div className={`inline-flex items-center rounded-full overflow-hidden border border-gray-300 bg-white`}>
+                              <button onClick={() => setCartItems(prev => prev.map((it, i) => i === index ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it))} className={`w-7 h-7 text-sm hover:bg-gray-100`}>-</button>
                               <span className="w-7 text-center text-sm font-semibold select-none">{ci.quantity}</span>
-                              <button onClick={() => setCartItems(prev => prev.map((it, i) => i === index ? { ...it, quantity: it.quantity + 1 } : it))} className={`w-7 h-7 text-sm ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`}>+</button>
+                              <button onClick={() => setCartItems(prev => prev.map((it, i) => i === index ? { ...it, quantity: it.quantity + 1 } : it))} className={`w-7 h-7 text-sm hover:bg-gray-100`}>+</button>
                             </div>
-                            <div className="w-20 text-right text-sm font-semibold">{subtotal.toLocaleString('es-AR',{style:'currency',currency:'ARS'})}</div>
+                            <div className="w-20 text-right text-sm font-semibold">{subtotal.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
                           </div>
                         </div>
                       );
                     })
                   )}
                 </div>
-                <div className={`px-3 py-2 border-t flex items-center justify-between ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                <div className={`px-3 py-2 border-t flex items-center justify-between border-gray-300 bg-white`}>
                   <div className="text-sm font-medium">Total</div>
                   <div className="text-base font-bold">
                     {(() => {
                       const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
-                      return total.toLocaleString('es-AR',{style:'currency',currency:'ARS'});
+                      return total.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0});
                     })()}
                   </div>
                 </div>
               </div>
 
               {/* Formulario simple: cada fila label + control */}
-              <div className="space-y-3">
+              <div className={`space-y-3 rounded-lg border border-gray-300 bg-white p-3`}>
                 <div className="flex items-center gap-3">
-                  <label className="w-32 text-sm">Nombre</label>
-                  <input value={proName} onChange={(e)=>setProName(e.target.value)} className={`flex-1 rounded-lg px-3 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`} placeholder="Nombre y apellido" />
+                  <label className="w-32 text-sm text-gray-900">Nombre</label>
+                  <input value={proName} onChange={(e)=>setProName(e.target.value)} className={`flex-1 rounded-lg px-3 py-2 border bg-white border-gray-300 text-gray-900`} placeholder="Nombre y apellido" />
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="w-32 text-sm">Dirección <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}` }>(Delivery)</span></label>
-                  <input value={proAddress} onChange={(e)=>setProAddress(e.target.value)} className={`flex-1 rounded-lg px-3 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`} placeholder="Calle y número" />
+                  <label className="w-32 text-sm text-gray-900">Dirección <span className={`text-gray-600`}>(Delivery)</span></label>
+                  <input value={proAddress} onChange={(e)=>setProAddress(e.target.value)} className={`flex-1 rounded-lg px-3 py-2 border bg-white border-gray-300 text-gray-900`} placeholder="Calle y número" />
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="w-32 text-sm">Pago</label>
+                  <label className="w-32 text-sm text-gray-900">Pago</label>
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="pago" checked={proPayment==='efectivo'} onChange={()=>setProPayment('efectivo')} /> Efectivo</label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="pago" checked={proPayment==='mp'} onChange={()=>setProPayment('mp')} /> MP</label>
@@ -1467,8 +1480,8 @@ export default function CartaMenuPage() {
               </div>
             </div>
 
-            <div className={`px-4 py-3 border-t flex gap-3 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-              <button onClick={()=>setShowProCartModal(false)} className={`flex-1 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'}`}>Cancelar</button>
+            <div className={`px-4 py-3 border-t flex gap-3 border-gray-300 bg-white`}>
+              <button onClick={()=>setShowProCartModal(false)} className={`flex-1 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-900`}>✖ Cancelar</button>
               <button
                 onClick={() => {
                   if (cartItems.length === 0) { alert('Carrito vacío'); return; }
@@ -1496,7 +1509,7 @@ export default function CartaMenuPage() {
                 }}
                 className={`flex-1 py-2 rounded-lg text-white ${proPayment==='mp' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}
               >
-                {proPayment==='mp' ? 'Pagar con MP' : 'Confirmar pedido'}
+                {proPayment==='mp' ? '💳 Pagar con MP' : '✅ Confirmar pedido'}
               </button>
               <button
                 onClick={() => {
@@ -1505,10 +1518,10 @@ export default function CartaMenuPage() {
                   const text = encodeURIComponent(buildTicketMessage());
                   window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
                 }}
-                className={`px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900'}`}
+                className={`px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-900`}
                 title="Enviar ticket por WhatsApp"
               >
-                📤 WhatsApp
+                📲 WhatsApp
               </button>
             </div>
           </div>

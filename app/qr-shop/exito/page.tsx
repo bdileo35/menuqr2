@@ -8,9 +8,9 @@ function ExitoContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   
-  const ref = searchParams.get('ref');
-  const product = searchParams.get('product');
-  const precio = searchParams.get('precio');
+  const ref = searchParams?.get('ref') || null;
+  const product = searchParams?.get('product') || null;
+  const precio = searchParams?.get('precio') || null;
 
   useEffect(() => {
     // Simular verificación de pago

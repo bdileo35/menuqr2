@@ -1,5 +1,33 @@
 # Dependencies
 node_modules/
+
+# Next.js
+.next/
+out/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma local DBs
+prisma/*.db
+prisma/*.db-journal
+
+# Vercel
+.vercel/
+
+# Mac/Windows
+.DS_Store
+Thumbs.db
+# Dependencies
+node_modules/
 .pnpm-debug.log*
 
 # Local env files

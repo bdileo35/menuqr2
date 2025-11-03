@@ -91,28 +91,28 @@ export default function QRWithActions({
               <QRGenerator value={qrUrl} size={240} bare margin={false} />
             </div>
           ) : (
-            <div className="relative" style={{ width: 300 }}>
+            <div className="relative" style={{ width: 260 }}>
               {/* Laptop base */}
-              <div className="mx-auto" style={{ width: 300, height: 220 }}>
+              <div className="mx-auto" style={{ width: 260, height: 260 }}>
                 {/* Pantalla */}
                 <div
                   className="mx-auto rounded-md"
                   style={{
-                    width: 280,
-                    height: 180,
+                    width: 240,
+                    height: 200,
                     border: `6px solid #000`,
                     background: '#ffffff'
                   }}
                 >
                   {/* Área blanca segura para QR */}
                   <div className="flex items-center justify-center w-full h-full">
-                    <QRGenerator value={qrUrl} size={175} bare margin={false} />
+                    <QRGenerator value={qrUrl} size={170} bare margin={false} />
                   </div>
                 </div>
                 {/* Base */}
-                <div className="mx-auto rounded-b-lg" style={{ width: 280, height: 12, background: '#000' }} />
+                <div className="mx-auto rounded-b-lg" style={{ width: 240, height: 12, background: '#000' }} />
                 {/* Soporte */}
-                <div className="mx-auto mt-1" style={{ width: 170, height: 12, background: '#000', borderRadius: 9999 }} />
+                <div className="mx-auto mt-1" style={{ width: 150, height: 14, background: '#000', borderRadius: 9999 }} />
               </div>
             </div>
           )}
@@ -147,22 +147,26 @@ export default function QRWithActions({
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowPreview(false)}>
           {/* Etiqueta según variante */}
           {variant === 'framed' ? (
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="rounded-2xl w-full max-w-sm overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+              style={{ border: '1px solid #d1d5db', background: '#ffffff', borderRadius: 16 }}
+            >
               {/* Encabezado estrecho */}
               <div className="px-4 py-2 border-b bg-gray-100 text-center">
                 {title && <div className="text-base font-bold text-gray-800">{title}</div>}
               </div>
               {/* Cuerpo: QR en soporte */}
-              <div className="p-4 flex items-center justify-center">
-                <div className="relative" style={{ width: 300 }}>
-                  <div className="mx-auto" style={{ width: 300, height: 220 }}>
-                    <div className="mx-auto rounded-md" style={{ width: 280, height: 180, border: '6px solid #000', background: '#ffffff' }}>
+              <div className="px-4 py-2 flex items-center justify-center">
+                <div className="relative" style={{ width: 230 }}>
+                  <div className="mx-auto" style={{ width: 230, height: 270 }}>
+                    <div className="mx-auto rounded-md" style={{ width: 200, height: 230, border: '6px solid #000', background: '#ffffff' }}>
                       <div className="flex items-center justify-center w-full h-full">
-                        <QRGenerator value={qrUrl} size={175} bare margin={false} />
+                        <QRGenerator value={qrUrl} size={160} bare margin={false} />
                       </div>
                     </div>
-                    <div className="mx-auto rounded-b-lg" style={{ width: 280, height: 12, background: '#000' }} />
-                    <div className="mx-auto mt-1" style={{ width: 170, height: 12, background: '#000', borderRadius: 9999 }} />
+                    <div className="mx-auto rounded-b-lg" style={{ width: 200, height: 12, background: '#000' }} />
+                    <div className="mx-auto mt-1" style={{ width: 140, height: 14, background: '#000', borderRadius: 9999 }} />
                   </div>
                 </div>
               </div>
@@ -171,7 +175,7 @@ export default function QRWithActions({
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[260px] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="rounded-2xl w-full max-w-[260px] overflow-hidden" onClick={(e) => e.stopPropagation()} style={{ border: '1px solid #d1d5db', background: '#ffffff' }}>
               <div className="px-4 py-2 border-b bg-gray-100 text-center">
                 {title && <div className="text-base font-bold text-gray-800">{title}</div>}
               </div>

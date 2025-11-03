@@ -41,6 +41,8 @@ export async function GET(
       id: menu.id,
       idUnico: menu.restaurantId,
       restaurantName: menu.restaurantName,
+      allowOrdering: menu.allowOrdering,
+      deliveryEnabled: menu.deliveryEnabled,
       contactPhone: menu.contactPhone,
       contactAddress: menu.contactAddress,
       categories: menu.categories.map(cat => ({

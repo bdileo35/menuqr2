@@ -13,6 +13,7 @@ interface MenuItem {
   description?: string;
   isAvailable?: boolean;
   code?: string;
+  imageBase64?: string;
 }
 
 interface MenuCategory {
@@ -60,6 +61,11 @@ export default function Editor2() {
   const getItemCode = (categoryCode: string, itemIndex: number): string => {
     return `${categoryCode}${String(itemIndex + 1).padStart(2, '0')}`;
   };
+  const generateNextCodeForCategory = (category: MenuCategory | undefined): string => {
+    if (!category) return '0101';
+    const base = category.code || getCategoryCode(category.name, 0);
+    return getItemCode(base, category.items.length);
+  };
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
@@ -76,6 +82,16 @@ export default function Editor2() {
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const [showEditCategory, setShowEditCategory] = useState(false);
 
+  // Utilitario: archivo -> dataURL (para persistir imagen en localStorage)
+  const fileToDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Función para cargar datos desde API
   const loadMenuFromAPI = async () => {
     console.log('🔍 Cargando menú desde la base de datos...');
@@ -87,7 +103,7 @@ export default function Editor2() {
       if (data.success && data.menu) {
         console.log('✅ Menú cargado desde API:', data.menu);
     
-        const restaurantInfo: RestaurantData = {
+        let restaurantInfo: RestaurantData = {
           restaurantName: data.menu.restaurantName,
           categories: data.menu.categories.map((cat: any) => ({
           id: cat.id,
@@ -103,7 +119,59 @@ export default function Editor2() {
         }))
       }))
         };
-    
+
+        // Fusionar con ediciones locales (fotos/isAvailable) si existen
+        try {
+          const savedStr = localStorage.getItem('editor-menu-data');
+          if (savedStr) {
+            const saved = JSON.parse(savedStr) as RestaurantData;
+            const savedCatMap = new Map<string, any>();
+            saved.categories.forEach(sc => {
+              const key = sc.id || sc.name;
+              savedCatMap.set(key, sc);
+            });
+
+            restaurantInfo = {
+              ...restaurantInfo,
+              categories: restaurantInfo.categories.map(rc => {
+                const key = rc.id || rc.name;
+                const sc = savedCatMap.get(key);
+                if (!sc) return rc;
+                const savedItemMap = new Map<string, any>();
+                sc.items.forEach((si: any) => savedItemMap.set(si.id || si.name, si));
+
+                // Merge de items existentes
+                const mergedExisting = rc.items.map(ri => {
+                  const si = savedItemMap.get(ri.id || ri.name);
+                  if (!si) return ri;
+                  const hasLocalImageProp = Object.prototype.hasOwnProperty.call(si, 'imageBase64');
+                  const mergedImage = hasLocalImageProp ? si.imageBase64 : ri.imageBase64;
+                  return {
+                    ...ri,
+                    imageBase64: mergedImage,
+                    isAvailable: typeof si.isAvailable === 'boolean' ? si.isAvailable : ri.isAvailable,
+                    name: si.name || ri.name,
+                    description: si.description ?? ri.description,
+                    price: si.price || ri.price,
+                  } as any;
+                });
+
+                // Agregar items que sólo existen en localStorage (nuevos)
+                const existingIdOrName = new Set(mergedExisting.map(i => (i as any).id || (i as any).name));
+                const onlyLocal = sc.items.filter((si: any) => !existingIdOrName.has(si.id || si.name));
+                const mergedAll = [...mergedExisting, ...onlyLocal];
+
+                return {
+                  ...rc,
+                  items: mergedAll
+                };
+              })
+            };
+          }
+        } catch (mergeErr) {
+          console.warn('⚠️ No se pudo fusionar ediciones locales:', mergeErr);
+        }
+
         setMenuData(restaurantInfo);
         
         // Expandir todas las categorías por defecto
@@ -187,7 +255,8 @@ export default function Editor2() {
     categoryId: '',
     imageFile: null as File | null,
     imagePreview: '',
-    isAvailable: true  // ✅ AGREGAR ESTADO DISPONIBLE/AGOTADO
+    isAvailable: true,  // ✅ AGREGAR ESTADO DISPONIBLE/AGOTADO
+    removeImage: false
   });
 
   // Guardar item
@@ -199,19 +268,60 @@ export default function Editor2() {
         alert('❌ No hay datos del menú');
         return;
       }
+      // Procesar imagen
+      let imageDataBase64: string | undefined | null = editingItem?.imageBase64;
+      if (modalData.removeImage) {
+        imageDataBase64 = '';
+      } else if (modalData.imageFile) {
+        try {
+          imageDataBase64 = await fileToDataURL(modalData.imageFile);
+        } catch (e) {
+          console.error('Error convirtiendo imagen a base64', e);
+        }
+      }
       
       // TODO: Implementar guardado en base de datos
       if (editingItem) {
-        // Actualizar item existente
-        const updatedCategories = menuData.categories.map(cat => {
-          if ((cat.id || cat.name) === modalData.categoryId) {
-            return {
-              ...cat,
-              items: cat.items.map(i => i.id === editingItem.id ? item : i)
-            };
-          }
-          return cat;
-        });
+        // Actualizar item existente (mover de categoría si cambió)
+        const originalCategory = menuData.categories.find(cat => cat.items.some(i => i.id === editingItem.id));
+        const targetCategory = menuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
+
+        const safeItem: MenuItem = {
+          ...editingItem,
+          ...item,
+          code: (item.code && item.code.trim()) || generateNextCodeForCategory(targetCategory),
+          imageBase64: imageDataBase64 === undefined ? editingItem?.imageBase64 : (imageDataBase64 as any),
+        };
+
+        let updatedCategories = menuData.categories.map(cat => ({ ...cat }));
+
+        if (originalCategory && (originalCategory.id || originalCategory.name) !== (targetCategory?.id || targetCategory?.name)) {
+          // Quitar de la original
+          updatedCategories = updatedCategories.map(cat => {
+            if ((cat.id || cat.name) === (originalCategory.id || originalCategory.name)) {
+              return { ...cat, items: cat.items.filter(i => i.id !== editingItem.id) };
+            }
+            return cat;
+          });
+          // Agregar a la destino
+          updatedCategories = updatedCategories.map(cat => {
+            if ((cat.id || cat.name) === (targetCategory?.id || targetCategory?.name)) {
+              return { ...cat, items: [...cat.items, safeItem] };
+            }
+            return cat;
+          });
+        } else {
+          // Misma categoría: reemplazar in-place
+          updatedCategories = updatedCategories.map(cat => {
+            if ((cat.id || cat.name) === modalData.categoryId) {
+              return {
+                ...cat,
+                items: cat.items.map(i => i.id === editingItem.id ? safeItem : i)
+              };
+            }
+            return cat;
+          });
+        }
         
         const updatedData = { ...menuData, categories: updatedCategories };
         setMenuData(updatedData);
@@ -224,7 +334,7 @@ export default function Editor2() {
           if ((cat.id || cat.name) === modalData.categoryId) {
             return {
               ...cat,
-              items: [...cat.items, { ...item, id: Date.now().toString() }]
+              items: [...cat.items, { ...item, id: Date.now().toString(), imageBase64: (imageDataBase64 as any) }]
             };
           }
           return cat;
@@ -247,7 +357,8 @@ export default function Editor2() {
         categoryId: '',
         imageFile: null,
         imagePreview: '',
-        isAvailable: true
+        isAvailable: true,
+        removeImage: false
       });
     } catch (error) {
       console.error('Error guardando producto:', error);
@@ -263,15 +374,18 @@ export default function Editor2() {
 
   // Abrir modal para editar plato
   const openEditPlateModal = (item: MenuItem, categoryId: string) => {
+    const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
+    const ensuredCode = item.code && item.code.trim().length > 0 ? item.code : generateNextCodeForCategory(selectedCategory);
     setModalData({
       name: item.name,
-      code: item.code || '',
+      code: ensuredCode,
       price: item.price,
       description: item.description || '',
       categoryId: categoryId,
       imageFile: null,
-      imagePreview: '',
-      isAvailable: item.isAvailable ?? true  // ✅ INCLUIR ESTADO DISPONIBLE
+      imagePreview: item.imageBase64 || '',
+      isAvailable: item.isAvailable ?? true,  // ✅ INCLUIR ESTADO DISPONIBLE
+      removeImage: !item.imageBase64
     });
     setEditingItem(item);
     setShowAddItem(true);
@@ -336,7 +450,8 @@ export default function Editor2() {
       setModalData(prev => ({
         ...prev,
         imageFile: file,
-        imagePreview: URL.createObjectURL(file)
+        imagePreview: URL.createObjectURL(file),
+        removeImage: false
       }));
     }
   };
@@ -345,11 +460,7 @@ export default function Editor2() {
   const handleCategoryChange = (categoryId: string) => {
     const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
     if (selectedCategory) {
-      // Generar código automáticamente
-      const categoryCode = selectedCategory.code || '01';
-      const nextItemNumber = (selectedCategory.items.length + 1).toString().padStart(2, '0');
-      const generatedCode = `${categoryCode}${nextItemNumber}`;
-      
+      const generatedCode = generateNextCodeForCategory(selectedCategory);
       setModalData(prev => ({
         ...prev,
         categoryId: categoryId,
@@ -451,7 +562,7 @@ export default function Editor2() {
             <div className="flex items-center gap-2">
               {/* Botón Carta Menu - Icono + Texto */}
           <button 
-            onClick={() => router.push('/carta-menu')}
+            onClick={() => router.push(`/carta/${idUnico}`)}
                 className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors border ${
                   isDarkMode 
                     ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-gray-300' 
@@ -538,6 +649,23 @@ export default function Editor2() {
                 <button
                   onClick={() => {
                     setEditingItem(null);
+                    // Prefijar categoría y generar código automáticamente
+                    const firstCategory = menuData?.categories?.[0];
+                    const selectedCategoryId = firstCategory ? (firstCategory.id || firstCategory.name) : '';
+                    const categoryCode = firstCategory?.code || getCategoryCode(firstCategory?.name || '', 0);
+                    const nextItemNumber = firstCategory ? String(firstCategory.items.length + 1).padStart(2, '0') : '01';
+                    const generatedCode = `${categoryCode}${nextItemNumber}`;
+                    setModalData({
+                      name: '',
+                      code: generatedCode,
+                      price: '',
+                      description: '',
+                      categoryId: selectedCategoryId,
+                      imageFile: null,
+                      imagePreview: '',
+                      isAvailable: true,
+                      removeImage: false
+                    });
                     setShowAddItem(true);
                   }}
                   className="w-10 h-10 flex items-center justify-center transition-colors text-2xl font-bold text-white hover:text-green-300 ml-2"
@@ -694,8 +822,8 @@ export default function Editor2() {
                 onDoubleClick={(e) => handleDoubleClick(e, 'category', category)}
               >
               <div className="flex items-center justify-between">
-                <div className="flex items-start gap-2 pl-2">
-                  <span className={`w-6 h-6 flex items-center justify-center text-xs rounded-full border ${
+                <div className="flex items-center gap-2 pl-1">
+                  <span className={`w-8 h-8 flex items-center justify-center text-sm font-semibold rounded-full border ${
                     isDarkMode 
                       ? 'bg-transparent border-gray-500 text-white' 
                       : 'bg-transparent border-gray-500 text-gray-800'
@@ -748,7 +876,7 @@ export default function Editor2() {
                       {/* Imagen sin marco */}
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mr-2">
                         <img 
-                          src={(() => {
+                          src={item.imageBase64 || (() => {
                             const platosImages = [
                               '/platos/albondigas.jpg',
                               '/platos/rabas.jpg',
@@ -773,12 +901,12 @@ export default function Editor2() {
                               parent.innerHTML = `
                                 <div class="w-full h-full flex items-center justify-center bg-gray-200">
                                   <span class="text-xs">🍽️</span>
-                            </div>
+                                </div>
                               `;
                             }
                           }}
                         />
-                          </div>
+                      </div>
                             
                       {/* Contenido sin marco */}
                       <div className="flex-1 flex items-center justify-between">
@@ -845,8 +973,13 @@ export default function Editor2() {
             {/* Contenido - QR con acciones */}
             <div className="p-6">
               <QRWithActions 
-                qrUrl={`https://menuqrep.vercel.app/carta/${idUnico}`} 
-                isDarkMode={isDarkMode} 
+                qrUrl={`https://menuqr.vercel.app/carta/${idUnico}`} 
+                isDarkMode={isDarkMode}
+                showTitle
+                title={menuData.restaurantName}
+                showLegend
+                legendText="Escanear para ver la Carta"
+                variant="framed"
               />
               
               {/* Información adicional */}
@@ -884,7 +1017,8 @@ export default function Editor2() {
                     categoryId: '',
                     imageFile: null,
                     imagePreview: '',
-                    isAvailable: true
+                    isAvailable: true,
+                    removeImage: false
                   });
                 }}
                 className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
@@ -912,33 +1046,42 @@ export default function Editor2() {
                   {/* Cuadro de imagen - 60% ancho */}
                   <div className="w-[60%]">
                     <div className="relative">
-                  <input
+                      {/* Input cámara */}
+                      <input
                         type="file"
                         accept="image/*"
                         capture="environment"
                         onChange={handleImageChange}
                         className="hidden"
-                        id="imageInput"
+                        id="cameraInput"
                       />
-                      <label
-                        htmlFor="imageInput"
-                        className="w-full h-32 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
-                      >
-                        {modalData.imagePreview ? (
+                      {/* Input galería */}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="galleryInput"
+                      />
+
+                      <div className="w-full h-32 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center overflow-hidden">
+                        {modalData.imagePreview && !modalData.removeImage ? (
                           <img 
                             src={modalData.imagePreview} 
                             alt="Preview" 
-                            className="w-full h-full object-cover rounded-lg"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="text-center">
-                            <span className="text-gray-400 text-2xl block mb-1">📷</span>
-                            <span className="text-gray-400 text-xs">Toca para tomar foto o seleccionar</span>
+                            <span className="text-gray-300 text-2xl block mb-1">🍽️</span>
+                            <span className="text-gray-400 text-xs">Sin imagen</span>
                           </div>
                         )}
-                      </label>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">📷</span>
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <label htmlFor="cameraInput" title="Tomar foto" className="flex-1 py-1.5 text-center bg-gray-600 hover:bg-gray-500 rounded-lg cursor-pointer text-lg">📷</label>
+                        <label htmlFor="galleryInput" title="Galería" className="flex-1 py-1.5 text-center bg-gray-600 hover:bg-gray-500 rounded-lg cursor-pointer text-lg">🖼️</label>
+                        <button type="button" title="Sin imagen" className="flex-1 py-1.5 text-center bg-gray-600 hover:bg-gray-500 rounded-lg text-lg" onClick={() => setModalData(prev => ({...prev, imageFile: null, imagePreview: '', removeImage: true }))}>🍽️</button>
                       </div>
                     </div>
                   </div>
