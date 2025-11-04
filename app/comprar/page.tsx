@@ -23,7 +23,7 @@ export default function ComprarPage() {
       };
 
       const idUnico = generarIdUnico();
-      const precio = plan === 'mensual' ? 14999 : 149990;
+      const precio = plan === 'mensual' ? 13999 : 139990;
       const descripcion = `MenuQR - Plan ${plan === 'mensual' ? 'Mensual' : 'Anual'}`;
 
       // Crear preferencia de pago
@@ -97,7 +97,7 @@ export default function ComprarPage() {
                   }`}
                 >
                     <div className="text-center">
-                      <div className="text-lg font-bold">$14,999</div>
+                      <div className="text-lg font-bold">$13,999</div>
                       <div className="text-sm">por mes</div>
                     </div>
                   </button>
@@ -111,7 +111,7 @@ export default function ComprarPage() {
                     }`}
                   >
                     <div className="text-center">
-                      <div className="text-lg font-bold">$149,990</div>
+                      <div className="text-lg font-bold">$139,990</div>
                       <div className="text-sm">por año</div>
                       <div className="text-xs text-green-400 mt-1">¡Ahorra 2 meses!</div>
                     </div>

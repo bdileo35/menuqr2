@@ -54,6 +54,8 @@ export default function QRShopPage() {
     */
   };
 
+  const [period, setPeriod] = useState<'mensual' | 'anual'>('mensual');
+  const [menuPlan, setMenuPlan] = useState<'basic' | 'pro'>('basic');
   const products = [
     {
       id: 'qring',
@@ -70,11 +72,15 @@ export default function QRShopPage() {
       id: 'menuqr',
       name: 'MenuQR',
       subtitle: 'Cartas Digitales + Scanner OCR',
-      price: '$19.99/mes',
-      description: 'Digitaliza tu carta física automáticamente y crea menús digitales profesionales',
-      features: ['Scanner OCR automático', 'Menús digitales responsivos', 'Pedidos por WhatsApp', 'Panel de gestión'],
+      priceBasicMonthly: 13999,
+      priceBasicYearly: 139990,
+      priceProMonthly: 17999,
+      priceProYearly: 179990,
+      description: 'Digitaliza tu carta y crea menús digitales profesionales',
+      featuresBasic: ['Scanner OCR automático', 'Menús responsivos', 'Pedidos por WhatsApp', 'Panel de gestión'],
+      featuresPro: ['Carrito centralizado', 'Delivery/Retiro', 'Pago Mercado Pago', 'Ticket por WhatsApp'],
       color: 'from-emerald-600 to-emerald-700',
-      demo: '/generador',
+      demo: '/carta/5XJ1J37F',
       icon: '🍽️'
     },
     {
@@ -120,7 +126,7 @@ export default function QRShopPage() {
             🚀 <span className="text-blue-300">QR Shop</span>
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            La suite completa de soluciones QR para tu negocio
+            Elige tu solución QR
           </p>
           <div className="text-lg text-blue-200">
             Timbres inteligentes • Cartas digitales • Tarjetas personales
@@ -147,42 +153,95 @@ export default function QRShopPage() {
                   <div className="text-4xl mb-2">{product.icon}</div>
                   <h3 className="text-2xl font-bold mb-1">{product.name}</h3>
                   <p className="text-sm opacity-90">{product.subtitle}</p>
-                  <div className="mt-4 text-3xl font-bold">{product.price}</div>
+                  {product.id !== 'menuqr' ? (
+                    <div className="mt-4 text-3xl font-bold">{product.price}</div>
+                  ) : (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <button onClick={()=>setMenuPlan('basic')} className={`px-3 py-1 rounded ${menuPlan==='basic'?'bg-white text-emerald-700':'bg-emerald-700 text-white/90'}`}>MenuQR</button>
+                        <button onClick={()=>setMenuPlan('pro')} className={`px-3 py-1 rounded ${menuPlan==='pro'?'bg-white text-emerald-700':'bg-emerald-700 text-white/90'}`}>Pro</button>
+                        <div className="mx-2"/>
+                        <button onClick={()=>setPeriod('mensual')} className={`px-3 py-1 rounded ${period==='mensual'?'bg-black/20':'bg-black/10'}`}>Mensual</button>
+                        <button onClick={()=>setPeriod('anual')} className={`px-3 py-1 rounded ${period==='anual'?'bg-black/20':'bg-black/10'}`}>Anual</button>
+                      </div>
+                      <div className="text-3xl font-bold">
+                        {menuPlan==='basic' ? (
+                          period==='mensual' ? `$${(product as any).priceBasicMonthly.toLocaleString('es-AR')}/mes` : `$${(product as any).priceBasicYearly.toLocaleString('es-AR')}/año`
+                        ) : (
+                          period==='mensual' ? `$${(product as any).priceProMonthly.toLocaleString('es-AR')}/mes` : `$${(product as any).priceProYearly.toLocaleString('es-AR')}/año`
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Contenido */}
                 <div className="p-6">
-                  <p className="text-gray-300 mb-4">{product.description}</p>
+                  {product.id !== 'menuqr' ? (
+                    <p className="text-gray-300 mb-4">{product.description}</p>
+                  ) : (
+                    <div className="text-gray-300 mb-6">
+                      {/* Comparativa MenuQR vs Pro */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border border-gray-700 rounded-lg overflow-hidden">
+                          <thead>
+                            <tr className="bg-gray-700 text-gray-100">
+                              <th className="text-left px-3 py-2">Función</th>
+                              <th className="px-3 py-2">MenuQR</th>
+                              <th className="px-3 py-2">Pro</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-700">
+                            {[
+                              { f: 'Menús responsivos', b: true, p: true },
+                              { f: 'Scanner OCR automático', b: true, p: true },
+                              { f: 'Pedidos por WhatsApp', b: true, p: true },
+                              { f: 'Panel de gestión', b: true, p: true },
+                              { f: 'Carrito centralizado', b: false, p: true },
+                              { f: 'Delivery / Retiro', b: false, p: true },
+                              { f: 'Pago Mercado Pago', b: false, p: true },
+                              { f: 'Ticket por WhatsApp', b: true, p: true },
+                            ].map((row, i) => (
+                              <tr key={i} className="bg-gray-800">
+                                <td className="px-3 py-2 text-gray-300 text-left">{row.f}</td>
+                                <td className="px-3 py-2 text-center">{row.b ? '✔️' : '—'}</td>
+                                <td className="px-3 py-2 text-center">{row.p ? '✔️' : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Mensual: ${ (product as any).priceBasicMonthly.toLocaleString('es-AR') } (MenuQR) / ${ (product as any).priceProMonthly.toLocaleString('es-AR') } (Pro) — Anual: ${ (product as any).priceBasicYearly.toLocaleString('es-AR') } / ${ (product as any).priceProYearly.toLocaleString('es-AR') } — Pagás 10 meses, ahorrás 2.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
-                  <ul className="space-y-2 mb-6">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-center text-sm text-gray-300">
-                        <span className="text-green-400 mr-2">✓</span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                  {product.id !== 'menuqr' && (
+                    <ul className="space-y-2 mb-6">
+                      {(product as any).features?.map((feature:string, index:number) => (
+                        <li key={index} className="flex items-center text-sm text-gray-300">
+                          <span className="text-green-400 mr-2">✓</span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   
                   <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        if (product.id === 'menuqr') {
-                          router.push('/demo-flow/page1');
-                        } else {
-                          router.push(product.demo);
-                        }
-                      }}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200"
-                    >
-                      {product.id === 'menuqr' ? '� Ver Demo Completo' : '�🎯 Ver Demo'}
-                    </button>
-                    <button
-                      onClick={() => handleComprar(product.id)}
-                      disabled={loading}
-                      className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200"
-                    >
-                      {loading ? '⏳ Procesando...' : '💳 Comprar'}
-                    </button>
+                    {product.id!=='menuqr' ? (
+                      <>
+                        <button onClick={() => router.push(product.demo)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">🎯 Ver Demo</button>
+                        <button onClick={() => handleComprar(product.id)} disabled={loading} className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200">{loading ? '⏳ Procesando...' : '💳 Comprar'}</button>
+                      </>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button onClick={() => router.push('/carta/5XJ1J37F')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">🎯 Demo MenuQR</button>
+                        <button onClick={() => router.push('/carta/5XJ1J37F?pro=1')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">🎯 Demo Pro</button>
+                        <button onClick={() => handleComprar('menuqr')} disabled={loading} className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200">{loading?'⏳':'💳 Comprar MenuQR'}</button>
+                        <button onClick={() => handleComprar('menuqrpro')} disabled={loading} className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200">{loading?'⏳':'💳 Comprar Pro'}</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

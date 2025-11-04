@@ -973,7 +973,7 @@ export default function Editor2() {
             {/* Contenido - QR con acciones */}
             <div className="p-6">
               <QRWithActions 
-                qrUrl={`https://menuqr.vercel.app/carta/${idUnico}`} 
+                qrUrl={`${(typeof window !== 'undefined' && window.location?.origin) || process.env.NEXT_PUBLIC_APP_URL || 'https://menuqrep.vercel.app'}/carta/${idUnico}`} 
                 isDarkMode={isDarkMode}
                 showTitle
                 title={menuData.restaurantName}

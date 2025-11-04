@@ -11,6 +11,7 @@ interface MenuItem {
   description?: string;
   isAvailable?: boolean;
   imageBase64?: string | null;
+  code?: string;
 }
 
 interface MenuCategory {
@@ -68,8 +69,9 @@ export default function CartaPage() {
     if (proAddress) lines.push(`Dirección: ${proAddress}`);
     lines.push('---');
     cartItems.forEach(ci => {
+      const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
       const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
-      lines.push(`${ci.quantity} x ${ci.item.name} - ${price.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}`);
+      lines.push(`${ci.quantity} x ${nameNoParens} - ${price.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}`);
     });
     const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
     lines.push('---');
@@ -138,7 +140,8 @@ export default function CartaPage() {
                 name: item.name,
                 price: `$${item.price}`,
                 description: item.description,
-                isAvailable: item.isAvailable
+                isAvailable: item.isAvailable,
+                code: item.code
               }))
             }))
           };
@@ -324,18 +327,18 @@ export default function CartaPage() {
                     category.name.toUpperCase().includes('PROMO') ? (
                       <div key={item.id || itemIndex} className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full rounded-lg overflow-hidden" style={{ minHeight: '140px' }} onClick={()=>{setModalItem(item); const promoImages = ['/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/rabas.jpg']; setModalItemImage(promoImages[itemIndex % promoImages.length]);}} title="Click para ver detalles">
                         <div className={`px-3 py-2 border-b ${isDarkMode? 'bg-gray-700 border-gray-600':'bg-gray-200 border-gray-300'}`}>
-                          <h3 className={`text-sm font-bold text-center ${isDarkMode? 'text-white':'text-gray-800'}`}>{item.name}</h3>
+                          <h3 className={`text-sm font-bold text-center ${isDarkMode? 'text-white':'text-gray-800'}`}>{(/\([^\)]*\)\s*$/.test(item.name||'')) ? (item.name||'').replace(/\s*\([^)]*\)\s*$/, '').trim() : item.name}</h3>
                         </div>
                         <div className="h-24 overflow-hidden">
                           <img src={['/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/rabas.jpg'][itemIndex % 3]} alt={item.name} className="w-full h-full object-cover" />
                         </div>
                         <div className={`${isDarkMode? 'bg-gray-700':'bg-gray-200'} p-2`}>
-                          {item.description && (<p className={`${isDarkMode? 'text-gray-300':'text-gray-800'} text-xs text-center min-h-[2rem] flex items-center justify-center`}>{item.description}</p>)}
+                          {(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const desc = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return desc ? (<p className={`${isDarkMode? 'text-gray-300':'text-gray-800'} text-xs text-center min-h-[2rem] flex items-center justify-center`}>{desc}</p>) : null; })()}
                           <div className="text-sm font-bold text-center text-blue-500 mt-2">{item.price.replace('$$','$')}</div>
                         </div>
                       </div>
                     ) : (
-                      <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg']; setModalItemImage(item.imageBase64 || fallbacks[itemIndex % fallbacks.length]); }}}>
+                      <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} title={`${item.code ? `#${item.code}` : ''}${(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const d = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return (item.code? ' ' : '') + (d||''); })()}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg']; setModalItemImage(item.imageBase64 || fallbacks[itemIndex % fallbacks.length]); }}}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1">
                           {item.imageBase64 ? (
                             <img src={item.imageBase64} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
@@ -344,7 +347,7 @@ export default function CartaPage() {
                           )}
                         </div>
                         <div className={`flex-1 flex items-center justify-between px-2 py-1 ${item.isAvailable === false ? 'text-gray-400' : isDarkMode ? 'text-white' : 'text-black'}`}>
-                          <div className="flex-1"><h3 className={`font-medium text-xs leading-tight ${item.isAvailable === false ? 'text-gray-400' : isDarkMode ? 'text-white' : 'text-black'}`}>{item.name}</h3></div>
+                          <div className="flex-1"><h3 className={`font-medium text-xs leading-tight ${item.isAvailable === false ? 'text-gray-400' : isDarkMode ? 'text-white' : 'text-black'}`}>{(/\([^\)]*\)\s*$/.test(item.name||'')) ? (item.name||'').replace(/\s*\([^)]*\)\s*$/, '').trim() : item.name}</h3></div>
                           <div className="flex items-center gap-1">
                             {item.isAvailable === false && (<div className="text-xs font-bold px-1.5 py-0.5 rounded bg-red-200 text-gray-600 border border-red-300">AGOTADO</div>)}
                             <div className={`text-sm font-bold ${item.isAvailable === false ? 'text-gray-400' : 'text-blue-500'}`}>{item.price.replace('$$','$')}</div>

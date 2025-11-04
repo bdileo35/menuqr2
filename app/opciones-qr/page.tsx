@@ -10,7 +10,8 @@ export default function OpcionesQR() {
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
   const idUnico = (params?.idUnico as string) || '5XJ1J37F'; // Por defecto
-  const qrUrl = `https://menuqr.vercel.app/carta/${idUnico}`;
+  const baseUrl = (typeof window !== 'undefined' && window.location?.origin) || process.env.NEXT_PUBLIC_APP_URL || 'https://menuqrep.vercel.app';
+  const qrUrl = `${baseUrl}/carta/${idUnico}`;
 
   // Controles de vista previa
   const [variant, setVariant] = useState<'plain' | 'framed'>('framed');
