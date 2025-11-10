@@ -46,13 +46,7 @@ export default function CartaPage() {
   const [arrowDirection, setArrowDirection] = useState<'next' | 'prev' | null>(null);
   const [cartItems, setCartItems] = useState<Array<{item: MenuItem, quantity: number, code: string}>>([]);
   const [modalQuantity, setModalQuantity] = useState(1);
-  const [modalidad, setModalidad] = useState<'salon' | 'retiro' | 'delivery' | null>(null);
-  const [formaPago, setFormaPago] = useState<'efectivo' | 'mp' | null>(null);
-  const [productosClicked, setProductosClicked] = useState(false);
-  const [showModalidadModal, setShowModalidadModal] = useState(false);
-  const [showPagosModal, setShowPagosModal] = useState(false);
-  const [showTelon, setShowTelon] = useState(false);
-  const [telonContent, setTelonContent] = useState<'productos' | 'entrega' | 'pagos'>('productos');
+  const [modalidad, setModalidad] = useState<'delivery' | 'retiro'>('delivery');
   const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
   const [animationActive, setAnimationActive] = useState(false);
   const [showProCart, setShowProCart] = useState(true);
@@ -62,12 +56,35 @@ export default function CartaPage() {
   const [proPayment, setProPayment] = useState<'efectivo' | 'mp' | null>(null);
   const [waPhone, setWaPhone] = useState<string>(process.env.NEXT_PUBLIC_ORDER_WHATSAPP || '5491165695648');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const storageKey = `pro-cart-${idUnico}`;
+  const [cartHydrated, setCartHydrated] = useState(false);
 
-  const buildTicketMessage = () => {
+  function generateOrderCode(mode: 'delivery' | 'retiro' | 'salon') {
+    const prefix = mode === 'delivery' ? 'D' : mode === 'retiro' ? 'T' : 'S';
+    const number = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix}${number}`;
+  }
+
+  const [orderCode, setOrderCode] = useState<string>(() => generateOrderCode('delivery'));
+
+  const ensureOrderCodeForMode = (mode: 'delivery' | 'retiro') => {
+    const expectedPrefix = mode === 'delivery' ? 'D' : 'T';
+    if (orderCode.startsWith(expectedPrefix)) return orderCode;
+    const newCode = generateOrderCode(mode);
+    setOrderCode(newCode);
+    return newCode;
+  };
+
+  const buildTicketMessage = (modeOverride?: 'delivery' | 'retiro', codeOverride?: string) => {
+    const mode = modeOverride || modalidad;
+    const code = codeOverride || orderCode;
     const lines: string[] = [];
     lines.push(`Pedido - ${menuData?.restaurantName || 'Mi Restaurante'}`);
+    if (code) {
+      lines.push(`Orden ${code} (${mode === 'delivery' ? 'Delivery' : 'Take Away'})`);
+    }
     if (proName) lines.push(`Nombre: ${proName}`);
-    if (proAddress) lines.push(`Dirección: ${proAddress}`);
+    if (mode === 'delivery' && proAddress) lines.push(`Dirección: ${proAddress}`);
     lines.push('---');
     cartItems.forEach(ci => {
       const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
@@ -77,6 +94,9 @@ export default function CartaPage() {
     const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
     lines.push('---');
     lines.push(`Total: ${total.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}`);
+    if (code) {
+      lines.push(`Modalidad: ${mode === 'delivery' ? 'Delivery' : 'Take Away'} · Orden ${code}`);
+    }
     if (proPayment) lines.push(`Pago: ${proPayment === 'mp' ? 'Mercado Pago' : 'Efectivo'}`);
     return lines.join('\n');
   };
@@ -89,10 +109,11 @@ export default function CartaPage() {
   };
 
   const generateMPLink = async () => {
-    if (!modalidad || !formaPago) return;
+    if (proPayment !== 'mp') return;
+    const currentMode = modalidad;
     const total = cartItems.reduce((sum, cartItem) => {
-      const price = parseFloat(cartItems.length ? cartItems[0].item.price.replace('$','').replace(',','') : '0');
-      return sum + (price * cartItem.quantity);
+      const price = parseFloat((cartItem.item.price || '').replace(/[$,\s]/g, '')) || 0;
+      return sum + price * cartItem.quantity;
     }, 0);
     try {
       const response = await fetch('/api/tienda/crear-preferencia', {
@@ -101,7 +122,7 @@ export default function CartaPage() {
         body: JSON.stringify({
           plan: 'pedido',
           precio: total,
-          descripcion: `Pedido - ${modalidad} - ${cartItems.length} productos`,
+          descripcion: `Pedido - ${currentMode} - ${cartItems.length} productos`,
           items: cartItems.map(item => ({
             nombre: item.item.name,
             precio: parseFloat(item.item.price.replace('$','').replace(',','')),
@@ -239,6 +260,54 @@ export default function CartaPage() {
     loadMenuFromAPI();
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed.items)) {
+          setCartItems(parsed.items);
+        }
+        if (parsed.modalidad === 'delivery' || parsed.modalidad === 'retiro') {
+          setModalidad(parsed.modalidad);
+        }
+        if (typeof parsed.orderCode === 'string') {
+          setOrderCode(parsed.orderCode);
+        }
+        if (typeof parsed.proName === 'string') {
+          setProName(parsed.proName);
+        }
+        if (typeof parsed.proAddress === 'string') {
+          setProAddress(parsed.proAddress);
+        }
+        if (parsed.proPayment === 'efectivo' || parsed.proPayment === 'mp') {
+          setProPayment(parsed.proPayment);
+        }
+      }
+    } catch (err) {
+      console.warn('No se pudo hidratar carrito Pro:', err);
+    } finally {
+      setCartHydrated(true);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!cartHydrated) return;
+    const payload = {
+      items: cartItems,
+      modalidad,
+      orderCode,
+      proName,
+      proAddress,
+      proPayment,
+    };
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch (err) {
+      console.warn('No se pudo guardar carrito Pro:', err);
+    }
+  }, [cartHydrated, cartItems, modalidad, orderCode, proName, proAddress, proPayment, storageKey]);
+
   const filterItems = (items: MenuItem[]) => {
     if (!searchTerm.trim()) return items;
     const term = searchTerm.toLowerCase();
@@ -307,7 +376,7 @@ export default function CartaPage() {
         </div>
         {/* Barra de filtros posicionada al fondo del header */}
         {menuData?.categories && (menuData?.categories?.length || 0) > 0 && (
-          <div className={`absolute bottom-[-1px] left-0 right-0 hidden min-[550px]:block z-20 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} pointer-events-none`}>
+          <div className={`absolute bottom-[-1px] left-0 right-0 hidden min-[450px]:block z-20 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} pointer-events-none`}>
             <div className="max-w-6xl mx-auto px-4 pb-1">
               <div className="flex gap-2 overflow-x-auto custom-scrollbar pointer-events-auto">
                 <button
@@ -450,7 +519,10 @@ export default function CartaPage() {
           <div className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden bg-white border border-gray-300 text-gray-900`}>
             <div className={`px-4 py-2 border-b bg-white border-gray-300`}>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold">Pedido/Comanda</h3>
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  Pedido/Comanda
+                  <span className="text-sm font-semibold text-gray-500">{orderCode}</span>
+                </h3>
                 <button onClick={()=>setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300`}>✕</button>
               </div>
             </div>
@@ -488,29 +560,103 @@ export default function CartaPage() {
                 </div>
               </div>
 
-              {/* Formulario simple: cada fila label + control */}
-              <div className={`space-y-3 rounded-lg border border-gray-300 bg-white p-3`}>
-                <div className="flex items-center gap-3">
-                  <label className="w-32 text-sm text-gray-900">Nombre</label>
-                  <input value={proName} onChange={(e)=>setProName(e.target.value)} className={`flex-1 rounded-lg px-3 py-1.5 h-8 text-sm border bg-white border-gray-300 text-gray-900`} placeholder="Nombre" />
+              {/* Formulario compacto como en la imagen */}
+              <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-gray-200">
+                <div className="flex gap-2">
+                  <select
+                    value={modalidad}
+                    onChange={(e) => {
+                      const value = e.target.value as 'delivery' | 'retiro';
+                      setModalidad(value);
+                      setOrderCode(generateOrderCode(value));
+                    }}
+                    className="w-36 rounded-lg border border-gray-300 bg-white px-3 py-1.5 h-9 text-sm text-gray-900"
+                  >
+                    <option value="delivery">Delivery</option>
+                    <option value="retiro">Take Away</option>
+                  </select>
+                  <input
+                    value={modalidad === 'delivery' ? proAddress : proName}
+                    onChange={(e) => (modalidad === 'delivery' ? setProAddress(e.target.value) : setProName(e.target.value))}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 h-9 text-sm text-gray-900"
+                    placeholder={modalidad === 'delivery' ? 'Calle y número' : 'Nombre'}
+                  />
                 </div>
-                <div className="flex items-center gap-3">
-                  <label className="w-32 text-sm text-gray-900">Dirección <span className={`text-gray-600`}>(Delivery)</span></label>
-                  <input value={proAddress} onChange={(e)=>setProAddress(e.target.value)} className={`flex-1 rounded-lg px-3 py-1.5 h-8 text-sm border bg-white border-gray-300 text-gray-900`} placeholder="Calle y número" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <label className="w-32 text-sm text-gray-900">Pago</label>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="pago" checked={proPayment==='efectivo'} onChange={()=>setProPayment('efectivo')} /> Efectivo</label>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="pago" checked={proPayment==='mp'} onChange={()=>setProPayment('mp')} /> MP</label>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-900">Pago</span>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="pago"
+                      checked={proPayment === 'efectivo'}
+                      onChange={() => setProPayment('efectivo')}
+                    />
+                    Efectivo
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="pago"
+                      checked={proPayment === 'mp'}
+                      onChange={() => setProPayment('mp')}
+                    />
+                    MP
+                  </label>
+                  <button
+                    onClick={() => {
+                      if (cartItems.length === 0) {
+                        alert('Carrito vacío');
+                        return;
+                      }
+                      const mode: 'delivery' | 'retiro' = modalidad;
+                      if (mode === 'delivery') {
+                        if (!proAddress.trim()) {
+                          alert('Ingresá la dirección para delivery');
+                          return;
+                        }
+                      } else {
+                        if (!proName.trim()) {
+                          alert('Ingresá tu nombre');
+                          return;
+                        }
+                      }
+                      if (!proPayment) {
+                        alert('Seleccioná forma de pago');
+                        return;
+                      }
+                      const effectiveCode = ensureOrderCodeForMode(mode);
+                      if (proPayment === 'mp') {
+                        try {
+                          const msg = buildTicketMessage(mode, effectiveCode) + '\nPago: Mercado Pago';
+                          window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                        } catch {}
+                        alert('Te redirigimos a Mercado Pago para completar el pago.');
+                        setTimeout(() => {
+                          generateMPLink();
+                        }, 300);
+                      } else {
+                        const mensaje = buildTicketMessage(mode, effectiveCode);
+                        const mensajeCompleto = mensaje + '\nPago: Efectivo';
+                        try {
+                          window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensajeCompleto)}`, '_blank');
+                        } catch {}
+                        alert(`Pedido confirmado!\n\n${mensaje}`);
+                      }
+                      setShowProCartModal(false);
+                      setCartItems([]);
+                      setProName('');
+                      setProAddress('');
+                      setProPayment(null);
+                      try {
+                        localStorage.removeItem(storageKey);
+                      } catch {}
+                    }}
+                    className="ml-auto px-4 h-9 rounded-lg text-white bg-green-600 hover:bg-green-700 text-sm font-semibold"
+                  >
+                    Confirmar
+                  </button>
                 </div>
               </div>
-            </div>
-            <div className={`px-4 py-3 border-t flex gap-3 border-gray-300 bg-white`}>
-              <button onClick={()=>setShowProCartModal(false)} className={`flex-1 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-900`}>✖ Cancelar</button>
-              <button onClick={()=>{ if (cartItems.length===0) { alert('Carrito vacío'); return; } const mod = proAddress.trim() ? 'delivery' : 'retiro'; if (mod==='delivery') { if (!proName.trim()) { alert('Ingresá tu nombre para delivery'); return; } if (!proAddress.trim()) { alert('Ingresá la dirección para delivery'); return; } if (!proPayment) { alert('Seleccioná forma de pago'); return; } } setModalidad(mod as any); setFormaPago((proPayment || 'efectivo') as any); if (proPayment === 'mp') { try { const msg = buildTicketMessage() + '\nPago: Mercado Pago (pendiente)'; window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank'); } catch {} alert('Te redirigimos a Mercado Pago para completar el pago.'); setTimeout(()=>{ generateMPLink(); }, 300); } else { alert(`Pedido confirmado!`); } setShowProCartModal(false); }} className={`flex-1 py-2 rounded-lg text-white ${proPayment==='mp' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}>{proPayment==='mp' ? '💳 Pagar con MP' : '✅ Confirmar pedido'}</button>
-              <button onClick={()=>{ if (cartItems.length===0) { alert('Carrito vacío'); return; } const text = encodeURIComponent(buildTicketMessage()); window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank'); }} className={`px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-900`} title="Enviar ticket por WhatsApp">📲 WhatsApp</button>
             </div>
           </div>
         </div>
