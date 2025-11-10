@@ -61,6 +61,7 @@ export default function CartaPage() {
   const [proAddress, setProAddress] = useState('');
   const [proPayment, setProPayment] = useState<'efectivo' | 'mp' | null>(null);
   const [waPhone, setWaPhone] = useState<string>(process.env.NEXT_PUBLIC_ORDER_WHATSAPP || '5491165695648');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const buildTicketMessage = () => {
     const lines: string[] = [];
@@ -274,14 +275,23 @@ export default function CartaPage() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 relative ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-        <div className="max-w-4xl mx-auto px-4 pt-2 pb-1">
+        <div className="max-w-6xl mx-auto px-4 pt-0 pb-1 -mt-2">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
-              <img src="/demo-images/logo.png?v=2" alt="Logo" className="w-[180px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setShowMapsModal(true)} title="Ver ubicación en Google Maps" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/demo-images/Logo.jpg?v=2'; }} />
+              <img
+                src="/demo-images/logo.png?v=2"
+                alt="Logo"
+                className="w-[180px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setShowMapsModal(true)}
+                title="Ver ubicación en Google Maps"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/demo-images/Logo.jpg?v=2'; }}
+              />
             </div>
             <div className="flex flex-col gap-2 ml-auto">
               <div className="flex items-center gap-2 w-full">
-                <button onClick={(e)=>{e.preventDefault();e.stopPropagation();setShowMencionesModal(true);}} className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-gray-300':'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}> <span className="text-lg">🔍</span><span className="text-sm font-medium">Reseñas</span></button>
+                <button onClick={(e)=>{e.preventDefault();e.stopPropagation();setShowMencionesModal(true);}} className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-gray-300':'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
+                  <span className="text-lg">🔍</span><span className="text-sm font-medium">Reseñas</span>
+                </button>
                 <button onClick={(e)=>{e.preventDefault();e.stopPropagation();toggleTheme();}} className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-yellow-400':'bg-gray-200 hover:bg-gray-300 text-gray-800'}`} title={isDarkMode? 'Cambiar a modo claro':'Cambiar a modo oscuro'}> <span className="text-lg">{isDarkMode?'☀️':'🌙'}</span> <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{isDarkMode?'Claro':'Oscuro'}</span></button>
               </div>
               {showSearch ? (
@@ -295,6 +305,46 @@ export default function CartaPage() {
             </div>
           </div>
         </div>
+        {/* Barra de filtros posicionada al fondo del header */}
+        {menuData?.categories && (menuData?.categories?.length || 0) > 0 && (
+          <div className={`absolute bottom-[-1px] left-0 right-0 hidden min-[550px]:block z-20 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} pointer-events-none`}>
+            <div className="max-w-6xl mx-auto px-4 pb-1">
+              <div className="flex gap-2 overflow-x-auto custom-scrollbar pointer-events-auto">
+                <button
+                  onClick={() => setSelectedCategory('ALL')}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    selectedCategory === 'ALL'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : isDarkMode
+                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                  }`}
+                >
+                  Todas
+                </button>
+                {menuData.categories.map((category) => {
+                  const key = category.id || category.name;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedCategory(key!)}
+                      className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                        selectedCategory === key
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : isDarkMode
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                      }`}
+                      title={category.name}
+                    >
+                      {category.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-4">
@@ -306,7 +356,9 @@ export default function CartaPage() {
           </div>
         ) : (
           menuData.categories.filter(category => {
-            if (searchTerm && filterItems(category.items).length === 0) return false; return true;
+            if (selectedCategory !== 'ALL' && (category.id || category.name) !== selectedCategory) return false;
+            if (searchTerm && filterItems(category.items).length === 0) return false;
+            return true;
           }).map((category, index) => (
             <div key={category.id || index} className={`mb-4 rounded-lg border ${isDarkMode? 'bg-gray-800 border-gray-700':'bg-white border-gray-300'}`}>
               <div className={`px-3 py-1 border-b rounded-t-lg cursor-pointer hover:opacity-80 ${isDarkMode? 'bg-gray-700 border-gray-600':'bg-gray-200 border-gray-300'}`} onClick={()=>toggleCategory(category.id || category.name)}>
@@ -459,6 +511,54 @@ export default function CartaPage() {
               <button onClick={()=>setShowProCartModal(false)} className={`flex-1 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-900`}>✖ Cancelar</button>
               <button onClick={()=>{ if (cartItems.length===0) { alert('Carrito vacío'); return; } const mod = proAddress.trim() ? 'delivery' : 'retiro'; if (mod==='delivery') { if (!proName.trim()) { alert('Ingresá tu nombre para delivery'); return; } if (!proAddress.trim()) { alert('Ingresá la dirección para delivery'); return; } if (!proPayment) { alert('Seleccioná forma de pago'); return; } } setModalidad(mod as any); setFormaPago((proPayment || 'efectivo') as any); if (proPayment === 'mp') { try { const msg = buildTicketMessage() + '\nPago: Mercado Pago (pendiente)'; window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank'); } catch {} alert('Te redirigimos a Mercado Pago para completar el pago.'); setTimeout(()=>{ generateMPLink(); }, 300); } else { alert(`Pedido confirmado!`); } setShowProCartModal(false); }} className={`flex-1 py-2 rounded-lg text-white ${proPayment==='mp' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}>{proPayment==='mp' ? '💳 Pagar con MP' : '✅ Confirmar pedido'}</button>
               <button onClick={()=>{ if (cartItems.length===0) { alert('Carrito vacío'); return; } const text = encodeURIComponent(buildTicketMessage()); window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank'); }} className={`px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-900`} title="Enviar ticket por WhatsApp">📲 WhatsApp</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Google Maps (embed) */}
+      {showMapsModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={()=>setShowMapsModal(false)}>
+          <div className="bg-white rounded-xl w-full max-w-3xl h-[70vh] overflow-hidden shadow-xl" onClick={(e)=>e.stopPropagation()}>
+            <div className="px-4 py-2 border-b flex items-center justify-between">
+              <h3 className="text-gray-900 font-semibold">Ubicación - Google Maps</h3>
+              <button onClick={()=>setShowMapsModal(false)} className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300">✕</button>
+            </div>
+            <iframe
+              className="w-full h-full"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || 'Esquina Pompeya')}&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Modal Reseñas (no iframe por X-Frame-Options; CTA a Google) */}
+      {showMencionesModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={()=>setShowMencionesModal(false)}>
+          <div className="bg-white rounded-xl w-full max-w-xl overflow-hidden shadow-xl" onClick={(e)=>e.stopPropagation()}>
+            <div className="px-4 py-2 border-b flex items-center justify-between">
+              <h3 className="text-gray-900 font-semibold">Reseñas</h3>
+              <button onClick={()=>setShowMencionesModal(false)} className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300">✕</button>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-sm text-gray-700">
+                Abrí Google para ver y escribir reseñas del local. Por políticas de Google, no se puede embeber esta vista dentro del sitio.
+              </p>
+              <a
+                href={`https://www.google.com/search?sca_esv=8383db09aa19d6e9&sxsrf=AE3TifNHkDoM-M1ekuN6613Xeunsi-zK9A:1762618596054&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E2YxajoXoZ1xvXtFn2Uj59asWq-4EuMAIf_BJNLd6Zxi4DLscn1I8kQJUxOKNlnPcGtQ8sVbmi1xImbN81zRTHfZ_DtpJuWmncVyNVmhAjkjMwBS2GaMgfujSTgJlHGEhEz1Myk%3D&q=Esquina+Pompeya+Restaurant+Bar+Opiniones&sa=X&ved=2ahUKEwil-6r6-eKQAxWfRLgEHcntE2MQ0bkNegQIQxAD&biw=1365&bih=992&dpr=1`}
+                target="_blank"
+                className="inline-flex items-center justify-center w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              >
+                Escribir una opinión en Google
+              </a>
+              <button
+                onClick={()=>{ navigator.clipboard?.writeText('https://www.google.com/search?sca_esv=8383db09aa19d6e9&sxsrf=AE3TifNHkDoM-M1ekuN6613Xeunsi-zK9A:1762618596054&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E2YxajoXoZ1xvXtFn2Uj59asWq-4EuMAIf_BJNLd6Zxi4DLscn1I8kQJUxOKNlnPcGtQ8sVbmi1xImbN81zRTHfZ_DtpJuWmncVyNVmhAjkjMwBS2GaMgfujSTgJlHGEhEz1Myk%3D&q=Esquina+Pompeya+Restaurant+Bar+Opiniones&sa=X&ved=2ahUKEwil-6r6-eKQAxWfRLgEHcntE2MQ0bkNegQIQxAD&biw=1365&bih=992&dpr=1'); alert('Link copiado'); }}
+                className="w-full px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm"
+              >
+                Copiar link
+              </button>
             </div>
           </div>
         </div>
