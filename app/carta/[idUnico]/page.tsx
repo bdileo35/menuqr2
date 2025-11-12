@@ -54,6 +54,7 @@ export default function CartaPage() {
   const [proName, setProName] = useState('');
   const [proAddress, setProAddress] = useState('');
   const [proPayment, setProPayment] = useState<'efectivo' | 'mp' | null>(null);
+  const [customerNotes, setCustomerNotes] = useState(''); // Campo de observaciones
   const [waPhone, setWaPhone] = useState<string>(process.env.NEXT_PUBLIC_ORDER_WHATSAPP || '5491165695648');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const storageKey = `pro-cart-${idUnico}`;
@@ -79,12 +80,15 @@ export default function CartaPage() {
     const mode = modeOverride || modalidad;
     const code = codeOverride || orderCode;
     const lines: string[] = [];
-    lines.push(`Pedido - ${menuData?.restaurantName || 'Mi Restaurante'}`);
+    lines.push(`Pedido - ${menuData?.restaurantName || 'Esquina Pompeya'}`);
     if (code) {
-      lines.push(`Orden ${code} (${mode === 'delivery' ? 'Delivery' : 'Take Away'})`);
+      lines.push(`${mode === 'delivery' ? 'Delivery' : 'Take Away'} - ${code}`);
     }
-    if (proName) lines.push(`Nombre: ${proName}`);
-    if (mode === 'delivery' && proAddress) lines.push(`Dirección: ${proAddress}`);
+    if (mode === 'delivery' && proAddress) {
+      lines.push(`Dirección: ${proAddress}`);
+    } else if (mode === 'retiro' && proName) {
+      lines.push(`Nombre: ${proName}`);
+    }
     lines.push('---');
     cartItems.forEach(ci => {
       const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
@@ -94,8 +98,8 @@ export default function CartaPage() {
     const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
     lines.push('---');
     lines.push(`Total: ${total.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}`);
-    if (code) {
-      lines.push(`Modalidad: ${mode === 'delivery' ? 'Delivery' : 'Take Away'} · Orden ${code}`);
+    if (customerNotes.trim()) {
+      lines.push(`Obs.: ${customerNotes.trim()}`);
     }
     if (proPayment) lines.push(`Pago: ${proPayment === 'mp' ? 'Mercado Pago' : 'Efectivo'}`);
     return lines.join('\n');
@@ -516,53 +520,30 @@ export default function CartaPage() {
       {showProCart && showProCartModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={()=>setShowProCartModal(false)} />
-          <div className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden bg-white border border-gray-300 text-gray-900`}>
-            <div className={`px-4 py-2 border-b bg-white border-gray-300`}>
+          <div className={`relative w-full max-w-md mx-4 rounded-xl overflow-hidden shadow-2xl`} style={{backgroundColor: '#0a5f4e'}}>
+            {/* Header con código */}
+            <div className={`px-4 py-3 border-b`} style={{borderColor: '#084d3f', backgroundColor: '#0a5f4e'}}>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  Pedido/Comanda
-                  <span className="text-sm font-semibold text-gray-500">{orderCode}</span>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  Pedido - Esquina Pompeya
                 </h3>
-                <button onClick={()=>setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300`}>✕</button>
+                <button onClick={()=>setShowProCartModal(false)} className={`w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/10`}>✕</button>
               </div>
+              <div className="text-sm text-white/90 mt-1">
+                {modalidad === 'delivery' ? 'Delivery' : 'Take Away'} - {orderCode}
+              </div>
+              {modalidad === 'delivery' && proAddress && (
+                <div className="text-xs text-white/80 mt-1">
+                  Dirección: {proAddress}
+                </div>
+              )}
             </div>
-            <div className="p-4 max-h-[70vh] overflow-y-auto">
-              <div className={`rounded-lg mb-4 bg-white border border-gray-300`}>
-                <div className="p-3 space-y-2">
-                  {cartItems.length === 0 ? (
-                    <div className={`text-center py-6 text-gray-600`}>Carrito vacío</div>
-                  ) : (
-                    cartItems.map((ci, index) => {
-                      const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
-                      const subtotal = price * ci.quantity;
-                      return (
-                        <div key={index} className="flex items-center justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium">{ci.item.name} <span className={`ml-1 text-xs text-gray-600`}>({ci.code})</span></div>
-                          </div>
-                          <div className="flex items-center gap-1 ml-auto">
-                            <div className={`inline-flex items-center rounded-full overflow-hidden border border-gray-300 bg-white`}>
-                              <button onClick={()=>setCartItems(prev=>{ const next=[...prev]; if(next[index].quantity>1){ next[index]={...next[index], quantity: next[index].quantity-1}; } else { next.splice(index,1); } return next; })} className={`w-6 h-6 text-sm hover:bg-gray-100`}>-</button>
-                              <span className="w-6 text-center text-sm font-semibold select-none">{ci.quantity}</span>
-                              <button onClick={()=>setCartItems(prev=>prev.map((it,i)=> i===index ? { ...it, quantity: it.quantity+1} : it))} className={`w-6 h-6 text-sm hover:bg-gray-100`}>+</button>
-                            </div>
-                            <div className="w-16 text-right text-sm font-semibold">{subtotal.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-                            <button onClick={()=>setCartItems(prev=>prev.filter((_,i)=>i!==index))} className={`w-6 h-6 text-sm rounded hover:bg-gray-100`} title="Quitar">✖</button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-                <div className={`px-3 py-2 border-t flex items-center justify-between border-gray-300 bg-white`}>
-                  <div className="text-sm font-medium">Total</div>
-                  <div className="text-base font-bold">{(() => { const total = cartItems.reduce((sum,it)=> sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0); return total.toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0}); })()}</div>
-                </div>
-              </div>
 
-              {/* Formulario compacto como en la imagen */}
-              <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-gray-200">
-                <div className="flex gap-2">
+            {/* Items del pedido */}
+            <div className="p-4 max-h-[60vh] overflow-y-auto" style={{backgroundColor: '#0a5f4e'}}>
+              {/* Selección de modalidad y datos */}
+              <div className="mb-4 pb-4 border-b" style={{borderColor: '#084d3f'}}>
+                <div className="flex gap-2 mb-3">
                   <select
                     value={modalidad}
                     onChange={(e) => {
@@ -570,7 +551,7 @@ export default function CartaPage() {
                       setModalidad(value);
                       setOrderCode(generateOrderCode(value));
                     }}
-                    className="w-36 rounded-lg border border-gray-300 bg-white px-3 py-1.5 h-9 text-sm text-gray-900"
+                    className="w-32 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
                   >
                     <option value="delivery">Delivery</option>
                     <option value="retiro">Take Away</option>
@@ -578,85 +559,136 @@ export default function CartaPage() {
                   <input
                     value={modalidad === 'delivery' ? proAddress : proName}
                     onChange={(e) => (modalidad === 'delivery' ? setProAddress(e.target.value) : setProName(e.target.value))}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 h-9 text-sm text-gray-900"
-                    placeholder={modalidad === 'delivery' ? 'Calle y número' : 'Nombre'}
+                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50"
+                    placeholder={modalidad === 'delivery' ? 'Dirección' : 'Nombre'}
                   />
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-900">Pago</span>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="pago"
-                      checked={proPayment === 'efectivo'}
-                      onChange={() => setProPayment('efectivo')}
-                    />
-                    Efectivo
-                  </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="pago"
-                      checked={proPayment === 'mp'}
-                      onChange={() => setProPayment('mp')}
-                    />
-                    MP
-                  </label>
-                  <button
-                    onClick={() => {
-                      if (cartItems.length === 0) {
-                        alert('Carrito vacío');
-                        return;
-                      }
-                      const mode: 'delivery' | 'retiro' = modalidad;
-                      if (mode === 'delivery') {
-                        if (!proAddress.trim()) {
-                          alert('Ingresá la dirección para delivery');
-                          return;
-                        }
-                      } else {
-                        if (!proName.trim()) {
-                          alert('Ingresá tu nombre');
-                          return;
-                        }
-                      }
-                      if (!proPayment) {
-                        alert('Seleccioná forma de pago');
-                        return;
-                      }
-                      const effectiveCode = ensureOrderCodeForMode(mode);
-                      if (proPayment === 'mp') {
-                        try {
-                          const msg = buildTicketMessage(mode, effectiveCode) + '\nPago: Mercado Pago';
-                          window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-                        } catch {}
-                        alert('Te redirigimos a Mercado Pago para completar el pago.');
-                        setTimeout(() => {
-                          generateMPLink();
-                        }, 300);
-                      } else {
-                        const mensaje = buildTicketMessage(mode, effectiveCode);
-                        const mensajeCompleto = mensaje + '\nPago: Efectivo';
-                        try {
-                          window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensajeCompleto)}`, '_blank');
-                        } catch {}
-                        alert(`Pedido confirmado!\n\n${mensaje}`);
-                      }
-                      setShowProCartModal(false);
-                      setCartItems([]);
-                      setProName('');
-                      setProAddress('');
-                      setProPayment(null);
-                      try {
-                        localStorage.removeItem(storageKey);
-                      } catch {}
-                    }}
-                    className="ml-auto px-4 h-9 rounded-lg text-white bg-green-600 hover:bg-green-700 text-sm font-semibold"
-                  >
-                    Confirmar
-                  </button>
-                </div>
               </div>
+
+              <div className="space-y-2">
+                {cartItems.length === 0 ? (
+                  <div className={`text-center py-6 text-white/70`}>Carrito vacío</div>
+                ) : (
+                  cartItems.map((ci, index) => {
+                    const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
+                    const subtotal = price * ci.quantity;
+                    return (
+                      <div key={index} className="text-white text-sm">
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium">{ci.quantity} x</span>
+                          <span className="flex-1">{ci.item.name} - $ {price.toLocaleString('es-AR', {minimumFractionDigits: 0})}</span>
+                          <button onClick={()=>setCartItems(prev=>prev.filter((_,i)=>i!==index))} className="text-white/60 hover:text-white text-xs ml-2">✖</button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Total */}
+              {cartItems.length > 0 && (
+                <div className="mt-4 pt-3 border-t text-white" style={{borderColor: '#084d3f'}}>
+                  <div className="flex justify-between font-bold text-base">
+                    <span>Total:</span>
+                    <span>$ {cartItems.reduce((sum,it)=> sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0).toLocaleString('es-AR', {minimumFractionDigits: 0})}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Campo de observaciones */}
+              {cartItems.length > 0 && (
+                <div className="mt-3">
+                  <label className="block text-white text-sm mb-1">Obs:</label>
+                  <input
+                    value={customerNotes}
+                    onChange={(e) => setCustomerNotes(e.target.value)}
+                    className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50"
+                    placeholder="Ej: Sin sal, tocar timbre negro"
+                  />
+                </div>
+              )}
+
+              {/* Forma de pago */}
+              {cartItems.length > 0 && (
+                <div className="mt-3">
+                  <span className="block text-white text-sm mb-2">Pago:</span>
+                  <div className="flex gap-3">
+                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                      <input
+                        type="radio"
+                        name="pago"
+                        checked={proPayment === 'efectivo'}
+                        onChange={() => setProPayment('efectivo')}
+                        className="accent-white"
+                      />
+                      Efectivo
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                      <input
+                        type="radio"
+                        name="pago"
+                        checked={proPayment === 'mp'}
+                        onChange={() => setProPayment('mp')}
+                        className="accent-white"
+                      />
+                      Mercado Pago
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Botón de confirmar */}
+              {cartItems.length > 0 && (
+                <button
+                  onClick={() => {
+                    const mode: 'delivery' | 'retiro' = modalidad;
+                    if (mode === 'delivery') {
+                      if (!proAddress.trim()) {
+                        alert('Ingresá la dirección para delivery');
+                        return;
+                      }
+                    } else {
+                      if (!proName.trim()) {
+                        alert('Ingresá tu nombre');
+                        return;
+                      }
+                    }
+                    if (!proPayment) {
+                      alert('Seleccioná forma de pago');
+                      return;
+                    }
+                    const effectiveCode = ensureOrderCodeForMode(mode);
+                    const mensaje = buildTicketMessage(mode, effectiveCode);
+                    
+                    if (proPayment === 'mp') {
+                      try {
+                        window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
+                      } catch {}
+                      alert('Te redirigimos a Mercado Pago para completar el pago.');
+                      setTimeout(() => {
+                        generateMPLink();
+                      }, 300);
+                    } else {
+                      try {
+                        window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
+                      } catch {}
+                      alert(`Pedido confirmado!\n\n${mensaje}`);
+                    }
+                    setShowProCartModal(false);
+                    setCartItems([]);
+                    setProName('');
+                    setProAddress('');
+                    setProPayment(null);
+                    setCustomerNotes('');
+                    try {
+                      localStorage.removeItem(storageKey);
+                    } catch {}
+                  }}
+                  className="w-full mt-4 bg-white text-teal-900 font-bold py-3 rounded-lg hover:bg-white/90 transition-colors"
+                >
+                  Enviar por WhatsApp
+                </button>
+              )}
             </div>
           </div>
         </div>

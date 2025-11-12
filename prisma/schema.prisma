@@ -193,6 +193,7 @@ model Order {
   customerPhone   String?      // Obligatorio si mode=DELIVERY
   customerAddress String?      // Obligatorio si mode=DELIVERY
   deliveryNotes   String?      // "Timbre 3B", "Casa azul", etc.
+  customerNotes   String?      // Observaciones generales del cliente (ej: "Sin sal", "Tocar timbre negro")
   
   // DATOS DEL RESTAURANTE
   restaurantId    String       // A qué comercio pertenece
