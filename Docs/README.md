@@ -1,289 +1,287 @@
-# 📱 MenuQR - Menús Digitales con QR
+# 📖 MenuQR - Guía de Inicio Rápido
 
-> **Plataforma SaaS para restaurantes: Cartas digitales, pedidos online y sistema de comandas**
-
-[![Next.js](https://img.shields.io/badge/Next.js-14.2.5-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.x-2D3748)](https://www.prisma.io/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC)](https://tailwindcss.com/)
+**Versión:** 1.0.0  
+**Última actualización:** 11 de Noviembre, 2025  
+**Estado:** MVP en desarrollo (70% completo)
 
 ---
 
-## 🚀 Inicio Rápido
+## 🎯 ¿Qué es MenuQR?
 
+**MenuQR** es una plataforma SaaS para restaurantes que permite crear **menús digitales accesibles mediante códigos QR**.
+
+### Características principales:
+- 📱 Carta digital QR con pedidos online
+- 🎨 Editor visual de menú en tiempo real
+- 📦 Scanner OCR para digitalizar menús físicos
+- 🛒 Carrito PRO con WhatsApp integrado
+- 🎨 Personalización de tema y colores
+- 📊 Sistema de comandas D/T (Delivery/Takeaway)
+
+---
+
+## 🚀 Quick Start (5 minutos)
+
+### 1. **Instalar dependencias**
 ```bash
-# Clonar el repositorio
-git clone https://github.com/bdileo35/MenuQR.git
-cd MenuQR
-
-# Instalar dependencias
 npm install
+```
 
-# Configurar base de datos
+### 2. **Configurar base de datos**
+```bash
+# Variables de entorno (.env)
+DATABASE_URL="postgresql://postgres:bat33man@db.vzcniaopxflpgrwarnvn.supabase.co:5432/postgres"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+
+# Ejecutar migraciones
 npx prisma migrate dev
-npx tsx scripts/seed-esquina-pompeya.ts
+```
 
-# Levantar servidor de desarrollo
+### 3. **Cargar datos demo**
+```bash
+# Iniciar servidor
 npm run dev
+
+# En otra terminal (PowerShell):
+Invoke-WebRequest -Uri "http://localhost:3000/api/seed-demo" -Method POST
+
+# O con curl:
+curl -X POST http://localhost:3000/api/seed-demo
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
-
----
-
-## 📚 Documentación Completa
-
-### **→ [`PROYECTO-MENUQR-COMPLETO.md`](./PROYECTO-MENUQR-COMPLETO.md)** ← LEE ESTO PRIMERO
-
-Este documento maestro contiene **TODA** la información del proyecto:
-
-- ✅ **Arquitectura técnica completa** (Stack, estructura, flujo de datos)
-- ✅ **Base de datos** (Schema Prisma + 73 productos reales)
-- ✅ **APIs y Endpoints** (5 endpoints documentados con ejemplos)
-- ✅ **Páginas y componentes** (10 páginas explicadas)
-- ✅ **Flujos de usuario** (Carta física → QR, Pedidos salón/delivery)
-- ✅ **Sistema de comandas** (Arquitectura completa)
-- ✅ **Estado actual** (Completado / En progreso / Pendiente)
-- ✅ **Roadmap 3 años** (Plan hasta $1.2M ARR)
-
----
-
-## ⚡ Features Principales
-
-### ✅ **Funcional (MVP):**
-- 📱 Carta digital accesible vía QR
-- ✏️ Editor de menú con doble-click
-- 📊 Base de datos con 73 productos reales
-- 🔄 CRUD completo de productos
-- 🎨 Modo oscuro/claro
-- 📍 Links clickeables (Google Maps, WhatsApp, Mercado Pago)
-
-### ⏳ **En Desarrollo:**
-- 🍽️ Sistema de comandas (salón/delivery)
-- 📦 Carrito de compras
-- 📞 WhatsApp Business API
-- 👨‍💼 Panel administrativo
-
-### 🎯 **Roadmap:**
-- 🔐 Autenticación multi-tenant
-- 💳 Pagos online (Mercado Pago)
-- 📈 Analytics y reportes
-- 🏢 Multi-sucursal
-
----
-
-## 🛠️ Stack Tecnológico
-
-```yaml
-Frontend:
-  - Next.js 14.2.5 (App Router)
-  - React 18 + TypeScript
-  - Tailwind CSS 3.x
-
-Backend:
-  - Next.js API Routes
-  - Prisma ORM 5.x
-  - SQLite (dev) / PostgreSQL (prod)
-
-Deploy:
-  - Vercel (frontend + APIs)
-  - Railway/Supabase (DB producción)
+### 4. **Ver el resultado**
+```
+✅ Editor:  http://localhost:3000/editor/5XJ1J37F
+✅ Carta:   http://localhost:3000/carta/5XJ1J37F
+✅ Pro:     http://localhost:3000/carta/5XJ1J37F?pro=1
 ```
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📂 Estructura del Proyecto
 
 ```
 MenuQR/
-├── app/                        # Next.js App Router
-│   ├── api/                   # Backend APIs
-│   │   └── menu/
-│   │       └── [restaurantId]/
-│   │           ├── route.ts   # GET menú completo
-│   │           └── items/
-│   │               └── route.ts # CRUD items
-│   ├── carta-menu/            # Vista pública del menú ⭐
-│   ├── editor-clean/          # Editor optimizado ⭐
-│   ├── editor-v2/             # Editor mobile
-│   ├── scanner/               # OCR de carta física
-│   └── components/            # Componentes reutilizables
-│
+├── app/
+│   ├── api/                    # Endpoints de API
+│   │   ├── menu/              # CRUD de menús
+│   │   ├── seed-demo/         # Cargar datos demo
+│   │   ├── seed-from-md/      # Cargar desde MD
+│   │   └── tienda/            # Mercado Pago
+│   ├── carta/[idUnico]/       # Menú público
+│   ├── editor/[idUnico]/      # Editor de menú
+│   ├── scanner/               # OCR para digitalizar
+│   ├── configuracion/         # Configuración del comercio
+│   └── qr-shop/               # Tienda de compra
+├── lib/
+│   ├── prisma.ts              # Cliente Prisma singleton
+│   └── shared/                # 🆕 Módulos compartidos (QRing + MenuQR)
+│       ├── idu-generator.ts   # Generador de IDs únicos
+│       ├── mercadopago.ts     # Service de Mercado Pago
+│       ├── qr-generator.ts    # Generador de QR
+│       └── planes.ts          # Planes y precios
 ├── prisma/
-│   ├── schema.prisma          # Schema de DB
-│   ├── dev.db                 # SQLite local
+│   ├── schema.prisma          # Schema de base de datos
 │   └── migrations/            # Migraciones
-│
-├── scripts/
-│   └── seed-esquina-pompeya.ts # Seed con 73 productos
-│
-├── Docs/
-│   ├── Menu_Esquina_Pompeya.md # Datos del menú demo
-│   └── README.md              # Índice de docs
-│
-└── PROYECTO-MENUQR-COMPLETO.md # 📚 DOCUMENTO MAESTRO
+└── Docs/
+    ├── README.md              # Este archivo
+    ├── QR-SUITE-MASTER.md     # 📘 DOCUMENTO MAESTRO COMPLETO
+    ├── ESTRUCTURA_TABLAS.md   # Schema detallado
+    ├── Menu_Esquina_Pompeya.md # Datos demo reales
+    └── Propuesta-Integracion-Maxirest.md
 ```
 
 ---
 
-## 🎯 Casos de Uso
+## 🔑 Conceptos Clave
 
-### **Para Restaurantes:**
-```
-1. Escanear carta física con el scanner OCR
-2. Editar productos en /editor-clean (doble-click)
-3. Generar QR personalizado
-4. Cliente escanea QR → ve carta actualizada
-5. Recibir pedidos (salón/delivery)
-6. Ver comandas en tiempo real
-```
+### **IDU (ID Único)**
+- Identificador de 8 caracteres (ej: `5XJ1J37F`)
+- Se genera al comprar un plan
+- Es el `restaurantId` en la base de datos
+- Se usa en todas las URLs: `/carta/[idUnico]`
 
-### **Para Desarrolladores:**
-```
-1. Leer PROYECTO-MENUQR-COMPLETO.md
-2. Ejecutar npm install && npm run dev
-3. Explorar /carta-menu y /editor-clean
-4. Abrir Prisma Studio: npx prisma studio
-5. Modificar código con contexto completo
-```
+### **Modalidades de Pedido**
+1. **Salón**: `?mesa=1` → Pedido en mesa
+2. **Delivery**: `?modalidad=delivery` → Envío a domicilio
+3. **Takeaway**: `?modalidad=takeaway` → Retiro en local
 
----
-
-## 🔌 APIs Disponibles
-
-```typescript
-// Obtener menú completo
-GET /api/menu/esquina-pompeya
-
-// Listar items para editor
-GET /api/menu/esquina-pompeya/items
-
-// Crear producto
-POST /api/menu/esquina-pompeya/items
-Body: { name, price, description, categoryId }
-
-// Actualizar producto
-PUT /api/menu/esquina-pompeya/items
-Body: { itemId, name, price, description }
-
-// Eliminar producto
-DELETE /api/menu/esquina-pompeya/items?itemId=xxx
-```
-
-Ver ejemplos completos en [`PROYECTO-MENUQR-COMPLETO.md`](./PROYECTO-MENUQR-COMPLETO.md#4-apis-y-endpoints)
+### **Códigos de Pedido**
+- `D####` → Delivery (ej: D0001)
+- `T####` → Takeaway (ej: T0012)
 
 ---
 
 ## 🗄️ Base de Datos
 
-### **Modelos Prisma:**
-- `User` - Dueños de restaurantes
-- `Menu` - Configuración del menú
-- `Category` - Secciones (Platos del día, Promos, etc.)
-- `MenuItem` - Productos/Platos
-- `Order` - Comandas (salón/delivery)
-- `OrderItem` - Items del pedido
+**Stack:** PostgreSQL + Prisma ORM + Supabase
 
-### **Datos Demo:**
-- **Restaurante:** Esquina Pompeya
-- **Productos:** 73 items reales
-- **Categorías:** 9 secciones
-- **Credentials:** esquina@pompeya.com / esquina2024
+### Modelos principales:
+```typescript
+User         → Dueño del restaurante
+Menu         → Menú del restaurante (restaurantId = IDU)
+Category     → Categorías del menú (Entradas, Platos, Postres...)
+MenuItem     → Platos individuales
+Order        → Pedidos realizados
+OrderItem    → Items de cada pedido
+```
 
+📖 Ver detalles completos en [ESTRUCTURA_TABLAS.md](./ESTRUCTURA_TABLAS.md)
+
+---
+
+## 🛠️ APIs Disponibles
+
+### **Menú**
 ```bash
-# Ver datos en visual DB
-npx prisma studio
-# http://localhost:5555
+GET  /api/menu/[idUnico]              # Obtener menú completo
+GET  /api/menu/[idUnico]/categories   # Obtener categorías + items
+POST /api/menu/[idUnico]/categories   # Crear/actualizar categoría
+```
+
+### **Seed Data**
+```bash
+POST /api/seed-demo                   # Cargar datos demo (Esquina Pompeya)
+POST /api/seed-from-md                # Cargar desde Menu_Esquina_Pompeya.md
+```
+
+### **Tienda (Mercado Pago)**
+```bash
+POST /api/tienda/crear-preferencia    # Crear pago MP
+GET  /api/tienda/pago-exitoso         # Callback de pago exitoso
 ```
 
 ---
 
-## 🧪 Testing
+## 📱 Flujo Completo del Usuario
 
-```bash
-# Probar carta digital
-http://localhost:3000/carta-menu
+### **FASE 1: Compra**
+```
+/qr-shop → Elegir plan → Pagar MP → Obtener IDU → /tienda/exito
+```
 
-# Probar editor
-http://localhost:3000/editor-clean
+### **FASE 2: Setup (6 pasos)**
+```
+1. /datos-comercio/[idUnico]      → Datos del comercio
+2. /scanner?idUnico=XXX           → OCR para digitalizar menú físico
+3. /editor/[idUnico]              → Administrar menú
+4. /opciones-qr/[idUnico]         → Personalizar y descargar QR
+5. /carta/[idUnico]               → Ver carta pública
+6. /configuracion/[idUnico]       → Configuración (tel WhatsApp, horarios)
+```
 
-# Probar scanner OCR
-http://localhost:3000/scanner
+### **FASE 3: Uso diario**
+```
+Cliente escanea QR → /carta/[idUnico] → Hace pedido → Envía por WhatsApp
+Comerciante edita → /editor/[idUnico] → Actualiza en tiempo real
 ```
 
 ---
 
-## 📦 Comandos Útiles
+## 🔗 Integraciones
 
+### **✅ Implementadas:**
+- Mercado Pago (puenteado para demo)
+- WhatsApp (envío de pedidos)
+- Supabase (PostgreSQL)
+
+### **🔄 En desarrollo:**
+- WhatsApp Business Catalog
+- MaxiRest POS (conector bidireccional)
+- Scanner OCR real (Google Vision)
+
+### **🎯 Planeadas:**
+- QRing (integración completa)
+- Analytics avanzado
+- Multi-idioma
+
+---
+
+## 🚀 Deploy
+
+### **Producción:**
+- URL: https://menuqrep.vercel.app
+- Demo: https://menuqrep.vercel.app/carta/5XJ1J37F
+- Platform: Vercel + Supabase
+
+### **Deploy local:**
 ```bash
-# Desarrollo
-npm run dev                    # Servidor desarrollo
-npm run build                  # Build producción
-npm run start                  # Correr build
-
-# Base de datos
-npx prisma studio              # DB visual
-npx prisma migrate dev         # Nueva migración
-npx prisma generate            # Regenerar client
-npx tsx scripts/seed-esquina-pompeya.ts  # Seed datos
+# Instalar Vercel CLI
+npm i -g vercel
 
 # Deploy
-vercel                         # Deploy a Vercel
+vercel
 ```
 
 ---
 
-## 🐛 Bugs Conocidos
+## 📚 Documentación Completa
 
-1. **Editor-v2:** Categorías nuevas no se guardan (falta API POST categories)
-2. **Carta-menu:** Imágenes demo hardcodeadas (no desde DB)
-3. **Scanner:** Precisión OCR ~70%
-4. **Logo:** No se carga desde DB
+### 📘 **[QR-SUITE-MASTER.md](./QR-SUITE-MASTER.md)** ← **LEER ESTO PRIMERO**
+**Documento maestro con TODO:**
+- Arquitectura completa QRing + MenuQR
+- Módulos compartidos (`lib/shared`)
+- Flujo post-compra detallado (6 pasos)
+- Integraciones (MaxiRest, WhatsApp Business)
+- Roadmap completo
+- Estado actual y pendientes
 
-Ver sección completa en [`PROYECTO-MENUQR-COMPLETO.md`](./PROYECTO-MENUQR-COMPLETO.md#9-estado-actual-del-proyecto)
-
----
-
-## 🤝 Contribuir
-
-1. Lee [`PROYECTO-MENUQR-COMPLETO.md`](./PROYECTO-MENUQR-COMPLETO.md) para entender el contexto
-2. Crea un branch: `git checkout -b feature/nueva-feature`
-3. Commit: `git commit -m 'feat: descripción'`
-4. Push: `git push origin feature/nueva-feature`
-5. Abre un Pull Request
+### Otros documentos:
+- [ESTRUCTURA_TABLAS.md](./ESTRUCTURA_TABLAS.md) - Schema de base de datos
+- [Menu_Esquina_Pompeya.md](./Menu_Esquina_Pompeya.md) - Datos demo reales (21 categorías, 196 platos)
+- [Propuesta-Integracion-Maxirest.md](./Propuesta-Integracion-Maxirest.md) - Spec del conector POS
 
 ---
 
-## 📝 Licencia
+## ⚠️ Estado Actual del Proyecto
 
-Este proyecto es privado y pertenece a **bdileo35**.
+### **✅ Funcional (70%):**
+- Editor de menú con Prisma
+- Carta pública con carrito PRO
+- Sistema de comandas D/T
+- Generación de QR
+- Modal de pedido con WhatsApp
+
+### **🔄 En progreso (20%):**
+- Webhook Mercado Pago real
+- Scanner OCR integrado
+- Onboarding guiado (6 pasos)
+- Autenticación
+
+### **❌ Pendiente (10%):**
+- Dashboard de estadísticas
+- WhatsApp Business Catalog
+- Conector MaxiRest
+- Integración QRing
+
+---
+
+## 🆘 Para una IA que retome este proyecto
+
+**Si perdimos el hilo de la conversación, lee en este orden:**
+
+1. **Este README** → Contexto general y quick start
+2. **[QR-SUITE-MASTER.md](./QR-SUITE-MASTER.md)** → TODO el proyecto en detalle
+3. **[ESTRUCTURA_TABLAS.md](./ESTRUCTURA_TABLAS.md)** → Schema de DB
+4. **Ejecutar seed-demo** → Ver datos reales en acción
+
+**Preguntas clave para entender el proyecto:**
+- ¿Qué es un IDU? → ID único de 8 chars que identifica al restaurante
+- ¿Dónde está el flujo post-compra? → QR-SUITE-MASTER.md, Sección 3
+- ¿Cómo se integra con QRing? → Módulos compartidos en `lib/shared`
+- ¿Qué falta implementar? → Ver Roadmap en QR-SUITE-MASTER.md
+
+**Contexto del último hilo:**
+- Se crearon módulos compartidos en `lib/shared` para QRing + MenuQR
+- Se consolidó toda la documentación en QR-SUITE-MASTER.md
+- Se implementó sistema de comandas D/T (Delivery/Takeaway)
+- Hay 20 categorías y 190 platos cargados en Supabase (Esquina Pompeya)
+- Falta completar el flujo de 6 pasos post-compra
 
 ---
 
 ## 📞 Contacto
 
-- **GitHub:** [@bdileo35](https://github.com/bdileo35)
-- **Repo:** [github.com/bdileo35/MenuQR](https://github.com/bdileo35/MenuQR)
-
----
-
-## 🎓 Para IAs (Claude, GPT, etc.)
-
-**→ Lee [`PROYECTO-MENUQR-COMPLETO.md`](./PROYECTO-MENUQR-COMPLETO.md) primero**
-
-Este documento contiene TODO el contexto necesario para:
-- ✅ Entender la arquitectura
-- ✅ Modificar código
-- ✅ Agregar features
-- ✅ Debuggear problemas
-- ✅ Tomar decisiones de diseño
-
-No necesitas leer otros archivos de documentación (están consolidados ahí).
-
----
-
-**🚀 MenuQR - De carta física a QR en minutos**
-
-[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)](https://vercel.com)
-[![Prisma](https://img.shields.io/badge/DB-Prisma-2D3748)](https://prisma.io)
-# Force deploy 10/05/2025 23:31:44
+**Desarrollador:** bdileo35  
+**Última revisión:** 11 de Noviembre, 2025  
+**Stack:** Next.js 14 + Prisma + PostgreSQL + Supabase + Vercel
