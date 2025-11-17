@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { getDemoMenuData } from '@/lib/demo-data';
 import { useAppTheme } from '../../hooks/useAppTheme';
 
@@ -32,7 +32,10 @@ interface RestaurantData {
 export default function CartaPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const idUnico = (params?.idUnico as string) || '5XJ1J37F';
+  // Detectar si es modo interno (uso en cocina) - por parámetro o por defecto en Salón
+  const isModoInterno = searchParams?.get('interno') === '1' || false;
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -122,8 +125,11 @@ export default function CartaPage() {
 
   const printComanda = (code: string) => {
     const now = new Date();
-    const fecha = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const fecha = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
     const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
+    // En modo interno (Salón), siempre es uso interno (para cocina)
+    const esUsoInterno = modalidad === 'salon' || isModoInterno;
     
     const comandaHTML = `
 <!DOCTYPE html>
@@ -139,19 +145,19 @@ export default function CartaPage() {
       }
       body {
         margin: 0;
-        padding: 3mm 2mm;
+        padding: 5mm 3mm;
         font-family: 'Courier New', monospace;
-        font-size: 10px;
-        line-height: 1.2;
+        font-size: 12px;
+        line-height: 1.4;
       }
     }
     body {
       font-family: 'Courier New', monospace;
-      font-size: 10px;
-      line-height: 1.2;
+      font-size: 12px;
+      line-height: 1.4;
       max-width: 48mm;
       margin: 0 auto;
-      padding: 3mm 2mm;
+      padding: 5mm 3mm;
     }
     .header {
       margin-bottom: 10px;
@@ -160,8 +166,8 @@ export default function CartaPage() {
     }
     .comanda-title {
       font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 3px;
+      font-size: 18px;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -169,39 +175,41 @@ export default function CartaPage() {
     .info-line {
       display: flex;
       justify-content: space-between;
-      margin: 3px 0;
-      font-size: 9px;
+      margin: 5px 0;
+      font-size: 11px;
     }
     .separator {
-      border-top: 1px dashed #000;
-      margin: 5px 0;
+      margin: 8px 0;
+      border: none;
+      display: none;
     }
     .item-line {
+      margin: 6px 0;
+    }
+    .item-name {
+      display: block;
+      margin-bottom: 3px;
+      word-wrap: break-word;
+      line-height: 1.4;
+      font-size: 11px;
+    }
+    .item-details {
       display: flex;
       justify-content: space-between;
-      margin: 2px 0;
-      font-size: 9px;
+      font-size: 13px;
+      margin-top: 2px;
     }
     .item-quantity {
       display: inline-block;
-      width: 15px;
-      text-align: right;
-      margin-right: 3px;
-    }
-    .item-name {
-      flex: 1;
-      margin-right: 3px;
-      word-wrap: break-word;
     }
     .item-price {
       text-align: right;
-      min-width: 40px;
       white-space: nowrap;
     }
     .total {
       font-weight: bold;
-      font-size: 11px;
-      margin-top: 3px;
+      font-size: 14px;
+      margin-top: 5px;
     }
     .footer {
       margin-top: 5px;
@@ -215,20 +223,19 @@ export default function CartaPage() {
 <body>
   <div class="header">
     <div class="comanda-title">
-      <span style="font-size: 14px; font-weight: bold;">COMANDA</span>
-      <span style="font-size: 10px; font-weight: normal;">${code}</span>
+      <span style="font-size: 18px; font-weight: bold;">COMANDA</span>
+      <span style="font-size: 12px; font-weight: normal;">${code}</span>
     </div>
   </div>
   
   <div class="info-line">
-    <span>Fecha: ${fecha}</span>
+    <span>${fecha} ${hora}</span>
   </div>
   <div class="info-line" style="margin: 4px 0;">
-    <span>Mesa: ${proMesa || '___'}</span>
-    <span>Mesero/a: ${proMesera || '__________'}</span>
+    <span>Mesa: ${proMesa || '___'}-${proMesera || '__________'}</span>
   </div>
   
-  <div class="separator"></div>
+  <div style="margin: 5px 0; text-align: center; font-size: 10px;">-------------------------</div>
   
   ${cartItems.map(ci => {
     const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
@@ -236,17 +243,17 @@ export default function CartaPage() {
     const subtotal = price * ci.quantity;
     return `
       <div class="item-line">
-        <span class="item-quantity">${ci.quantity}</span>
-        <span class="item-name">${nameNoParens}</span>
-        <span class="item-price">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+        <div class="item-name">${nameNoParens}</div>
+        <div class="item-details">
+          <span class="item-quantity">Cant: ${ci.quantity}</span>
+          <span class="item-price">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+        </div>
       </div>
     `;
   }).join('')}
   
-  <div class="separator"></div>
-  
   <div class="item-line total">
-    <span>TOTAL</span>
+    <span>TOTAL:</span>
     <span class="item-price">$${total.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
   </div>
   
@@ -257,10 +264,12 @@ export default function CartaPage() {
     </div>
   ` : ''}
   
-  <div class="footer">
-    ${menuData?.restaurantName || 'Esquina Pompeya'}<br>
-    ${menuData?.address || ''}
-  </div>
+  ${!esUsoInterno ? `
+    <div class="footer">
+      ${menuData?.restaurantName || 'Esquina Pompeya'}<br>
+      ${menuData?.address || ''}
+    </div>
+  ` : ''}
 </body>
 </html>
     `;
@@ -277,13 +286,14 @@ export default function CartaPage() {
         printWindow.focus();
         // window.print() funciona en Android y usará la impresora predeterminada
         // Si la H22 está emparejada por Bluetooth, aparecerá en el diálogo
+        // No cerramos automáticamente para que el usuario pueda ver y seleccionar la impresora
         printWindow.print();
         
-        // Cerrar la ventana después de un delay (dar tiempo para que se procese la impresión)
+        // Cerrar la ventana después de un delay más largo (dar tiempo para seleccionar impresora)
         setTimeout(() => {
           printWindow.close();
-        }, 2000);
-      }, 300);
+        }, 5000);
+      }, 500);
     }
   };
 
@@ -976,56 +986,53 @@ export default function CartaPage() {
       {/* Modal Preview Comanda */}
       {showComandaPreview && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowComandaPreview(false)}>
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl w-full max-w-md overflow-hidden shadow-xl`} onClick={(e) => e.stopPropagation()}>
-            <div className={`px-4 py-3 border-b flex items-center justify-between ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview Comanda</h3>
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl w-full max-w-[200px] overflow-hidden shadow-xl`} onClick={(e) => e.stopPropagation()}>
+            <div className={`px-2 py-2 border-b flex items-center justify-between ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview Comanda</h3>
               <button 
                 onClick={() => setShowComandaPreview(false)} 
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
               >
                 ✕
               </button>
             </div>
             
             {/* Preview del ticket */}
-            <div className="p-4 overflow-y-auto max-h-[70vh]">
-              <div className="bg-white p-4 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '80mm', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '12px' }}>
+            <div className="p-2 overflow-y-auto max-h-[70vh]">
+              <div className="bg-white p-3 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '48mm', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '10px' }}>
                 <div className="mb-2 pb-2 border-b border-dashed border-black">
-                  <div className="font-bold text-lg flex items-center justify-between">
+                  <div className="font-bold text-xl flex items-center justify-between">
                     <span>COMANDA</span>
-                    <span className="text-sm font-normal">{comandaCode}</span>
+                    <span className="text-base font-normal">{comandaCode}</span>
                   </div>
                 </div>
                 
                 <div className="flex justify-between text-xs my-1">
-                  <span>Fecha: {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                  <span>{new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })} {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                 </div>
-                <div className="flex justify-between text-xs my-2" style={{ marginTop: '8px', marginBottom: '8px' }}>
-                  <span>Mesa: {proMesa || '_____'}</span>
-                  <span>Mesero/a: {proMesera || '________'}</span>
+                <div className="text-xs my-2" style={{ marginTop: '8px', marginBottom: '8px' }}>
+                  <span>Mesa: {proMesa || '___'}-{proMesera || '__________'}</span>
                 </div>
                 
-                <div className="border-t border-dashed border-black my-2"></div>
+                <div className="text-center my-2" style={{ fontSize: '10px' }}>-------------------------</div>
                 
                 {cartItems.map((ci, idx) => {
                   const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
                   const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
                   const subtotal = price * ci.quantity;
                   return (
-                    <div key={idx} className="flex justify-between text-xs my-1">
-                      <div className="flex-1 flex items-start">
-                        <span className="inline-block w-5 text-right mr-2">{ci.quantity}</span>
-                        <span className="flex-1 break-words">{nameNoParens}</span>
+                    <div key={idx} className="my-2">
+                      <div className="mb-1 break-words" style={{ fontSize: '11px', lineHeight: '1.4' }}>{nameNoParens}</div>
+                      <div className="flex justify-between" style={{ fontSize: '13px' }}>
+                        <span>Cant: {ci.quantity}</span>
+                        <span className="whitespace-nowrap">${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                       </div>
-                      <span className="ml-2 whitespace-nowrap">${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                     </div>
                   );
                 })}
                 
-                <div className="border-t border-dashed border-black my-2"></div>
-                
-                <div className="flex justify-between font-bold text-sm mt-1">
-                  <span>TOTAL</span>
+                <div className="flex justify-between font-bold mt-2" style={{ fontSize: '14px' }}>
+                  <span>TOTAL:</span>
                   <span>${cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0).toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                 </div>
                 
@@ -1038,18 +1045,21 @@ export default function CartaPage() {
                   </>
                 )}
                 
-                <div className="mt-3 pt-2 border-t border-dashed border-black text-center text-xs">
-                  <div>{menuData?.restaurantName || 'Esquina Pompeya'}</div>
-                  <div>{menuData?.address || ''}</div>
-                </div>
+                {/* Footer solo si NO es uso interno (Salón) */}
+                {(modalidad !== 'salon' && !isModoInterno) && (
+                  <div className="mt-3 pt-2 border-t border-dashed border-black text-center text-xs">
+                    <div>{menuData?.restaurantName || 'Esquina Pompeya'}</div>
+                    <div>{menuData?.address || ''}</div>
+                  </div>
+                )}
               </div>
             </div>
             
-            {/* Botones */}
-            <div className={`px-4 py-3 border-t flex gap-2 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            {/* Botones - ancho del ticket (48mm) */}
+            <div className={`px-2 py-2 border-t flex gap-2 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`} style={{ maxWidth: '48mm', margin: '0 auto', width: '100%' }}>
               <button
                 onClick={() => setShowComandaPreview(false)}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
               >
                 Cancelar
               </button>
@@ -1069,9 +1079,9 @@ export default function CartaPage() {
                     localStorage.removeItem(storageKey);
                   } catch {}
                 }}
-                className="flex-1 px-4 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
+                className="flex-1 px-2 py-1.5 rounded text-xs font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
               >
-                Confirmar e Imprimir
+                Imprimir
               </button>
             </div>
           </div>
