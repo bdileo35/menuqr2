@@ -986,12 +986,12 @@ export default function CartaPage() {
       {/* Modal Preview Comanda */}
       {showComandaPreview && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowComandaPreview(false)}>
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl w-full max-w-[200px] overflow-hidden shadow-xl`} onClick={(e) => e.stopPropagation()}>
-            <div className={`px-2 py-2 border-b flex items-center justify-between ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview Comanda</h3>
+          <div className="bg-white rounded-xl w-full max-w-[200px] overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="px-2 py-2 border-b flex items-center justify-between border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900">Preview Comanda</h3>
               <button 
                 onClick={() => setShowComandaPreview(false)} 
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                className="w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-200 hover:bg-gray-300 text-gray-700"
               >
                 ✕
               </button>
@@ -1055,11 +1055,11 @@ export default function CartaPage() {
               </div>
             </div>
             
-            {/* Botones - ancho del ticket (48mm) */}
-            <div className={`px-2 py-2 border-t flex gap-2 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`} style={{ maxWidth: '48mm', margin: '0 auto', width: '100%' }}>
+            {/* Botones - ancho del ticket (48mm) - siempre claro */}
+            <div className="px-2 py-2 border-t flex gap-2 border-gray-200" style={{ maxWidth: '48mm', margin: '0 auto', width: '100%' }}>
               <button
                 onClick={() => setShowComandaPreview(false)}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                className="flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors bg-gray-200 hover:bg-gray-300 text-gray-700"
               >
                 Cancelar
               </button>
