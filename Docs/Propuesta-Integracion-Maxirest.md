@@ -160,3 +160,6 @@ Imágenes (opcional)
 | Ticket/Comanda automática       |   ✔️    |  ✔️  |
 
 > La integración propuesta con MaxiRest es independiente del plan comercial del restaurante; la tabla es ilustrativa del front de MenuQR.
+
+
+

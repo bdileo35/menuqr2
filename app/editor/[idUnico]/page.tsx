@@ -470,17 +470,137 @@ export default function Editor2() {
   };
 
   // Eliminar item
-  const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    if (!confirm(`¿Estás seguro de eliminar "${itemName}"?\n\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
     
     try {
       setSaving(true);
-      // TODO: Implementar eliminación via API
-      console.log('Eliminando item:', itemId);
-      alert('✅ Producto eliminado (demo)');
-    } catch (error) {
+      
+      if (!itemId) {
+        // Si no tiene ID, es un item nuevo que solo está en localStorage
+        setMenuData(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            categories: prev.categories.map(cat => ({
+              ...cat,
+              items: cat.items.filter(item => (item.id || item.name) !== itemId)
+            }))
+          };
+        });
+        alert('✅ Producto eliminado');
+        setShowAddItem(false);
+        setEditingItem(null);
+        return;
+      }
+
+      // Buscar el item en el menú para obtener su categoría
+      const category = menuData?.categories.find(cat => 
+        cat.items.some(item => (item.id || item.name) === itemId)
+      );
+      
+      if (!category) {
+        alert('❌ No se pudo encontrar el producto');
+        return;
+      }
+
+      // Llamar al API para eliminar (si existe endpoint)
+      // Por ahora, eliminamos del estado local
+      setMenuData(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          categories: prev.categories.map(cat => {
+            if ((cat.id || cat.name) === (category.id || category.name)) {
+              return {
+                ...cat,
+                items: cat.items.filter(item => (item.id || item.name) !== itemId)
+              };
+            }
+            return cat;
+          })
+        };
+      });
+
+      // Guardar en localStorage
+      const updatedData = {
+        ...menuData!,
+        categories: menuData!.categories.map(cat => {
+          if ((cat.id || cat.name) === (category.id || category.name)) {
+            return {
+              ...cat,
+              items: cat.items.filter(item => (item.id || item.name) !== itemId)
+            };
+          }
+          return cat;
+        })
+      };
+      localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
+
+      alert('✅ Producto eliminado correctamente');
+      setShowAddItem(false);
+      setEditingItem(null);
+    } catch (error: any) {
       console.error('Error eliminando producto:', error);
-      alert('❌ Error al eliminar. Intenta nuevamente.');
+      alert(`❌ Error al eliminar: ${error.message || 'Intenta nuevamente.'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Eliminar categoría
+  const handleDeleteCategory = async (categoryId: string, categoryName: string, itemCount: number) => {
+    if (itemCount > 0) {
+      alert(`❌ No se puede eliminar la categoría "${categoryName}" porque tiene ${itemCount} ${itemCount === 1 ? 'plato' : 'platos'}.\n\nElimina primero todos los platos de esta categoría.`);
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de eliminar la categoría "${categoryName}"?\n\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
+    
+    try {
+      setSaving(true);
+      
+      // Buscar el ID real de la categoría
+      const category = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
+      if (!category || !category.id) {
+        alert('❌ No se pudo encontrar la categoría');
+        return;
+      }
+
+      const response = await fetch(`/api/menu/${idUnico}/categories?id=${category.id}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Error al eliminar categoría');
+      }
+
+      // Actualizar el estado local
+      setMenuData(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          categories: prev.categories.filter(cat => (cat.id || cat.name) !== categoryId)
+        };
+      });
+
+      // Guardar en localStorage
+      const updatedData = {
+        ...menuData!,
+        categories: menuData!.categories.filter(cat => (cat.id || cat.name) !== categoryId)
+      };
+      localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
+
+      alert('✅ Categoría eliminada correctamente');
+    } catch (error: any) {
+      console.error('Error eliminando categoría:', error);
+      alert(`❌ Error al eliminar categoría: ${error.message || 'Intenta nuevamente.'}`);
     } finally {
       setSaving(false);
     }
@@ -539,7 +659,7 @@ export default function Editor2() {
                 className={`p-2 border rounded-lg transition-all ${
                   isDarkMode 
                     ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-blue-300 hover:bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:bg-gray-100 text-gray-700'
                 }`}
                 title="Menú de funciones"
               >
@@ -597,13 +717,13 @@ export default function Editor2() {
               <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
                 isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                  : 'bg-gray-300 border-gray-400 text-gray-800'
+                  : 'bg-gray-200 border-gray-300 text-gray-800'
               }`}>
                 {/* Contador con ícono dentro */}
                 <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
                     ? 'bg-transparent border-gray-400 text-white' 
-                    : 'bg-transparent border-gray-500 text-gray-800'
+                    : 'bg-transparent border-gray-300 text-gray-800'
                 }`}>
                   <span className="text-base">📂</span>
                   <span>{menuData?.categories.length || 0}</span>
@@ -633,13 +753,13 @@ export default function Editor2() {
               <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
                 isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                  : 'bg-gray-300 border-gray-400 text-gray-800'
+                  : 'bg-gray-200 border-gray-300 text-gray-800'
               }`}>
                 {/* Contador con ícono dentro */}
                 <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
                     ? 'bg-transparent border-gray-400 text-white' 
-                    : 'bg-transparent border-gray-500 text-gray-800'
+                    : 'bg-transparent border-gray-300 text-gray-800'
                 }`}>
                   <span className="text-base">🍽️</span>
                   <span>{menuData?.categories.reduce((total, cat) => total + cat.items.length, 0) || 0}</span>
@@ -686,7 +806,7 @@ export default function Editor2() {
                     className={`pl-2 pr-8 py-1.5 text-sm rounded-lg transition-colors duration-300 w-36 ${
                       isDarkMode 
                         ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
-                        : 'bg-white border border-blue-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500'
+                        : 'bg-gray-200 border border-gray-300 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-500'
                     }`}
                   autoFocus
                 />
@@ -803,18 +923,18 @@ export default function Editor2() {
           return (
             <div 
               key={categoryId}
-              className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
+              className={`mb-4 rounded-lg border transition-colors duration-300 overflow-hidden ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-gray-100 border-gray-300'
+                  : 'bg-white border-gray-300'
               }`}
             >
               {/* Header de Categoría - Compacto como carta */}
               <div 
-                className={`px-3 py-1 cursor-pointer transition-colors duration-300 border ${
+                className={`px-3 py-1 cursor-pointer transition-colors duration-300 border-b rounded-t-lg hover:opacity-80 ${
                   isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
-                    : 'bg-gray-300 border-gray-400 hover:bg-gray-400'
+                    ? 'bg-gray-700 border-gray-600' 
+                    : 'bg-gray-200 border-gray-300'
                 }`}
                 onClick={() => toggleCategory(categoryId)}
                 onTouchStart={(e) => handleTouchStart(e, 'category', category)}
@@ -826,7 +946,7 @@ export default function Editor2() {
                   <span className={`w-8 h-8 flex items-center justify-center text-sm font-semibold rounded-full border ${
                     isDarkMode 
                       ? 'bg-transparent border-gray-500 text-white' 
-                      : 'bg-transparent border-gray-500 text-gray-800'
+                      : 'bg-transparent border-gray-300 text-gray-800'
                   }`}>
                     {filteredItems.length}
                   </span>
@@ -837,15 +957,27 @@ export default function Editor2() {
                     )}
                   </div>
                 </div>
-                  <div className="flex items-center justify-end gap-3">
+                  <div className="flex items-center justify-end gap-2">
+                    {/* Botón eliminar categoría */}
+                    <button
+                      type="button"
+                      className="w-8 h-8 flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCategory(categoryId, category.name, filteredItems.length);
+                      }}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      title="Eliminar categoría"
+                    >
+                      🗑️
+                    </button>
                     
-                    
-                    {/* 3. Triangulito de expandir/colapsar esta categoría */}
+                    {/* Triangulito de expandir/colapsar esta categoría */}
                     <button
                       type="button"
                       className="w-8 h-8 flex items-center justify-center text-lg text-gray-400 hover:text-gray-300 transition-colors active:scale-95"
                       onClick={(e) => {
-                                e.stopPropagation();
+                        e.stopPropagation();
                         toggleCategory(categoryId);
                       }}
                       onTouchStart={(e) => e.stopPropagation()}
@@ -864,9 +996,9 @@ export default function Editor2() {
                     <div 
                       key={item.id || itemIndex}
                       className={`flex items-center transition-opacity duration-300 py-1 border-b ${
-                        item.isAvailable === false 
-                          ? 'opacity-50 border-gray-600' 
-                          : 'hover:opacity-90 border-gray-700'
+                        isDarkMode 
+                          ? (item.isAvailable === false ? 'opacity-50 border-gray-700' : 'hover:opacity-90 border-gray-700')
+                          : (item.isAvailable === false ? 'opacity-50 border-gray-200' : 'hover:opacity-90 border-gray-200')
                       } cursor-pointer`}
                       onClick={() => openEditPlateModal(item, categoryId)}
                       onTouchStart={(e) => handleTouchStart(e, 'item', { item, categoryId })}
@@ -956,16 +1088,16 @@ export default function Editor2() {
         
         {/* Componente QR con acciones */}
         <div className="mt-6">
-          <div className={`rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
+          <div className={`rounded-lg border transition-colors duration-300 overflow-hidden ${
             isDarkMode 
               ? 'bg-gray-800 border-gray-700' 
-              : 'bg-gray-100 border-gray-300'
+              : 'bg-white border-gray-300'
           }`}>
             {/* Header de Categoría */}
-            <div className={`px-4 py-2 transition-colors duration-300 border ${
+            <div className={`px-4 py-2 transition-colors duration-300 border-b rounded-t-lg ${
               isDarkMode 
                 ? 'bg-gray-700 border-gray-600' 
-                : 'bg-gray-300 border-gray-400'
+                : 'bg-gray-200 border-gray-300'
             }`}>
               <h3 className="text-lg font-bold">🖨️ QR de tu menú</h3>
             </div>
@@ -999,9 +1131,9 @@ export default function Editor2() {
       {/* Modal agregar/editar plato */}
       {showAddItem && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} rounded-xl p-6 max-w-md w-full border`}>
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold">
+              <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {editingItem ? 'Editar Plato' : 'Agregar Plato'}
               </h3>
               <button
@@ -1021,7 +1153,7 @@ export default function Editor2() {
                     removeImage: false
                   });
                 }}
-                className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
               >
                 ✕
               </button>
@@ -1064,7 +1196,7 @@ export default function Editor2() {
                         id="galleryInput"
                       />
 
-                      <div className="w-full h-32 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center overflow-hidden">
+                      <div className={`w-full h-32 border-2 rounded-lg flex items-center justify-center overflow-hidden ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'}`}>
                         {modalData.imagePreview && !modalData.removeImage ? (
                           <img 
                             src={modalData.imagePreview} 
@@ -1073,15 +1205,15 @@ export default function Editor2() {
                           />
                         ) : (
                           <div className="text-center">
-                            <span className="text-gray-300 text-2xl block mb-1">🍽️</span>
-                            <span className="text-gray-400 text-xs">Sin imagen</span>
+                            <span className={`text-2xl block mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>🍽️</span>
+                            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Sin imagen</span>
                           </div>
                         )}
                       </div>
                       <div className="flex gap-2 mt-2">
-                        <label htmlFor="cameraInput" title="Tomar foto" className="flex-1 py-1.5 text-center bg-gray-600 hover:bg-gray-500 rounded-lg cursor-pointer text-lg">📷</label>
-                        <label htmlFor="galleryInput" title="Galería" className="flex-1 py-1.5 text-center bg-gray-600 hover:bg-gray-500 rounded-lg cursor-pointer text-lg">🖼️</label>
-                        <button type="button" title="Sin imagen" className="flex-1 py-1.5 text-center bg-gray-600 hover:bg-gray-500 rounded-lg text-lg" onClick={() => setModalData(prev => ({...prev, imageFile: null, imagePreview: '', removeImage: true }))}>🍽️</button>
+                        <label htmlFor="cameraInput" title="Tomar foto" className={`flex-1 py-1.5 text-center rounded-lg cursor-pointer text-lg ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>📷</label>
+                        <label htmlFor="galleryInput" title="Galería" className={`flex-1 py-1.5 text-center rounded-lg cursor-pointer text-lg ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>🖼️</label>
+                        <button type="button" title="Sin imagen" className={`flex-1 py-1.5 text-center rounded-lg text-lg ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`} onClick={() => setModalData(prev => ({...prev, imageFile: null, imagePreview: '', removeImage: true }))}>🍽️</button>
                       </div>
                     </div>
                   </div>
@@ -1090,33 +1222,33 @@ export default function Editor2() {
                   <div className="flex-1 h-32 flex flex-col justify-between">
                     {/* Código - label e input en misma línea */}
                     <div className="flex items-center gap-3">
-                      <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Código:</label>
+                      <label className={`text-sm font-medium whitespace-nowrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Código:</label>
                       <input
                         type="text"
                         value={modalData.code || ''}
                         readOnly
-                        className="w-36 p-2 bg-gray-600 border border-gray-500 rounded text-gray-300 cursor-not-allowed text-sm"
+                        className={`w-36 p-2 border rounded cursor-not-allowed text-sm ${isDarkMode ? 'bg-gray-600 border-gray-500 text-gray-300' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
                         placeholder={modalData.code ? modalData.code : "Automático"}
                       />
                     </div>
                     
                     {/* Precio */}
                     <div className="flex items-center gap-3">
-                      <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Precio:</label>
+                      <label className={`text-sm font-medium whitespace-nowrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Precio:</label>
                       <input
                         name="price"
                     type="text"
                     required
                         value={modalData.price}
                         onChange={(e) => setModalData(prev => ({ ...prev, price: e.target.value }))}
-                        className="w-36 p-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className={`w-36 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                         placeholder="Ej: $9000"
                   />
                 </div>
                 
                     {/* Estado - debajo del Precio */}
                     <div className="flex items-center gap-3">
-                      <label className="text-sm font-medium text-gray-300 whitespace-nowrap">Estado:</label>
+                      <label className={`text-sm font-medium whitespace-nowrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Estado:</label>
                       <button
                         type="button"
                         onClick={() => setModalData(prev => ({ ...prev, isAvailable: !prev.isAvailable }))}
@@ -1139,13 +1271,13 @@ export default function Editor2() {
                 
                 {/* Combo de categorías */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Categoría *</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Categoría *</label>
                   <select
                     name="category"
                     required
                     value={modalData.categoryId}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                   >
                     <option value="">Seleccionar categoría...</option>
                     {menuData?.categories.map((category) => (
@@ -1158,27 +1290,27 @@ export default function Editor2() {
                 
                 {/* Nombre del plato */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Nombre del plato *</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Nombre del plato *</label>
                   <input
                     name="name"
                     type="text"
                     required
                     value={modalData.name}
                     onChange={(e) => setModalData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     placeholder="Ej: Milanesa con papas"
                   />
                 </div>
                 
                 {/* Descripción */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Descripción</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Descripción</label>
                   <textarea
                     name="description"
                     rows={3}
                     value={modalData.description}
                     onChange={(e) => setModalData(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     placeholder="Descripción opcional del plato..."
                   />
                 </div>
@@ -1186,20 +1318,23 @@ export default function Editor2() {
               </div>
               
               <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddItem(false);
-                    setEditingItem(null);
-                    setSelectedCategoryForItem('');
-                  }}
-                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
-                >
-                  Cancelar
-                </button>
-                
-                
+                {editingItem && (
                   <button
+                    type="button"
+                    onClick={() => {
+                      if (editingItem.id) {
+                        handleDeleteItem(editingItem.id, editingItem.name);
+                      } else {
+                        handleDeleteItem(editingItem.name, editingItem.name);
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                  >
+                    🗑️ Eliminar
+                  </button>
+                )}
+                
+                <button
                   type="submit"
                   className={`flex-1 px-4 py-2 rounded-lg transition-colors font-medium border ${
                     isDarkMode 
@@ -1208,7 +1343,7 @@ export default function Editor2() {
                   }`}
                 >
                   {editingItem ? 'Guardar' : 'Agregar'}
-                  </button>
+                </button>
               </div>
             </form>
           </div>
@@ -1218,12 +1353,12 @@ export default function Editor2() {
       {/* Modal agregar categoría */}
       {showAddCategory && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} rounded-xl p-6 max-w-md w-full border`}>
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold">Agregar Categoría</h3>
+              <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Agregar Categoría</h3>
               <button
                 onClick={() => setShowAddCategory(false)}
-                className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
               >
                 ✕
               </button>
@@ -1263,23 +1398,23 @@ export default function Editor2() {
               <div className="space-y-4">
                 {/* Nombre de la categoría */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Nombre de la categoría *</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Nombre de la categoría *</label>
                   <input
                     name="name"
                     type="text"
                     required
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     placeholder="Ej: Platos del Día, Promos, Bebidas..."
                   />
                 </div>
                 
                 {/* Descripción opcional */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Descripción (opcional)</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Descripción (opcional)</label>
                   <textarea
                     name="description"
                     rows={3}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     placeholder="Descripción de la categoría..."
                   />
                 </div>
@@ -1289,14 +1424,14 @@ export default function Editor2() {
                 <button
                   type="button"
                   onClick={() => setShowAddCategory(false)}
-                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}
                 >
                   Cancelar
                 </button>
                 
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition-colors font-medium text-white"
                 >
                   Crear Categoría
                 </button>
@@ -1309,15 +1444,15 @@ export default function Editor2() {
       {/* Modal editar categoría */}
       {showEditCategory && editingCategory && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} rounded-xl p-6 max-w-md w-full border`}>
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold">Editar Categoría</h3>
+              <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Editar Categoría</h3>
               <button
                 onClick={() => {
                   setShowEditCategory(false);
                   setEditingCategory(null);
                 }}
-                className="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-300"
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
               >
                 ✕
               </button>
@@ -1350,24 +1485,24 @@ export default function Editor2() {
               <div className="space-y-4">
                 {/* Nombre de la categoría */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Nombre *</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Nombre *</label>
                   <input
                     name="name"
                     type="text"
                     required
                     defaultValue={editingCategory.name}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                   />
                 </div>
                 
                 {/* Descripción */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Descripción</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Descripción</label>
                   <textarea
                     name="description"
                     rows={3}
                     defaultValue={editingCategory.description || ''}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     placeholder="Descripción de la categoría..."
                   />
                 </div>
@@ -1380,14 +1515,14 @@ export default function Editor2() {
                     setShowEditCategory(false);
                     setEditingCategory(null);
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}
                 >
                   Cancelar
                 </button>
                 
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors font-medium text-white"
                 >
                   Guardar Cambios
                 </button>

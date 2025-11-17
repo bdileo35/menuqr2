@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         contactAddress: 'Av. Fernández de la Cruz 1100, Buenos Aires',
         contactEmail: 'info@esquinapompeya.com',
         socialInstagram: '@esquinapompeya',
+        waiters: JSON.stringify(['Maria', 'Lucia', 'Carmen']), // Meseras por defecto
         ownerId: user.id,
       },
     });

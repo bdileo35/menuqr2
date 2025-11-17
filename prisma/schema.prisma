@@ -103,6 +103,9 @@ model Menu {
   deliveryRadius   Float?  // km (opcional)
   deliveryMinOrder Float?  // Mínimo para delivery (opcional)
   
+  // Salon configuration
+  waiters         String?  // JSON array de nombres de meseras (ej: ["Yesica", "Magali"])
+  
   isActive       Boolean  @default(true)
   
   // Relations
@@ -193,7 +196,7 @@ model Order {
   customerPhone   String?      // Obligatorio si mode=DELIVERY
   customerAddress String?      // Obligatorio si mode=DELIVERY
   deliveryNotes   String?      // "Timbre 3B", "Casa azul", etc.
-  customerNotes   String?      // Observaciones generales del cliente (ej: "Sin sal", "Tocar timbre negro")
+  customerNotes   String?      // Observaciones generales del cliente (ej: "Sin sal", "Timbre negro")
   
   // DATOS DEL RESTAURANTE
   restaurantId    String       // A qué comercio pertenece

@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
 
 export default function Configuracion() {
   const router = useRouter();
+  const params = useParams();
+  const idUnico = (params?.idUnico as string) || '5XJ1J37F';
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
 
@@ -96,7 +98,7 @@ export default function Configuracion() {
               📋 Datos del comercio
             </button>
             <button
-              onClick={() => router.push('/editor')}
+              onClick={() => router.push(`/editor/${idUnico}`)}
               className={`w-full text-left px-3 py-2 rounded transition-colors ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-300' 

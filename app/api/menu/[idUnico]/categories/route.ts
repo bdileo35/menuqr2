@@ -187,3 +187,6 @@ function generateCategoryCode(categoryName: string, currentCount: number): strin
 
 
 
+
+
+

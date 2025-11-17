@@ -11,6 +11,7 @@ interface MenuItem {
   description?: string;
   isAvailable?: boolean;
   imageBase64?: string | null;
+  imageUrl?: string | null;
   code?: string;
 }
 
@@ -46,13 +47,18 @@ export default function CartaPage() {
   const [arrowDirection, setArrowDirection] = useState<'next' | 'prev' | null>(null);
   const [cartItems, setCartItems] = useState<Array<{item: MenuItem, quantity: number, code: string}>>([]);
   const [modalQuantity, setModalQuantity] = useState(1);
-  const [modalidad, setModalidad] = useState<'delivery' | 'retiro'>('delivery');
+  const [modalidad, setModalidad] = useState<'delivery' | 'retiro' | 'salon'>('delivery');
   const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
   const [animationActive, setAnimationActive] = useState(false);
   const [showProCart, setShowProCart] = useState(true);
   const [showProCartModal, setShowProCartModal] = useState(false);
+  const [showComandaPreview, setShowComandaPreview] = useState(false);
+  const [comandaCode, setComandaCode] = useState('');
   const [proName, setProName] = useState('');
   const [proAddress, setProAddress] = useState('');
+  const [proMesa, setProMesa] = useState('');
+  const [proMesera, setProMesera] = useState('');
+  const [waiters, setWaiters] = useState<string[]>(['Maria', 'Lucia', 'Carmen']); // Valores por defecto
   const [proPayment, setProPayment] = useState<'efectivo' | 'mp' | null>(null);
   const [customerNotes, setCustomerNotes] = useState(''); // Campo de observaciones
   const [waPhone, setWaPhone] = useState<string>(process.env.NEXT_PUBLIC_ORDER_WHATSAPP || '5491165695648');
@@ -68,26 +74,30 @@ export default function CartaPage() {
 
   const [orderCode, setOrderCode] = useState<string>(() => generateOrderCode('delivery'));
 
-  const ensureOrderCodeForMode = (mode: 'delivery' | 'retiro') => {
-    const expectedPrefix = mode === 'delivery' ? 'D' : 'T';
+  const ensureOrderCodeForMode = (mode: 'delivery' | 'retiro' | 'salon') => {
+    const expectedPrefix = mode === 'delivery' ? 'D' : mode === 'retiro' ? 'T' : 'S';
     if (orderCode.startsWith(expectedPrefix)) return orderCode;
     const newCode = generateOrderCode(mode);
     setOrderCode(newCode);
     return newCode;
   };
 
-  const buildTicketMessage = (modeOverride?: 'delivery' | 'retiro', codeOverride?: string) => {
+  const buildTicketMessage = (modeOverride?: 'delivery' | 'retiro' | 'salon', codeOverride?: string) => {
     const mode = modeOverride || modalidad;
     const code = codeOverride || orderCode;
     const lines: string[] = [];
     lines.push(`Pedido - ${menuData?.restaurantName || 'Esquina Pompeya'}`);
     if (code) {
-      lines.push(`${mode === 'delivery' ? 'Delivery' : 'Take Away'} - ${code}`);
+      const modeLabel = mode === 'delivery' ? 'Delivery' : mode === 'retiro' ? 'Take Away' : 'Salón';
+      lines.push(`${modeLabel} - ${code}`);
     }
     if (mode === 'delivery' && proAddress) {
       lines.push(`Dirección: ${proAddress}`);
     } else if (mode === 'retiro' && proName) {
       lines.push(`Nombre: ${proName}`);
+    } else if (mode === 'salon') {
+      if (proMesa) lines.push(`Mesa: ${proMesa}`);
+      if (proMesera) lines.push(`Atendió: ${proMesera}`);
     }
     lines.push('---');
     cartItems.forEach(ci => {
@@ -103,6 +113,178 @@ export default function CartaPage() {
     }
     if (proPayment) lines.push(`Pago: ${proPayment === 'mp' ? 'Mercado Pago' : 'Efectivo'}`);
     return lines.join('\n');
+  };
+
+  const showComandaPreviewModal = (code: string) => {
+    setComandaCode(code);
+    setShowComandaPreview(true);
+  };
+
+  const printComanda = (code: string) => {
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const total = cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0);
+    
+    const comandaHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Comanda ${code}</title>
+  <style>
+    @media print {
+      @page {
+        size: 48mm auto;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        padding: 3mm 2mm;
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        line-height: 1.2;
+      }
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      line-height: 1.2;
+      max-width: 48mm;
+      margin: 0 auto;
+      padding: 3mm 2mm;
+    }
+    .header {
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 5px;
+    }
+    .comanda-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      margin: 3px 0;
+      font-size: 9px;
+    }
+    .separator {
+      border-top: 1px dashed #000;
+      margin: 5px 0;
+    }
+    .item-line {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0;
+      font-size: 9px;
+    }
+    .item-quantity {
+      display: inline-block;
+      width: 15px;
+      text-align: right;
+      margin-right: 3px;
+    }
+    .item-name {
+      flex: 1;
+      margin-right: 3px;
+      word-wrap: break-word;
+    }
+    .item-price {
+      text-align: right;
+      min-width: 40px;
+      white-space: nowrap;
+    }
+    .total {
+      font-weight: bold;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+    .footer {
+      margin-top: 5px;
+      text-align: center;
+      font-size: 8px;
+      border-top: 1px dashed #000;
+      padding-top: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="comanda-title">
+      <span style="font-size: 14px; font-weight: bold;">COMANDA</span>
+      <span style="font-size: 10px; font-weight: normal;">${code}</span>
+    </div>
+  </div>
+  
+  <div class="info-line">
+    <span>Fecha: ${fecha}</span>
+  </div>
+  <div class="info-line" style="margin: 4px 0;">
+    <span>Mesa: ${proMesa || '___'}</span>
+    <span>Mesero/a: ${proMesera || '__________'}</span>
+  </div>
+  
+  <div class="separator"></div>
+  
+  ${cartItems.map(ci => {
+    const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
+    const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
+    const subtotal = price * ci.quantity;
+    return `
+      <div class="item-line">
+        <span class="item-quantity">${ci.quantity}</span>
+        <span class="item-name">${nameNoParens}</span>
+        <span class="item-price">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+      </div>
+    `;
+  }).join('')}
+  
+  <div class="separator"></div>
+  
+  <div class="item-line total">
+    <span>TOTAL</span>
+    <span class="item-price">$${total.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+  </div>
+  
+  ${customerNotes.trim() ? `
+    <div class="separator"></div>
+    <div class="info-line">
+      <span>Obs: ${customerNotes.trim()}</span>
+    </div>
+  ` : ''}
+  
+  <div class="footer">
+    ${menuData?.restaurantName || 'Esquina Pompeya'}<br>
+    ${menuData?.address || ''}
+  </div>
+</body>
+</html>
+    `;
+    
+    // Crear ventana de impresión optimizada para impresoras térmicas 48mm
+    // Compatible con Android (Bluetooth 4.0) - funciona desde el celular de la mesera
+    const printWindow = window.open('', '_blank', 'width=200,height=300');
+    if (printWindow) {
+      printWindow.document.write(comandaHTML);
+      printWindow.document.close();
+      
+      // Esperar a que cargue el contenido y luego imprimir
+      setTimeout(() => {
+        printWindow.focus();
+        // window.print() funciona en Android y usará la impresora predeterminada
+        // Si la H22 está emparejada por Bluetooth, aparecerá en el diálogo
+        printWindow.print();
+        
+        // Cerrar la ventana después de un delay (dar tiempo para que se procese la impresión)
+        setTimeout(() => {
+          printWindow.close();
+        }, 2000);
+      }, 300);
+    }
   };
 
   const toggleCategory = (categoryId: string) => {
@@ -153,6 +335,16 @@ export default function CartaPage() {
         const response = await fetch(`/api/menu/${idUnico}`);
         const data = await response.json();
         if (data.success && data.menu) {
+          // Cargar meseras desde el menú (o usar valores por defecto)
+          if (data.menu.waiters && Array.isArray(data.menu.waiters) && data.menu.waiters.length > 0) {
+            setWaiters(data.menu.waiters);
+          } else {
+            // Valores por defecto para demo
+            setWaiters(['Maria', 'Lucia', 'Carmen']);
+          }
+          
+          console.log('Meseras cargadas:', data.menu.waiters || ['Maria', 'Lucia', 'Carmen']);
+          
           let restaurantInfo: RestaurantData = {
             restaurantName: data.menu.restaurantName,
             address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
@@ -167,7 +359,9 @@ export default function CartaPage() {
                 price: `$${item.price}`,
                 description: item.description,
                 isAvailable: item.isAvailable,
-                code: item.code
+                code: item.code,
+                imageUrl: item.imageUrl || null,
+                imageBase64: item.imageBase64 || item.imageUrl || null
               }))
             }))
           };
@@ -272,7 +466,7 @@ export default function CartaPage() {
         if (Array.isArray(parsed.items)) {
           setCartItems(parsed.items);
         }
-        if (parsed.modalidad === 'delivery' || parsed.modalidad === 'retiro') {
+        if (parsed.modalidad === 'delivery' || parsed.modalidad === 'retiro' || parsed.modalidad === 'salon') {
           setModalidad(parsed.modalidad);
         }
         if (typeof parsed.orderCode === 'string') {
@@ -283,6 +477,12 @@ export default function CartaPage() {
         }
         if (typeof parsed.proAddress === 'string') {
           setProAddress(parsed.proAddress);
+        }
+        if (typeof parsed.proMesa === 'string') {
+          setProMesa(parsed.proMesa);
+        }
+        if (typeof parsed.proMesera === 'string') {
+          setProMesera(parsed.proMesera);
         }
         if (parsed.proPayment === 'efectivo' || parsed.proPayment === 'mp') {
           setProPayment(parsed.proPayment);
@@ -303,6 +503,8 @@ export default function CartaPage() {
       orderCode,
       proName,
       proAddress,
+      proMesa,
+      proMesera,
       proPayment,
     };
     try {
@@ -310,7 +512,7 @@ export default function CartaPage() {
     } catch (err) {
       console.warn('No se pudo guardar carrito Pro:', err);
     }
-  }, [cartHydrated, cartItems, modalidad, orderCode, proName, proAddress, proPayment, storageKey]);
+  }, [cartHydrated, cartItems, modalidad, orderCode, proName, proAddress, proMesa, proMesera, proPayment, storageKey]);
 
   const filterItems = (items: MenuItem[]) => {
     if (!searchTerm.trim()) return items;
@@ -463,12 +665,12 @@ export default function CartaPage() {
                         </div>
                       </div>
                     ) : (
-                      <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} title={`${item.code ? `#${item.code}` : ''}${(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const d = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return (item.code? ' ' : '') + (d||''); })()}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg']; setModalItemImage(item.imageBase64 || fallbacks[itemIndex % fallbacks.length]); }}}>
+                      <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} title={`${item.code ? `#${item.code}` : ''}${(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const d = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return (item.code? ' ' : '') + (d||''); })()}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg']; setModalItemImage(item.imageBase64 || item.imageUrl || fallbacks[itemIndex % fallbacks.length]); }}}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1">
-                          {item.imageBase64 ? (
-                            <img src={item.imageBase64} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
+                          {item.imageBase64 || item.imageUrl ? (
+                            <img src={(item.imageBase64 || item.imageUrl) || ''} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
                           ) : (
-                            <img src={['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg'][itemIndex % 3]} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
+                            <img src={['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg'][itemIndex % 10]} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
                           )}
                         </div>
                         <div className={`flex-1 flex items-center justify-between px-2 py-1 ${item.isAvailable === false ? 'text-gray-400' : isDarkMode ? 'text-white' : 'text-black'}`}>
@@ -507,7 +709,26 @@ export default function CartaPage() {
               </div>
               <div className={`${isDarkMode? 'bg-gray-700 border-2 border-gray-600':'bg-transparent'} text-xl font-bold px-4 py-2 rounded-lg text-blue-500`}>{modalItem.price.replace('$$','$')}</div>
             </div>
-            <button onClick={()=>{ const code = `0${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`; setCartItems(prev=>[...prev,{ item: modalItem, quantity: modalQuantity, code }]); setModalItem(null); setModalQuantity(1); }} className={`${isDarkMode? 'bg-blue-600 hover:bg-blue-700 text-white':'bg-blue-500 hover:bg-blue-600 text-white'} w-full py-3 rounded-lg font-bold text-lg`}>🛒 Agregar al Carrito</button>
+            <button onClick={()=>{ 
+              setCartItems(prev => {
+                // Buscar si el item ya existe en el carrito
+                const existingIndex = prev.findIndex(ci => ci.item.id === modalItem.id || ci.item.name === modalItem.name);
+                if (existingIndex >= 0) {
+                  // Si existe, incrementar la cantidad
+                  return prev.map((ci, idx) => 
+                    idx === existingIndex 
+                      ? { ...ci, quantity: ci.quantity + modalQuantity }
+                      : ci
+                  );
+                } else {
+                  // Si no existe, agregar nuevo
+                  const code = `0${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`;
+                  return [...prev, { item: modalItem, quantity: modalQuantity, code }];
+                }
+              });
+              setModalItem(null); 
+              setModalQuantity(1); 
+            }} className={`${isDarkMode? 'bg-blue-600 hover:bg-blue-700 text-white':'bg-blue-500 hover:bg-blue-600 text-white'} w-full py-3 rounded-lg font-bold text-lg`}>🛒 Agregar al Carrito</button>
           </div>
         </div>
       )}
@@ -520,64 +741,56 @@ export default function CartaPage() {
       {showProCart && showProCartModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={()=>setShowProCartModal(false)} />
-          <div className={`relative w-full max-w-md mx-4 rounded-xl overflow-hidden shadow-2xl`} style={{backgroundColor: '#0a5f4e'}}>
+          <div className={`relative w-full max-w-md mx-4 rounded-xl shadow-2xl bg-white`}>
             {/* Header con código */}
-            <div className={`px-4 py-3 border-b`} style={{borderColor: '#084d3f', backgroundColor: '#0a5f4e'}}>
+            <div className={`px-4 py-3 border-b border-gray-200`}>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  Pedido - Esquina Pompeya
+                <h3 className="text-lg font-bold text-black flex items-center gap-2">
+                  Pedido <span className="text-sm font-semibold text-black">{orderCode}</span>
                 </h3>
-                <button onClick={()=>setShowProCartModal(false)} className={`w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/10`}>✕</button>
+                <button onClick={()=>setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-black`}>✕</button>
               </div>
-              <div className="text-sm text-white/90 mt-1">
-                {modalidad === 'delivery' ? 'Delivery' : 'Take Away'} - {orderCode}
-              </div>
-              {modalidad === 'delivery' && proAddress && (
-                <div className="text-xs text-white/80 mt-1">
-                  Dirección: {proAddress}
-                </div>
-              )}
             </div>
 
             {/* Items del pedido */}
-            <div className="p-4 max-h-[60vh] overflow-y-auto" style={{backgroundColor: '#0a5f4e'}}>
-              {/* Selección de modalidad y datos */}
-              <div className="mb-4 pb-4 border-b" style={{borderColor: '#084d3f'}}>
-                <div className="flex gap-2 mb-3">
-                  <select
-                    value={modalidad}
-                    onChange={(e) => {
-                      const value = e.target.value as 'delivery' | 'retiro';
-                      setModalidad(value);
-                      setOrderCode(generateOrderCode(value));
-                    }}
-                    className="w-32 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
-                  >
-                    <option value="delivery">Delivery</option>
-                    <option value="retiro">Take Away</option>
-                  </select>
-                  <input
-                    value={modalidad === 'delivery' ? proAddress : proName}
-                    onChange={(e) => (modalidad === 'delivery' ? setProAddress(e.target.value) : setProName(e.target.value))}
-                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50"
-                    placeholder={modalidad === 'delivery' ? 'Dirección' : 'Nombre'}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
+            <div className="px-4 pt-4 pb-0 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-2 mb-4">
                 {cartItems.length === 0 ? (
-                  <div className={`text-center py-6 text-white/70`}>Carrito vacío</div>
+                  <div className={`text-center py-6 text-gray-400`}>Carrito vacío</div>
                 ) : (
                   cartItems.map((ci, index) => {
                     const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
-                    const subtotal = price * ci.quantity;
                     return (
-                      <div key={index} className="text-white text-sm">
-                        <div className="flex items-start gap-2">
-                          <span className="font-medium">{ci.quantity} x</span>
-                          <span className="flex-1">{ci.item.name} - $ {price.toLocaleString('es-AR', {minimumFractionDigits: 0})}</span>
-                          <button onClick={()=>setCartItems(prev=>prev.filter((_,i)=>i!==index))} className="text-white/60 hover:text-white text-xs ml-2">✖</button>
+                      <div key={index} className="flex items-center justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-black">{ci.item.name} <span className="text-xs text-black">({ci.code})</span></div>
+                        </div>
+                        <div className="flex items-center gap-1 ml-auto">
+                          <div className="inline-flex items-center rounded-full overflow-hidden border border-gray-300 bg-white">
+                            <button 
+                              onClick={()=>setCartItems(prev=>{ 
+                                const next=[...prev]; 
+                                if(next[index].quantity>1){ 
+                                  next[index]={...next[index], quantity: next[index].quantity-1}; 
+                                } else { 
+                                  next.splice(index,1); 
+                                } 
+                                return next; 
+                              })} 
+                              className="w-6 h-6 text-sm hover:bg-gray-100 text-black"
+                            >-</button>
+                            <span className="w-6 text-center text-sm font-semibold select-none text-black">{ci.quantity}</span>
+                            <button 
+                              onClick={()=>setCartItems(prev=>prev.map((it,i)=> i===index ? { ...it, quantity: it.quantity+1} : it))} 
+                              className="w-6 h-6 text-sm hover:bg-gray-100 text-black"
+                            >+</button>
+                          </div>
+                          <div className="w-16 text-right text-sm font-semibold text-black">{(price * ci.quantity).toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
+                          <button 
+                            onClick={()=>setCartItems(prev=>prev.filter((_,i)=>i!==index))} 
+                            className="w-6 h-6 text-sm rounded hover:bg-gray-100 text-black" 
+                            title="Quitar"
+                          >✖</button>
                         </div>
                       </div>
                     );
@@ -587,9 +800,9 @@ export default function CartaPage() {
 
               {/* Total */}
               {cartItems.length > 0 && (
-                <div className="mt-4 pt-3 border-t text-white" style={{borderColor: '#084d3f'}}>
+                <div className="pb-3 text-black">
                   <div className="flex justify-between font-bold text-base">
-                    <span>Total:</span>
+                    <span>Total</span>
                     <span>$ {cartItems.reduce((sum,it)=> sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0).toLocaleString('es-AR', {minimumFractionDigits: 0})}</span>
                   </div>
                 </div>
@@ -597,98 +810,269 @@ export default function CartaPage() {
 
               {/* Campo de observaciones */}
               {cartItems.length > 0 && (
-                <div className="mt-3">
-                  <label className="block text-white text-sm mb-1">Obs:</label>
+                <div className="pb-3">
                   <input
                     value={customerNotes}
                     onChange={(e) => setCustomerNotes(e.target.value)}
-                    className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50"
-                    placeholder="Ej: Sin sal, tocar timbre negro"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black placeholder-gray-400"
+                    placeholder="Observaciones (ej: Sin sal)"
                   />
                 </div>
               )}
+            </div>
 
-              {/* Forma de pago */}
-              {cartItems.length > 0 && (
-                <div className="mt-3">
-                  <span className="block text-white text-sm mb-2">Pago:</span>
-                  <div className="flex gap-3">
-                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+            {/* Footer con pago y confirmar */}
+            {cartItems.length > 0 && (
+              <div className="px-4 py-2.5 border-t border-gray-200 rounded-b-xl bg-gray-50">
+                <div className="flex gap-2 mb-2">
+                  <select
+                    value={modalidad}
+                    onChange={(e) => {
+                      const value = e.target.value as 'delivery' | 'retiro' | 'salon';
+                      setModalidad(value);
+                      setOrderCode(generateOrderCode(value));
+                    }}
+                    className="w-28 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900"
+                  >
+                    <option value="delivery">Delivery</option>
+                    <option value="retiro">Take Away</option>
+                    <option value="salon">Salón</option>
+                  </select>
+                  {modalidad === 'salon' ? (
+                    <div className="flex-1 flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-2 py-1.5">
+                      <input
+                        type="text"
+                        value={proMesa}
+                        onChange={(e) => setProMesa(e.target.value)}
+                        className="w-16 text-xs text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:ring-0 p-0"
+                        placeholder="Mesa"
+                      />
+                      <span className="text-xs text-gray-400">-</span>
+                      <select
+                        value={proMesera}
+                        onChange={(e) => setProMesera(e.target.value)}
+                        className="flex-1 text-xs text-gray-900 bg-transparent border-none outline-none focus:ring-0 p-0 appearance-none cursor-pointer"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right center',
+                          paddingRight: '16px'
+                        }}
+                      >
+                        <option value="">Atendió</option>
+                        {waiters.map((waiter) => (
+                          <option key={waiter} value={waiter}>
+                            {waiter}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <input
+                      value={modalidad === 'delivery' ? proAddress : proName}
+                      onChange={(e) => (modalidad === 'delivery' ? setProAddress(e.target.value) : setProName(e.target.value))}
+                      className="flex-1 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900 placeholder-gray-400"
+                      placeholder={modalidad === 'delivery' ? 'Calle y número' : 'Nombre'}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-black">Pago</span>
+                    <label className="flex items-center gap-1.5 text-xs text-black cursor-pointer ml-2">
                       <input
                         type="radio"
                         name="pago"
                         checked={proPayment === 'efectivo'}
                         onChange={() => setProPayment('efectivo')}
-                        className="accent-white"
                       />
                       Efectivo
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <label className="flex items-center gap-1.5 text-xs text-black cursor-pointer">
                       <input
                         type="radio"
                         name="pago"
                         checked={proPayment === 'mp'}
                         onChange={() => setProPayment('mp')}
-                        className="accent-white"
                       />
-                      Mercado Pago
+                      MP
                     </label>
                   </div>
+                  <button
+                    onClick={() => {
+                      const mode: 'delivery' | 'retiro' | 'salon' = modalidad;
+                      if (mode === 'delivery') {
+                        if (!proAddress.trim()) {
+                          alert('Ingresá la dirección para delivery');
+                          return;
+                        }
+                      } else if (mode === 'retiro') {
+                        if (!proName.trim()) {
+                          alert('Ingresá tu nombre');
+                          return;
+                        }
+                      } else if (mode === 'salon') {
+                        if (!proMesa.trim()) {
+                          alert('Ingresá el número de mesa');
+                          return;
+                        }
+                        if (!proMesera.trim()) {
+                          alert('Seleccioná la mesera que atendió');
+                          return;
+                        }
+                      }
+                      if (!proPayment) {
+                        alert('Seleccioná forma de pago');
+                        return;
+                      }
+                      const effectiveCode = ensureOrderCodeForMode(mode);
+                      
+                      if (mode === 'salon') {
+                        // Mostrar preview de comanda para salón
+                        setShowProCartModal(false);
+                        showComandaPreviewModal(effectiveCode);
+                      } else {
+                        // Enviar por WhatsApp para delivery/take away
+                        const mensaje = buildTicketMessage(mode, effectiveCode);
+                        
+                        if (proPayment === 'mp') {
+                          try {
+                            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
+                          } catch {}
+                          alert('Te redirigimos a Mercado Pago para completar el pago.');
+                          setTimeout(() => {
+                            generateMPLink();
+                          }, 300);
+                        } else {
+                          try {
+                            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
+                          } catch {}
+                          alert(`Pedido confirmado!\n\n${mensaje}`);
+                        }
+                        setShowProCartModal(false);
+                        setCartItems([]);
+                      }
+                      setProName('');
+                      setProAddress('');
+                      setProMesa('');
+                      setProMesera('');
+                      setProPayment(null);
+                      setCustomerNotes('');
+                      try {
+                        localStorage.removeItem(storageKey);
+                      } catch {}
+                    }}
+                    className="px-4 py-1.5 bg-green-600 text-white font-bold text-sm rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Confirmar
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-              {/* Botón de confirmar */}
-              {cartItems.length > 0 && (
-                <button
-                  onClick={() => {
-                    const mode: 'delivery' | 'retiro' = modalidad;
-                    if (mode === 'delivery') {
-                      if (!proAddress.trim()) {
-                        alert('Ingresá la dirección para delivery');
-                        return;
-                      }
-                    } else {
-                      if (!proName.trim()) {
-                        alert('Ingresá tu nombre');
-                        return;
-                      }
-                    }
-                    if (!proPayment) {
-                      alert('Seleccioná forma de pago');
-                      return;
-                    }
-                    const effectiveCode = ensureOrderCodeForMode(mode);
-                    const mensaje = buildTicketMessage(mode, effectiveCode);
-                    
-                    if (proPayment === 'mp') {
-                      try {
-                        window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
-                      } catch {}
-                      alert('Te redirigimos a Mercado Pago para completar el pago.');
-                      setTimeout(() => {
-                        generateMPLink();
-                      }, 300);
-                    } else {
-                      try {
-                        window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
-                      } catch {}
-                      alert(`Pedido confirmado!\n\n${mensaje}`);
-                    }
-                    setShowProCartModal(false);
-                    setCartItems([]);
-                    setProName('');
-                    setProAddress('');
-                    setProPayment(null);
-                    setCustomerNotes('');
-                    try {
-                      localStorage.removeItem(storageKey);
-                    } catch {}
-                  }}
-                  className="w-full mt-4 bg-white text-teal-900 font-bold py-3 rounded-lg hover:bg-white/90 transition-colors"
-                >
-                  Enviar por WhatsApp
-                </button>
-              )}
+      {/* Modal Preview Comanda */}
+      {showComandaPreview && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowComandaPreview(false)}>
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl w-full max-w-md overflow-hidden shadow-xl`} onClick={(e) => e.stopPropagation()}>
+            <div className={`px-4 py-3 border-b flex items-center justify-between ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview Comanda</h3>
+              <button 
+                onClick={() => setShowComandaPreview(false)} 
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Preview del ticket */}
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              <div className="bg-white p-4 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '80mm', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '12px' }}>
+                <div className="mb-2 pb-2 border-b border-dashed border-black">
+                  <div className="font-bold text-lg flex items-center justify-between">
+                    <span>COMANDA</span>
+                    <span className="text-sm font-normal">{comandaCode}</span>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-xs my-1">
+                  <span>Fecha: {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                </div>
+                <div className="flex justify-between text-xs my-2" style={{ marginTop: '8px', marginBottom: '8px' }}>
+                  <span>Mesa: {proMesa || '_____'}</span>
+                  <span>Mesero/a: {proMesera || '________'}</span>
+                </div>
+                
+                <div className="border-t border-dashed border-black my-2"></div>
+                
+                {cartItems.map((ci, idx) => {
+                  const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
+                  const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
+                  const subtotal = price * ci.quantity;
+                  return (
+                    <div key={idx} className="flex justify-between text-xs my-1">
+                      <div className="flex-1 flex items-start">
+                        <span className="inline-block w-5 text-right mr-2">{ci.quantity}</span>
+                        <span className="flex-1 break-words">{nameNoParens}</span>
+                      </div>
+                      <span className="ml-2 whitespace-nowrap">${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                    </div>
+                  );
+                })}
+                
+                <div className="border-t border-dashed border-black my-2"></div>
+                
+                <div className="flex justify-between font-bold text-sm mt-1">
+                  <span>TOTAL</span>
+                  <span>${cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0).toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                </div>
+                
+                {customerNotes.trim() && (
+                  <>
+                    <div className="border-t border-dashed border-black my-2"></div>
+                    <div className="text-xs">
+                      <span>Obs: {customerNotes.trim()}</span>
+                    </div>
+                  </>
+                )}
+                
+                <div className="mt-3 pt-2 border-t border-dashed border-black text-center text-xs">
+                  <div>{menuData?.restaurantName || 'Esquina Pompeya'}</div>
+                  <div>{menuData?.address || ''}</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Botones */}
+            <div className={`px-4 py-3 border-t flex gap-2 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <button
+                onClick={() => setShowComandaPreview(false)}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  printComanda(comandaCode);
+                  setShowComandaPreview(false);
+                  setShowProCartModal(false);
+                  setCartItems([]);
+                  setProName('');
+                  setProAddress('');
+                  setProMesa('');
+                  setProMesera('');
+                  setProPayment(null);
+                  setCustomerNotes('');
+                  try {
+                    localStorage.removeItem(storageKey);
+                  } catch {}
+                }}
+                className="flex-1 px-4 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
+              >
+                Confirmar e Imprimir
+              </button>
             </div>
           </div>
         </div>

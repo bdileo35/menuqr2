@@ -34,7 +34,24 @@ export async function GET(
       }, { status: 404 });
     }
 
-    // Formatear respuesta
+    // Formatear respuesta - Manejar waiters de forma segura
+    let waitersArray: string[] = ['Maria', 'Lucia', 'Carmen']; // Valores por defecto
+    try {
+      // Acceder a waiters de forma segura (puede no existir si la migración no se aplicó)
+      const menuAny = menu as any;
+      if (menuAny?.waiters) {
+        if (typeof menuAny.waiters === 'string' && menuAny.waiters.trim()) {
+          const parsed = JSON.parse(menuAny.waiters);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            waitersArray = parsed;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error parseando waiters, usando valores por defecto:', e);
+      // Ya tiene valores por defecto
+    }
+    
     const formattedMenu = {
       id: menu.id,
       idUnico: menu.restaurantId,
@@ -43,6 +60,7 @@ export async function GET(
       deliveryEnabled: menu.deliveryEnabled,
       contactPhone: menu.contactPhone,
       contactAddress: menu.contactAddress,
+      waiters: waitersArray,
       categories: menu.categories.map(cat => ({
         id: cat.id,
         name: cat.name,
