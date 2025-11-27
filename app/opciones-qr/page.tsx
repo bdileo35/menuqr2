@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
 import QRWithActions from '../components/QRWithActions';
+import NavBar from '../components/NavBar';
 
 export default function OpcionesQR() {
   const router = useRouter();
   const params = useParams();
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
-  const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
   const idUnico = (params?.idUnico as string) || '5XJ1J37F'; // Por defecto
-  const baseUrl = (typeof window !== 'undefined' && window.location?.origin) || process.env.NEXT_PUBLIC_APP_URL || 'https://menuqrep.vercel.app';
+  const baseUrl = 'https://menuqrep.vercel.app';
   const qrUrl = `${baseUrl}/carta/${idUnico}`;
 
   // Controles de vista previa
@@ -55,21 +55,6 @@ export default function OpcionesQR() {
           {/* LÍNEA 1: Título Panel de Control */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowMenuHamburguesa(!showMenuHamburguesa)}
-                className={`p-2 border rounded-lg transition-all ${
-                  isDarkMode 
-                    ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-gray-300 hover:bg-gray-200 text-gray-800'
-                }`}
-                title="Menú de funciones"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="w-4 h-0.5 bg-current"></div>
-                  <div className="w-4 h-0.5 bg-current"></div>
-                  <div className="w-4 h-0.5 bg-current"></div>
-                </div>
-              </button>
               <h1 className="text-xl font-bold">🖨️ Opciones de QR</h1>
             </div>
 
@@ -114,83 +99,8 @@ export default function OpcionesQR() {
         </div>
       </div>
 
-      {/* Menu Hamburguesa Desplegable */}
-      {showMenuHamburguesa && (
-        <div className={`fixed top-16 left-4 z-50 rounded-lg shadow-lg min-w-64 border ${
-          isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-200 border-gray-300'
-        }`}>
-          <div className="p-2">
-            <button
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/datos-comercio/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              📋 Datos del comercio
-            </button>
-            <button
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/editor/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              📝 Administrar menú
-            </button>
-            <button 
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/opciones-qr/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-700 text-white' 
-                  : 'bg-gray-200 text-gray-800'
-              }`}
-            >
-              🖨️ Opciones QR
-            </button>
-            <button 
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/carta/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              👁️ Ver carta
-            </button>
-            <button
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/configuracion/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              ⚙️ Configuración
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Contenido Principal - Una sola card */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-6 pb-24">
         
         {/* Card única - Opciones de QR */}
         <div className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
@@ -286,6 +196,9 @@ export default function OpcionesQR() {
           </div>
         </div>
       </div>
+      
+      {/* NavBar fija en la parte inferior */}
+      <NavBar idUnico={idUnico} />
     </div>
   );
 }

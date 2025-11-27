@@ -1,30 +1,102 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
+import NavBar from '../components/NavBar';
 
 export default function DatosComercio() {
   const router = useRouter();
   const params = useParams();
   const idUnico = (params?.idUnico as string) || '5XJ1J37F';
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
-  const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [searching, setSearching] = useState(false);
 
   // Estados del formulario
   const [formData, setFormData] = useState({
-    restaurantName: 'Esquina Pompeya',
-    address: 'Av. Corrientes 1234, CABA',
-    phone: '+54 11 4567-8900',
-    email: 'contacto@restaurante.com',
-    hours: 'Lun a Dom: 12:00 - 00:00',
-    description: 'Restaurante familiar especializado en parrilla y platos tradicionales argentinos',
-    instagram: '@esquinapompeya',
-    facebook: 'Esquina Pompeya Restaurante',
-    logoUrl: ''
+    restaurantName: '',
+    address: '',
+    phone: '',
+    email: '',
+    hours: '',
+    description: '',
+    instagram: '',
+    facebook: '',
+    logoUrl: '',
+    whatsappPhone: ''
   });
+
+  // Cargar datos del comercio al montar y cuando cambia idUnico
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/menu/${idUnico}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.menu) {
+            setFormData({
+              restaurantName: data.menu.restaurantName || '',
+              address: data.menu.contactAddress || '',
+              phone: data.menu.contactPhone || '',
+              email: data.menu.contactEmail || '',
+              hours: '',
+              description: data.menu.description || '',
+              instagram: data.menu.socialInstagram || '',
+              facebook: data.menu.socialFacebook || '',
+              logoUrl: data.menu.logoUrl || '',
+              whatsappPhone: data.menu.whatsappPhone || ''
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [idUnico]);
+  
+  // Recargar datos cuando la página vuelve a estar visible (al volver de otra página)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const loadData = async () => {
+          try {
+            const response = await fetch(`/api/menu/${idUnico}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.menu) {
+                setFormData({
+                  restaurantName: data.menu.restaurantName || '',
+                  address: data.menu.contactAddress || '',
+                  phone: data.menu.contactPhone || '',
+                  email: data.menu.contactEmail || '',
+                  hours: '',
+                  description: data.menu.description || '',
+                  instagram: data.menu.socialInstagram || '',
+                  facebook: data.menu.socialFacebook || '',
+                  logoUrl: data.menu.logoUrl || '',
+                  whatsappPhone: data.menu.whatsappPhone || ''
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error recargando datos:', error);
+          }
+        };
+        loadData();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [idUnico]);
 
   // Manejar cambios en el formulario
   const handleInputChange = (field: string, value: string) => {
@@ -102,16 +174,31 @@ export default function DatosComercio() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // TODO: Implementar guardado en base de datos
-      console.log('Guardando datos del comercio:', formData);
-      
-      // Simular guardado
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const response = await fetch(`/api/menu/${idUnico}/comercio`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantName: formData.restaurantName,
+          contactPhone: formData.phone,
+          contactEmail: formData.email,
+          contactAddress: formData.address,
+          socialInstagram: formData.instagram,
+          socialFacebook: formData.facebook,
+          description: formData.description,
+          logoUrl: formData.logoUrl,
+          whatsappPhone: formData.whatsappPhone || null
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Error al guardar datos');
+      }
+
       alert('✅ Datos del comercio guardados correctamente');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error guardando:', error);
-      alert('❌ Error al guardar los datos');
+      alert(`❌ Error al guardar los datos: ${error.message || 'Intenta nuevamente'}`);
     } finally {
       setSaving(false);
     }
@@ -131,21 +218,6 @@ export default function DatosComercio() {
           {/* LÍNEA 1: Título Panel de Control */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowMenuHamburguesa(!showMenuHamburguesa)}
-                className={`p-2 border rounded-lg transition-all ${
-                  isDarkMode 
-                    ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-gray-300 hover:bg-gray-200 text-gray-800'
-                }`}
-                title="Menú de funciones"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="w-4 h-0.5 bg-current"></div>
-                  <div className="w-4 h-0.5 bg-current"></div>
-                  <div className="w-4 h-0.5 bg-current"></div>
-                </div>
-              </button>
               <h1 className="text-xl font-bold">📋 Datos del Comercio</h1>
             </div>
 
@@ -197,78 +269,38 @@ export default function DatosComercio() {
         </div>
       </div>
 
-      {/* Menu Hamburguesa Desplegable */}
-      {showMenuHamburguesa && (
-        <div className="fixed top-16 left-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-lg min-w-64">
-          <div className="p-2">
-            <button
-              onClick={() => router.push('/datos-comercio')}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-700 text-white' 
-                  : 'bg-gray-200 text-gray-800'
-              }`}
-            >
-              📋 Datos del comercio
-            </button>
-            <button
-              onClick={() => router.push(`/editor/${idUnico}`)}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              📝 Administrar menú
-            </button>
-            <button 
-              onClick={() => router.push('/opciones-qr')}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              🖨️ Opciones QR
-            </button>
-            <button 
-              onClick={() => router.push('/carta')}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              👁️ Ver carta
-            </button>
-            <button
-              onClick={() => router.push('/configuracion')}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              ⚙️ Configuración
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Contenido Principal - Una sola card */}
       <div className="max-w-6xl mx-auto px-4 py-6">
         
+        {/* Loading inicial */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Cargando datos del comercio...
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Indicador de guardado */}
-        {saving && (
+        {saving && !loading && (
           <div className="flex justify-center mb-6">
-            <span className="flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
-              <span className="animate-pulse">●</span>
-              Guardando...
+            <span className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+              isDarkMode 
+                ? 'bg-blue-500/20 text-blue-400' 
+                : 'bg-blue-100 text-blue-700'
+            }`}>
+              <span className="animate-spin">⏳</span>
+              Guardando cambios...
             </span>
           </div>
         )}
 
         {/* Card única - Información Básica */}
+        {!loading && (
         <div className={`mb-4 rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
           isDarkMode 
             ? 'bg-gray-800 border-gray-700' 
@@ -373,8 +405,8 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('hours', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="ej: Lun a Dom: 12:00 - 00:00"
                 />
@@ -382,7 +414,9 @@ export default function DatosComercio() {
 
               {/* Logo del Restaurante */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className={`block text-sm font-semibold mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Logo del Restaurante
                 </label>
                 <div className="relative">
@@ -395,10 +429,10 @@ export default function DatosComercio() {
                   />
                   <label
                     htmlFor="logoInput"
-                    className={`block w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                    className={`block w-full h-40 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-blue-400 ${
                       isDarkMode 
-                        ? 'border-gray-600 hover:border-gray-500' 
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-gray-600 bg-gray-700/50 hover:bg-gray-700' 
+                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
                     {formData.logoUrl ? (
@@ -457,6 +491,7 @@ export default function DatosComercio() {
                 />
               </div>
 
+
               {/* Instagram */}
               <div className="flex items-center gap-4">
                 <label className="w-24 text-sm font-medium">
@@ -486,11 +521,32 @@ export default function DatosComercio() {
                   onChange={(e) => handleInputChange('facebook', e.target.value)}
                   className={`flex-1 p-3 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="Página de Facebook"
                 />
+              </div>
+
+              {/* WhatsApp para Pedidos */}
+              <div className="flex items-center gap-4">
+                <label className="w-24 text-sm font-medium">
+                  WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  value={formData.whatsappPhone}
+                  onChange={(e) => handleInputChange('whatsappPhone', e.target.value)}
+                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
+                  }`}
+                  placeholder="5491165695648 (sin + ni espacios)"
+                />
+                <span className="text-xs text-gray-500 w-32">
+                  Número para recibir pedidos
+                </span>
               </div>
 
               {/* Botones de acción */}
@@ -517,7 +573,11 @@ export default function DatosComercio() {
               </div>
           </div>
         </div>
+        )}
       </div>
+      
+      {/* NavBar fija en la parte inferior */}
+      <NavBar idUnico={idUnico} />
     </div>
   );
 }

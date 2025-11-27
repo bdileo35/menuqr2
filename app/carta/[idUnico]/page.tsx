@@ -140,24 +140,26 @@ export default function CartaPage() {
   <style>
     @media print {
       @page {
-        size: 48mm auto;
+        size: 58mm auto;
         margin: 0;
       }
       body {
         margin: 0;
-        padding: 5mm 3mm;
+        padding: 3mm 2mm;
         font-family: 'Courier New', monospace;
         font-size: 12px;
         line-height: 1.4;
+        width: 58mm;
       }
     }
     body {
       font-family: 'Courier New', monospace;
       font-size: 12px;
       line-height: 1.4;
-      max-width: 48mm;
+      max-width: 58mm;
+      width: 58mm;
       margin: 0 auto;
-      padding: 5mm 3mm;
+      padding: 3mm 2mm;
     }
     .header {
       margin-bottom: 10px;
@@ -999,7 +1001,7 @@ export default function CartaPage() {
             
             {/* Preview del ticket */}
             <div className="p-2 overflow-y-auto max-h-[70vh]">
-              <div className="bg-white p-3 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '48mm', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '10px' }}>
+              <div className="bg-white p-3 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '58mm', width: '58mm', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '12px' }}>
                 <div className="mb-2 pb-2 border-b border-dashed border-black">
                   <div className="font-bold text-xl flex items-center justify-between">
                     <span>COMANDA</span>
@@ -1055,8 +1057,8 @@ export default function CartaPage() {
               </div>
             </div>
             
-            {/* Botones - ancho del ticket (48mm) - siempre claro */}
-            <div className="px-2 py-2 border-t flex gap-2 border-gray-200" style={{ maxWidth: '48mm', margin: '0 auto', width: '100%' }}>
+            {/* Botones - ancho del ticket (58mm) - siempre claro */}
+            <div className="px-2 py-2 border-t flex gap-2 border-gray-200" style={{ maxWidth: '58mm', margin: '0 auto', width: '100%' }}>
               <button
                 onClick={() => setShowComandaPreview(false)}
                 className="flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors bg-gray-200 hover:bg-gray-300 text-gray-700"

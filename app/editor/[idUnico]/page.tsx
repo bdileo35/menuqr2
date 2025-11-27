@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { getDemoMenuData } from '@/lib/demo-data';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useParams } from 'next/navigation';
-import QRWithActions from '../../components/QRWithActions';
+import NavBar from '@/components/NavBar';
 
 interface MenuItem {
   id?: string;
@@ -78,7 +78,6 @@ export default function Editor2() {
   const [showSearch, setShowSearch] = useState(true);
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState<string>('');
   const [allCategoriesExpanded, setAllCategoriesExpanded] = useState(true);
-  const [showMenuHamburguesa, setShowMenuHamburguesa] = useState(false);
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const [showEditCategory, setShowEditCategory] = useState(false);
 
@@ -208,10 +207,31 @@ export default function Editor2() {
     }
   };
 
-  // Cargar datos desde API
+  // Cargar datos desde API al montar y cuando cambia idUnico
   useEffect(() => {
     loadMenuFromAPI();
-  }, []);
+  }, [idUnico]);
+  
+  // Recargar datos cuando la página vuelve a estar visible o cuando se hace focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadMenuFromAPI();
+      }
+    };
+    
+    const handleFocus = () => {
+      loadMenuFromAPI();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [idUnico]);
 
   // Función para filtrar platos por término de búsqueda
   const filterItems = (items: MenuItem[]) => {
@@ -280,71 +300,96 @@ export default function Editor2() {
         }
       }
       
-      // TODO: Implementar guardado en base de datos
-      if (editingItem) {
-        // Actualizar item existente (mover de categoría si cambió)
-        const originalCategory = menuData.categories.find(cat => cat.items.some(i => i.id === editingItem.id));
-        const targetCategory = menuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
+      // Guardar en base de datos
+      const targetCategory = menuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
+      if (!targetCategory) {
+        alert('❌ Categoría no encontrada');
+        return;
+      }
 
-        const safeItem: MenuItem = {
-          ...editingItem,
-          ...item,
-          code: (item.code && item.code.trim()) || generateNextCodeForCategory(targetCategory),
-          imageBase64: imageDataBase64 === undefined ? editingItem?.imageBase64 : (imageDataBase64 as any),
-        };
+      const categoryId = targetCategory.id || targetCategory.name;
+      if (!categoryId) {
+        alert('❌ ID de categoría inválido');
+        return;
+      }
 
-        let updatedCategories = menuData.categories.map(cat => ({ ...cat }));
+      // Preparar datos para la API
+      const priceValue = item.price.toString().replace(/[$,\s]/g, '');
+      const itemData = {
+        name: item.name,
+        description: item.description || '',
+        price: priceValue,
+        code: item.code?.trim() || '',
+        categoryId: categoryId,
+        imageUrl: imageDataBase64 || null,
+        isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+        isPopular: item.isPopular || false,
+        isPromo: item.isPromo || false
+      };
 
-        if (originalCategory && (originalCategory.id || originalCategory.name) !== (targetCategory?.id || targetCategory?.name)) {
-          // Quitar de la original
-          updatedCategories = updatedCategories.map(cat => {
-            if ((cat.id || cat.name) === (originalCategory.id || originalCategory.name)) {
-              return { ...cat, items: cat.items.filter(i => i.id !== editingItem.id) };
-            }
-            return cat;
-          });
-          // Agregar a la destino
-          updatedCategories = updatedCategories.map(cat => {
-            if ((cat.id || cat.name) === (targetCategory?.id || targetCategory?.name)) {
-              return { ...cat, items: [...cat.items, safeItem] };
-            }
-            return cat;
-          });
-        } else {
-          // Misma categoría: reemplazar in-place
-          updatedCategories = updatedCategories.map(cat => {
-            if ((cat.id || cat.name) === modalData.categoryId) {
-              return {
-                ...cat,
-                items: cat.items.map(i => i.id === editingItem.id ? safeItem : i)
-              };
-            }
-            return cat;
-          });
+      if (editingItem && editingItem.id && !editingItem.id.match(/^\d+$/)) {
+        // Actualizar item existente (tiene ID de BD)
+        const response = await fetch(`/api/menu/${idUnico}/items`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingItem.id,
+            ...itemData
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Error al actualizar item');
         }
-        
-        const updatedData = { ...menuData, categories: updatedCategories };
-        setMenuData(updatedData);
-        localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
-        
+
         alert('✅ Producto actualizado correctamente');
       } else {
         // Crear nuevo item
-        const updatedCategories = menuData.categories.map(cat => {
-          if ((cat.id || cat.name) === modalData.categoryId) {
-            return {
-              ...cat,
-              items: [...cat.items, { ...item, id: Date.now().toString(), imageBase64: (imageDataBase64 as any) }]
-            };
-          }
-          return cat;
+        const response = await fetch(`/api/menu/${idUnico}/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(itemData)
         });
-        
-        const updatedData = { ...menuData, categories: updatedCategories };
-        setMenuData(updatedData);
-        localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
-        
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Error al crear item');
+        }
+
         alert('✅ Producto agregado correctamente');
+      }
+
+      // Recargar menú desde BD para tener datos actualizados
+      const menuResponse = await fetch(`/api/menu/${idUnico}`);
+      if (menuResponse.ok) {
+        const menuDataResponse = await menuResponse.json();
+        if (menuDataResponse.success && menuDataResponse.menu) {
+          const restaurantInfo: RestaurantData = {
+            restaurantName: menuDataResponse.menu.restaurantName,
+            address: menuDataResponse.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
+            phone: menuDataResponse.menu.contactPhone || '+54 11 1234-5678',
+            categories: menuDataResponse.menu.categories.map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              description: cat.description,
+              items: cat.items.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                price: `$${item.price}`,
+                description: item.description,
+                isAvailable: item.isAvailable,
+                code: item.code,
+                imageUrl: item.imageUrl || null,
+                imageBase64: item.imageUrl || null
+              }))
+            }))
+          };
+          setMenuData(restaurantInfo);
+          const initialExpanded: {[key: string]: boolean} = {};
+          restaurantInfo.categories.forEach(cat => { initialExpanded[cat.id || cat.name] = true; });
+          setExpandedCategories(initialExpanded);
+        }
       }
       
       setEditingItem(null);
@@ -506,38 +551,65 @@ export default function Editor2() {
         return;
       }
 
-      // Llamar al API para eliminar (si existe endpoint)
-      // Por ahora, eliminamos del estado local
-      setMenuData(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          categories: prev.categories.map(cat => {
-            if ((cat.id || cat.name) === (category.id || category.name)) {
-              return {
-                ...cat,
-                items: cat.items.filter(item => (item.id || item.name) !== itemId)
-              };
-            }
-            return cat;
-          })
-        };
-      });
+      // Llamar al API para eliminar
+      // Verificar si es un ID de BD (no numérico) o un ID temporal
+      if (itemId && !itemId.match(/^\d+$/)) {
+        // Es un ID de BD, llamar a la API
+        const response = await fetch(`/api/menu/${idUnico}/items?id=${itemId}`, {
+          method: 'DELETE'
+        });
 
-      // Guardar en localStorage
-      const updatedData = {
-        ...menuData!,
-        categories: menuData!.categories.map(cat => {
-          if ((cat.id || cat.name) === (category.id || category.name)) {
-            return {
-              ...cat,
-              items: cat.items.filter(item => (item.id || item.name) !== itemId)
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Error al eliminar item');
+        }
+
+        // Recargar menú desde BD
+        const menuResponse = await fetch(`/api/menu/${idUnico}`);
+        if (menuResponse.ok) {
+          const menuDataResponse = await menuResponse.json();
+          if (menuDataResponse.success && menuDataResponse.menu) {
+            const restaurantInfo: RestaurantData = {
+              restaurantName: menuDataResponse.menu.restaurantName,
+              address: menuDataResponse.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
+              phone: menuDataResponse.menu.contactPhone || '+54 11 1234-5678',
+              categories: menuDataResponse.menu.categories.map((cat: any) => ({
+                id: cat.id,
+                name: cat.name,
+                description: cat.description,
+                items: cat.items.map((item: any) => ({
+                  id: item.id,
+                  name: item.name,
+                  price: `$${item.price}`,
+                  description: item.description,
+                  isAvailable: item.isAvailable,
+                  code: item.code,
+                  imageUrl: item.imageUrl || null,
+                  imageBase64: item.imageUrl || null
+                }))
+              }))
             };
+            setMenuData(restaurantInfo);
           }
-          return cat;
-        })
-      };
-      localStorage.setItem('editor-menu-data', JSON.stringify(updatedData));
+        }
+      } else {
+        // Es un ID temporal (solo en localStorage), eliminar del estado local
+        setMenuData(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            categories: prev.categories.map(cat => {
+              if ((cat.id || cat.name) === (category.id || category.name)) {
+                return {
+                  ...cat,
+                  items: cat.items.filter(item => (item.id || item.name) !== itemId)
+                };
+              }
+              return cat;
+            })
+          };
+        });
+      }
 
       alert('✅ Producto eliminado correctamente');
       setShowAddItem(false);
@@ -654,21 +726,6 @@ export default function Editor2() {
           {/* LÍNEA 1: Título Panel de Control */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-4">
-                <button
-                onClick={() => setShowMenuHamburguesa(!showMenuHamburguesa)}
-                className={`p-2 border rounded-lg transition-all ${
-                  isDarkMode 
-                    ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                    : 'border-gray-300 hover:bg-gray-100 text-gray-700'
-                }`}
-                title="Menú de funciones"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="w-4 h-0.5 bg-current"></div>
-                  <div className="w-4 h-0.5 bg-current"></div>
-                  <div className="w-4 h-0.5 bg-current"></div>
-                </div>
-              </button>
               <h1 className="text-xl font-bold">📝 Administrar Menú</h1>
             {saving && (
                 <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
@@ -830,81 +887,8 @@ export default function Editor2() {
                       </div>
                     </div>
 
-      {/* Menu Hamburguesa Desplegable */}
-      {showMenuHamburguesa && (
-        <div className="fixed top-16 left-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-lg min-w-64">
-          <div className="p-2">
-                      <button
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/datos-comercio/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
-              }`}
-            >
-              📋 Datos del comercio
-                      </button>
-                      <button
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/editor/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-100 text-blue-700'
-              }`}
-            >
-              📝 Administrar menú
-                      </button>
-            <button 
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/opciones-qr/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
-              }`}
-            >
-              🖨️ Opciones QR
-            </button>
-            <button 
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/carta/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
-              }`}
-            >
-              👁️ Ver carta
-            </button>
-            <button
-              onClick={() => {
-                setShowMenuHamburguesa(false);
-                router.push(`/configuracion/${idUnico}`);
-              }}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-blue-100 text-blue-700'
-              }`}
-            >
-              ⚙️ Configuración
-            </button>
-                      </div>
-                    </div>
-      )}
-
       {/* Contenido Principal */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
 
         {/* Lista de Categorías */}
         {menuData.categories
@@ -1085,47 +1069,6 @@ export default function Editor2() {
           </div>
           );
         })}
-        
-        {/* Componente QR con acciones */}
-        <div className="mt-6">
-          <div className={`rounded-lg border transition-colors duration-300 overflow-hidden ${
-            isDarkMode 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border-gray-300'
-          }`}>
-            {/* Header de Categoría */}
-            <div className={`px-4 py-2 transition-colors duration-300 border-b rounded-t-lg ${
-              isDarkMode 
-                ? 'bg-gray-700 border-gray-600' 
-                : 'bg-gray-200 border-gray-300'
-            }`}>
-              <h3 className="text-lg font-bold">🖨️ QR de tu menú</h3>
-            </div>
-            
-            {/* Contenido - QR con acciones */}
-            <div className="p-6">
-              <QRWithActions 
-                qrUrl={`${(typeof window !== 'undefined' && window.location?.origin) || process.env.NEXT_PUBLIC_APP_URL || 'https://menuqrep.vercel.app'}/carta/${idUnico}`} 
-                isDarkMode={isDarkMode}
-                showTitle
-                title={menuData.restaurantName}
-                showLegend
-                legendText="Escanear para ver la Carta"
-                variant="framed"
-              />
-              
-              {/* Información adicional */}
-              <div className="text-center mt-4">
-                <p className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  💡 Guarda este QR para acceder a tu menú digital
-                </p>
-                <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  Comparte este código QR con tus clientes
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
         </div>
 
       {/* Modal agregar/editar plato */}
@@ -1531,6 +1474,9 @@ export default function Editor2() {
           </div>
         </div>
       )}
+      
+      {/* NavBar fija en la parte inferior */}
+      <NavBar idUnico={idUnico} />
     </div>
   );
 }

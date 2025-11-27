@@ -15,6 +15,11 @@ export async function GET(
         restaurantId: idUnico
       },
       include: {
+        owner: {
+          select: {
+            whatsappPhone: true
+          }
+        },
         categories: {
           include: {
             items: true
@@ -60,6 +65,12 @@ export async function GET(
       deliveryEnabled: menu.deliveryEnabled,
       contactPhone: menu.contactPhone,
       contactAddress: menu.contactAddress,
+      contactEmail: menu.contactEmail,
+      socialInstagram: menu.socialInstagram,
+      socialFacebook: menu.socialFacebook,
+      logoUrl: menu.logoUrl,
+      description: menu.description,
+      whatsappPhone: menu.owner?.whatsappPhone || null,
       waiters: waitersArray,
       categories: menu.categories.map(cat => ({
         id: cat.id,
@@ -89,11 +100,19 @@ export async function GET(
 
   } catch (error) {
     console.error(`❌ Error cargando menú para ID ${idUnico}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Detalles del error:', { errorMessage, errorStack });
     return NextResponse.json({
       success: false,
-      error: 'Error interno del servidor'
+      error: 'Error interno del servidor',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     }, { status: 500 });
   } finally {
-    await prisma.$disconnect();
+    try {
+      await prisma.$disconnect();
+    } catch (disconnectError) {
+      console.warn('Error al desconectar Prisma:', disconnectError);
+    }
   }
 }

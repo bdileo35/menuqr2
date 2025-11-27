@@ -99,17 +99,20 @@ O desde el Panel de Control:
 
 ## 📝 Notas
 
-- El formato está optimizado para **48mm** (ancho de impresión de la H22)
+- El formato está optimizado para **58mm** (ancho del papel de la H22)
+- Ancho de impresión: **48mm** (área imprimible)
 - Ancho del papel: **58mm** (57.5 +/- 0.5mm)
 - La fuente es **Courier New** (monospace) para mejor alineación
 - El ticket incluye todos los datos: comanda, fecha, mesa, mesero/a, items, total
 - Compatible con papel térmico estándar de 58mm de ancho
 - **Funciona desde Android**: La mesera puede imprimir directamente desde su celular
+- **Preview ajustado**: El preview muestra el ancho real de 58mm para coincidir con el ticket impreso
 
 ## 📐 Especificaciones Técnicas
 
-- **Ancho de impresión**: 48mm
 - **Ancho del papel**: 58mm (57.5 +/- 0.5mm)
+- **Ancho de impresión**: 48mm (área imprimible)
+- **Formato optimizado**: 58mm (coincide con el ancho real del papel)
 - **Grosor del papel**: 0.048mm - 0.08mm
 - **Velocidad**: hasta 90mm/s
 - **Bluetooth**: 4.0 (compatible con Android)
@@ -120,7 +123,8 @@ O desde el Panel de Control:
 ## 🔗 Referencia
 
 - Impresora: [H22 Bluetooth 4.0 + USB](https://www.mercadolibre.com.ar/impresora-termica-portatil-h22-bluetooth-40--cable-usb/up/MLAU366295133)
-- Formato: 48mm (ancho de impresión) x largo variable
-- Conexión: USB o Bluetooth 4.0
+- Formato: 58mm (ancho del papel) x largo variable
+- Área imprimible: 48mm
+- Conexión: USB o Bluetooth 4.0 (SPP y BLE)
 - Compatibilidad: Windows, Android
 
