@@ -57,6 +57,17 @@ export async function GET(
       // Ya tiene valores por defecto
     }
     
+    // Obtener items sin categoría
+    const itemsWithoutCategory = await prisma.menuItem.findMany({
+      where: {
+        menuId: menu.id,
+        categoryId: null
+      },
+      orderBy: {
+        position: 'asc'
+      }
+    });
+
     const formattedMenu = {
       id: menu.id,
       idUnico: menu.restaurantId,
@@ -72,24 +83,47 @@ export async function GET(
       description: menu.description,
       whatsappPhone: menu.owner?.whatsappPhone || null,
       waiters: waitersArray,
-      categories: menu.categories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        description: cat.description,
-        position: cat.position,
-        code: cat.code || '01',
-        items: cat.items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          description: item.description,
-          imageUrl: item.imageUrl,
-          isPopular: item.isPopular,
-          isPromo: item.isPromo,
-          isAvailable: item.isAvailable,
-          code: item.code || '0101'
-        }))
-      }))
+      categories: [
+        ...menu.categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description,
+          position: cat.position,
+          code: cat.code || '01',
+          items: cat.items
+            .filter(item => item.categoryId !== null) // Solo items con categoría
+            .map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              description: item.description,
+              imageUrl: item.imageUrl,
+              isPopular: item.isPopular,
+              isPromo: item.isPromo,
+              isAvailable: item.isAvailable,
+              code: item.code || '0101'
+            }))
+        })),
+        // Agregar categoría especial "Sin categoría" al final (solo si hay items)
+        ...(itemsWithoutCategory.length > 0 ? [{
+          id: '__SIN_CATEGORIA__',
+          name: 'Sin categoría (No se muestran en CARTA)',
+          description: 'Platos discontinuados temporalmente',
+          position: 9999, // Al final
+          code: '99',
+          items: itemsWithoutCategory.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            description: item.description,
+            imageUrl: item.imageUrl,
+            isPopular: item.isPopular,
+            isPromo: item.isPromo,
+            isAvailable: item.isAvailable,
+            code: item.code || '9999'
+          }))
+        }] : [])
+      ]
     };
 
     console.log(`✅ Menú cargado exitosamente para ID: ${idUnico}`);

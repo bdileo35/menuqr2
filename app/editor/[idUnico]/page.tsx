@@ -32,7 +32,27 @@ interface RestaurantData {
 export default function Editor2() {
   const router = useRouter();
   const params = useParams();
-  const idUnico = params?.idUnico as string || '5XJ1J37F'; // Default para EP
+  // Leer idUnico de los parámetros - sin default para forzar que venga de la URL
+  const idUnico = (params?.idUnico as string) || '';
+  
+  // Debug: verificar que se lee correctamente
+  useEffect(() => {
+    console.log('🔍 Editor - idUnico desde URL:', idUnico);
+    console.log('🔍 Editor - params completo:', params);
+  }, [idUnico, params]);
+  
+  // Si no hay idUnico, mostrar error
+  if (!idUnico) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error: ID Único no encontrado</h1>
+          <p className="text-gray-600">La URL debe incluir un ID único válido</p>
+          <p className="text-sm text-gray-500 mt-2">Ejemplo: /editor/5XJ1J37F</p>
+        </div>
+      </div>
+    );
+  }
 
   // Función para generar código de categoría
   const getCategoryCode = (categoryName: string, index: number): string => {
@@ -68,6 +88,8 @@ export default function Editor2() {
   };
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuNotFound, setMenuNotFound] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [showAddItem, setShowAddItem] = useState(false);
@@ -94,9 +116,34 @@ export default function Editor2() {
   // Función para cargar datos desde API
   const loadMenuFromAPI = async () => {
     console.log('🔍 Cargando menú desde la base de datos...');
+    console.log('🔍 ID Único usado en la petición:', idUnico);
+    
+    if (!idUnico) {
+      console.error('❌ Error: idUnico está vacío');
+      return;
+    }
     
     try {
       const response = await fetch(`/api/menu/${idUnico}`);
+      console.log('🔍 URL de la petición:', `/api/menu/${idUnico}`);
+      console.log('🔍 Status de la respuesta:', response.status);
+      
+      // Si es 404, el menú no existe para este IDU
+      if (response.status === 404) {
+        console.log(`⚠️ No se encontró menú para IDU: ${idUnico}`);
+        setMenuNotFound(true);
+        setMenuData(null);
+        setLoading(false);
+        return;
+      }
+      
+      // Si es 500, hay un error de conexión (NO significa que no existe)
+      if (response.status === 500) {
+        console.log('⚠️ Error de conexión a la base de datos (500)');
+        setConnectionError(true);
+        throw new Error('Error de conexión a la base de datos');
+      }
+      
       const data = await response.json();
       
       if (data.success && data.menu) {
@@ -186,21 +233,26 @@ export default function Editor2() {
     } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // TEMPORALMENTE DESHABILITADO: Intentar cargar datos completos desde seed-demo
-        // TODO: Habilitar cuando las APIs estén funcionando en Vercel
-        console.log('⚠️ APIs no disponibles en Vercel, usando datos demo limitados');
-        
-        // Fallback final: datos demo limitados
-        const tempData = getDemoMenuData();
-        
-        setMenuData(tempData);
-        
-        // Expandir todas las categorías por defecto
-        const initialExpanded: {[key: string]: boolean} = {};
-        tempData.categories.forEach(cat => {
-          initialExpanded[cat.id || cat.name] = true;
-        });
-        setExpandedCategories(initialExpanded);
+        // Error de conexión - usar datos demo solo si es el IDU por defecto
+        console.log('⚠️ Error de conexión a la base de datos');
+        if (idUnico === '5XJ1J37F') {
+          console.log('⚠️ Usando datos demo para IDU por defecto (5XJ1J37F)');
+          const tempData = getDemoMenuData();
+          setMenuData(tempData);
+          
+          // Expandir todas las categorías por defecto
+          const initialExpanded: {[key: string]: boolean} = {};
+          tempData.categories.forEach(cat => {
+            initialExpanded[cat.id || cat.name] = true;
+          });
+          setExpandedCategories(initialExpanded);
+        } else {
+          // Para otros IDUs con error de conexión, NO marcar como "no encontrado"
+          // Solo mostrar error de conexión
+          console.log(`⚠️ Error de conexión para IDU: ${idUnico}. No se puede verificar si existe`);
+          setConnectionError(true);
+          setMenuData(null);
+        }
         
     } finally {
       setLoading(false);
@@ -301,17 +353,21 @@ export default function Editor2() {
       }
       
       // Guardar en base de datos
-      const targetCategory = menuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
-      if (!targetCategory) {
-        alert('❌ Categoría no encontrada');
-        return;
+      // Si no hay categoryId o es string vacío, es un item sin categoría (discontinuado)
+      let categoryIdToSend: string | null = null;
+      if (modalData.categoryId && modalData.categoryId.trim() !== '' && modalData.categoryId !== '__SIN_CATEGORIA__') {
+        const targetCategory = menuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
+        if (!targetCategory) {
+          alert('❌ Categoría no encontrada');
+          return;
+        }
+        categoryIdToSend = targetCategory.id || targetCategory.name;
+        if (!categoryIdToSend) {
+          alert('❌ ID de categoría inválido');
+          return;
+        }
       }
-
-      const categoryId = targetCategory.id || targetCategory.name;
-      if (!categoryId) {
-        alert('❌ ID de categoría inválido');
-        return;
-      }
+      // Si categoryId está vacío o es '__SIN_CATEGORIA__', categoryIdToSend queda como null
 
       // Preparar datos para la API
       const priceValue = item.price.toString().replace(/[$,\s]/g, '');
@@ -320,7 +376,7 @@ export default function Editor2() {
         description: item.description || '',
         price: priceValue,
         code: item.code?.trim() || '',
-        categoryId: categoryId,
+        categoryId: categoryIdToSend, // null para sin categoría
         imageUrl: imageDataBase64 || null,
         isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
         isPopular: item.isPopular || false,
@@ -340,7 +396,8 @@ export default function Editor2() {
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.error || 'Error al actualizar item');
+          console.error('❌ Error de la API:', error);
+          throw new Error(error.error || error.details || 'Error al actualizar item');
         }
 
         alert('✅ Producto actualizado correctamente');
@@ -419,6 +476,8 @@ export default function Editor2() {
 
   // Abrir modal para editar plato
   const openEditPlateModal = (item: MenuItem, categoryId: string) => {
+    // Si es "Sin categoría", usar '' para que el dropdown muestre "Sin categoría (discontinuado)"
+    const modalCategoryId = (categoryId === '__SIN_CATEGORIA__' || !categoryId) ? '' : categoryId;
     const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
     const ensuredCode = item.code && item.code.trim().length > 0 ? item.code : generateNextCodeForCategory(selectedCategory);
     setModalData({
@@ -426,7 +485,7 @@ export default function Editor2() {
       code: ensuredCode,
       price: item.price,
       description: item.description || '',
-      categoryId: categoryId,
+      categoryId: modalCategoryId, // '' para items sin categoría
       imageFile: null,
       imagePreview: item.imageBase64 || '',
       isAvailable: item.isAvailable ?? true,  // ✅ INCLUIR ESTADO DISPONIBLE
@@ -503,6 +562,16 @@ export default function Editor2() {
 
   // Manejar cambio de categoría y generar código automáticamente
   const handleCategoryChange = (categoryId: string) => {
+    // Si categoryId es '' o null, es "Sin categoría"
+    if (!categoryId || categoryId === '') {
+      setModalData(prev => ({
+        ...prev,
+        categoryId: '', // Mantener como string vacío para el select
+        code: prev.code || '9999' // Código genérico para sin categoría
+      }));
+      return;
+    }
+    
     const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
     if (selectedCategory) {
       const generatedCode = generateNextCodeForCategory(selectedCategory);
@@ -510,6 +579,12 @@ export default function Editor2() {
         ...prev,
         categoryId: categoryId,
         code: generatedCode
+      }));
+    } else {
+      // Si no encuentra la categoría, mantener el categoryId pero no cambiar el código
+      setModalData(prev => ({
+        ...prev,
+        categoryId: categoryId
       }));
     }
   };
@@ -690,22 +765,42 @@ export default function Editor2() {
     );
   }
 
-  if (!menuData) {
-  return (
+  if (menuNotFound) {
+    return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <h1 className="text-2xl mb-4">⚠️ No hay datos del menú</h1>
-          <p className="text-gray-400 mb-6">Completa el proceso de configuración primero</p>
+          <h1 className="text-3xl font-bold mb-4 text-red-500">❌ NO EXISTE COMERCIO</h1>
+          <p className="text-gray-400 mb-2">El ID único <span className="font-mono font-bold text-yellow-400">{idUnico}</span> no está registrado</p>
+          <p className="text-gray-500 text-sm mb-6">Verifica que el ID sea correcto o contacta al administrador</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (connectionError && !menuData) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-3xl font-bold mb-4 text-yellow-500">⚠️ Error de Conexión</h1>
+          <p className="text-gray-400 mb-2">No se pudo conectar a la base de datos</p>
+          <p className="text-gray-500 text-sm mb-6">El comercio con ID <span className="font-mono font-bold text-yellow-400">{idUnico}</span> podría existir, pero no se puede verificar en este momento</p>
           <button 
-            onClick={() => router.push('/setup-comercio')}
-            className={`px-6 py-3 rounded-lg transition-colors border ${
-              isDarkMode 
-                ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-gray-300' 
-                : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
-            }`}
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors text-white font-semibold"
           >
-            Guardar
+            Reintentar
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!menuData) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Cargando datos...</p>
         </div>
       </div>
     );
@@ -903,22 +998,27 @@ export default function Editor2() {
           const categoryId = category.id || category.name;
           const isExpanded = expandedCategories[categoryId];
           const filteredItems = filterItems(category.items);
+          const isSinCategoria = categoryId === '__SIN_CATEGORIA__';
           
           return (
             <div 
               key={categoryId}
               className={`mb-4 rounded-lg border transition-colors duration-300 overflow-hidden ${
-                isDarkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-white border-gray-300'
+                isSinCategoria
+                  ? (isDarkMode ? 'bg-gray-800 border-yellow-600 border-2' : 'bg-yellow-50 border-yellow-300 border-2')
+                  : (isDarkMode 
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-300')
               }`}
             >
               {/* Header de Categoría - Compacto como carta */}
               <div 
                 className={`px-3 py-1 cursor-pointer transition-colors duration-300 border-b rounded-t-lg hover:opacity-80 ${
-                  isDarkMode 
-                    ? 'bg-gray-700 border-gray-600' 
-                    : 'bg-gray-200 border-gray-300'
+                  isSinCategoria
+                    ? (isDarkMode ? 'bg-yellow-900 border-yellow-700' : 'bg-yellow-200 border-yellow-400')
+                    : (isDarkMode 
+                        ? 'bg-gray-700 border-gray-600' 
+                        : 'bg-gray-200 border-gray-300')
                 }`}
                 onClick={() => toggleCategory(categoryId)}
                 onTouchStart={(e) => handleTouchStart(e, 'category', category)}
@@ -942,19 +1042,21 @@ export default function Editor2() {
                   </div>
                 </div>
                   <div className="flex items-center justify-end gap-2">
-                    {/* Botón eliminar categoría */}
-                    <button
-                      type="button"
-                      className="w-8 h-8 flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors active:scale-95"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteCategory(categoryId, category.name, filteredItems.length);
-                      }}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      title="Eliminar categoría"
-                    >
-                      🗑️
-                    </button>
+                    {/* Botón eliminar categoría (oculto para "Sin categoría") */}
+                    {!isSinCategoria && (
+                      <button
+                        type="button"
+                        className="w-8 h-8 flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors active:scale-95"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCategory(categoryId, category.name, filteredItems.length);
+                        }}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        title="Eliminar categoría"
+                      >
+                        🗑️
+                      </button>
+                    )}
                     
                     {/* Triangulito de expandir/colapsar esta categoría */}
                     <button
@@ -1217,17 +1319,21 @@ export default function Editor2() {
                   <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Categoría *</label>
                   <select
                     name="category"
-                    required
-                    value={modalData.categoryId}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    value={modalData.categoryId || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleCategoryChange(value === '' ? '' : value);
+                    }}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                   >
-                    <option value="">Seleccionar categoría...</option>
-                    {menuData?.categories.map((category) => (
-                      <option key={category.id || category.name} value={category.id || category.name}>
-                        {category.name} ({category.code})
-                      </option>
-                    ))}
+                    <option value="">Sin categoría (discontinuado)</option>
+                    {menuData?.categories
+                      .filter(cat => (cat.id || cat.name) !== '__SIN_CATEGORIA__') // Excluir "Sin categoría" del dropdown
+                      .map((category) => (
+                        <option key={category.id || category.name} value={category.id || category.name}>
+                          {category.name} ({category.code})
+                        </option>
+                      ))}
                   </select>
                 </div>
                 

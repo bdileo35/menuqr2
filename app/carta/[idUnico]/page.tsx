@@ -26,6 +26,7 @@ interface RestaurantData {
   restaurantName: string;
   address: string;
   phone: string;
+  logoUrl?: string | null;
   categories: MenuCategory[];
 }
 
@@ -38,6 +39,8 @@ export default function CartaPage() {
   const isModoInterno = searchParams?.get('interno') === '1' || false;
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuNotFound, setMenuNotFound] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   const { isDarkMode, toggleTheme } = useAppTheme();
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
   const [modalItemImage, setModalItemImage] = useState<string>('');
@@ -345,6 +348,25 @@ export default function CartaPage() {
     const loadMenuFromAPI = async () => {
       try {
         const response = await fetch(`/api/menu/${idUnico}`);
+        console.log('🔍 Carta - Status de la respuesta:', response.status);
+        
+        // Si es 404, el menú no existe para este IDU
+        if (response.status === 404) {
+          console.log(`⚠️ No se encontró menú para IDU: ${idUnico}`);
+          setMenuNotFound(true);
+          setMenuData(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Si es 500, hay un error de conexión (NO significa que no existe)
+        if (response.status === 500) {
+          console.log('⚠️ Error de conexión a la base de datos (500)');
+          setConnectionError(true);
+          // No marcar como "no encontrado" - solo error de conexión
+          throw new Error('Error de conexión a la base de datos');
+        }
+        
         const data = await response.json();
         if (data.success && data.menu) {
           // Cargar meseras desde el menú (o usar valores por defecto)
@@ -361,6 +383,7 @@ export default function CartaPage() {
             restaurantName: data.menu.restaurantName,
             address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
             phone: data.menu.contactPhone || '+54 11 1234-5678',
+            logoUrl: data.menu.logoUrl || null,
             categories: data.menu.categories.map((cat: any) => ({
               id: cat.id,
               name: cat.name,
@@ -429,6 +452,8 @@ export default function CartaPage() {
         }
       } catch (error) {
         console.error('Error cargando menú desde API:', error);
+        
+        // Intentar cargar desde localStorage primero
         const savedMenu = localStorage.getItem('editor-menu-data');
         const setupData = localStorage.getItem('setup-comercio-data');
         if (savedMenu && setupData) {
@@ -438,18 +463,28 @@ export default function CartaPage() {
             restaurantName: setup.nombreComercio || 'Mi Restaurante',
             address: setup.direccion || 'Dirección no especificada',
             phone: setup.telefono || 'Teléfono no especificado',
+            logoUrl: setup.logoUrl || null,
             categories: menuData.categories || menuData || []
           };
           setMenuData(restaurantInfo);
-        } else {
+        } else if (idUnico === '5XJ1J37F') {
+          // Solo usar datos demo para el IDU por defecto
+          console.log('⚠️ Usando datos demo para IDU por defecto (5XJ1J37F)');
           const demoData = getDemoMenuData();
           const restaurantInfo: RestaurantData = {
             restaurantName: demoData.restaurantName,
             address: 'Av. Corrientes 1234, Buenos Aires',
             phone: '+54 11 1234-5678',
+            logoUrl: null,
             categories: demoData.categories
           };
           setMenuData(restaurantInfo);
+        } else {
+          // Para otros IDUs con error de conexión, NO marcar como "no encontrado"
+          // Solo mostrar error de conexión
+          console.log(`⚠️ Error de conexión para IDU: ${idUnico}. No se puede verificar si existe`);
+          setConnectionError(true);
+          setMenuData(null);
         }
       } finally {
         setLoading(false);
@@ -547,13 +582,42 @@ export default function CartaPage() {
     );
   }
 
+  if (menuNotFound) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-3xl font-bold mb-4 text-red-500">❌ NO EXISTE COMERCIO</h1>
+          <p className="text-gray-400 mb-2">El ID único <span className="font-mono font-bold text-yellow-400">{idUnico}</span> no está registrado</p>
+          <p className="text-gray-500 text-sm mb-6">Verifica que el ID sea correcto o contacta al administrador</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (connectionError && !menuData) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-3xl font-bold mb-4 text-yellow-500">⚠️ Error de Conexión</h1>
+          <p className="text-gray-400 mb-2">No se pudo conectar a la base de datos</p>
+          <p className="text-gray-500 text-sm mb-6">El comercio con ID <span className="font-mono font-bold text-yellow-400">{idUnico}</span> podría existir, pero no se puede verificar en este momento</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors text-white font-semibold"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!menuData) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <h1 className="text-2xl mb-4">⚠️ No hay datos del menú</h1>
-          <p className="text-gray-400 mb-6">Completa el proceso de configuración primero</p>
-          <button onClick={() => router.push('/setup-comercio')} className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors">Guardar</button>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Cargando carta digital...</p>
         </div>
       </div>
     );
@@ -566,12 +630,19 @@ export default function CartaPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
               <img
-                src="/demo-images/logo.png?v=2"
-                alt="Logo"
+                src={menuData.logoUrl || '/demo-images/logo.png?v=2'}
+                alt={`Logo ${menuData.restaurantName}`}
                 className="w-[180px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setShowMapsModal(true)}
                 title="Ver ubicación en Google Maps"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/demo-images/Logo.jpg?v=2'; }}
+                onError={(e) => { 
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== '/demo-images/Logo.jpg?v=2') {
+                    target.src = '/demo-images/Logo.jpg?v=2';
+                  } else {
+                    target.src = '/demo-images/logo.png?v=2';
+                  }
+                }}
               />
             </div>
             <div className="flex flex-col gap-2 ml-auto">
@@ -1121,17 +1192,22 @@ export default function CartaPage() {
                 Abrí Google para ver y escribir reseñas del local. Por políticas de Google, no se puede embeber esta vista dentro del sitio.
               </p>
               <a
-                href={`https://www.google.com/search?sca_esv=8383db09aa19d6e9&sxsrf=AE3TifNHkDoM-M1ekuN6613Xeunsi-zK9A:1762618596054&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E2YxajoXoZ1xvXtFn2Uj59asWq-4EuMAIf_BJNLd6Zxi4DLscn1I8kQJUxOKNlnPcGtQ8sVbmi1xImbN81zRTHfZ_DtpJuWmncVyNVmhAjkjMwBS2GaMgfujSTgJlHGEhEz1Myk%3D&q=Esquina+Pompeya+Restaurant+Bar+Opiniones&sa=X&ved=2ahUKEwil-6r6-eKQAxWfRLgEHcntE2MQ0bkNegQIQxAD&biw=1365&bih=992&dpr=1`}
+                href={`https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               >
-                Escribir una opinión en Google
+                Ver reseñas en Google
               </a>
               <button
-                onClick={()=>{ navigator.clipboard?.writeText('https://www.google.com/search?sca_esv=8383db09aa19d6e9&sxsrf=AE3TifNHkDoM-M1ekuN6613Xeunsi-zK9A:1762618596054&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E2YxajoXoZ1xvXtFn2Uj59asWq-4EuMAIf_BJNLd6Zxi4DLscn1I8kQJUxOKNlnPcGtQ8sVbmi1xImbN81zRTHfZ_DtpJuWmncVyNVmhAjkjMwBS2GaMgfujSTgJlHGEhEz1Myk%3D&q=Esquina+Pompeya+Restaurant+Bar+Opiniones&sa=X&ved=2ahUKEwil-6r6-eKQAxWfRLgEHcntE2MQ0bkNegQIQxAD&biw=1365&bih=992&dpr=1'); alert('Link copiado'); }}
+                onClick={()=>{ 
+                  const reviewUrl = `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`;
+                  navigator.clipboard?.writeText(reviewUrl); 
+                  alert('Link copiado al portapapeles'); 
+                }}
                 className="w-full px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm"
               >
-                Copiar link
+                Copiar link de reseñas
               </button>
             </div>
           </div>

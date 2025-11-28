@@ -7,7 +7,26 @@ import NavBar from '../components/NavBar';
 export default function DatosComercio() {
   const router = useRouter();
   const params = useParams();
-  const idUnico = (params?.idUnico as string) || '5XJ1J37F';
+  const idUnico = (params?.idUnico as string) || '';
+  
+  // Debug: verificar que se lee correctamente
+  useEffect(() => {
+    console.log('🔍 Datos Comercio - idUnico desde URL:', idUnico);
+    console.log('🔍 Datos Comercio - params completo:', params);
+  }, [idUnico, params]);
+  
+  // Si no hay idUnico, mostrar error
+  if (!idUnico) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error: ID Único no encontrado</h1>
+          <p className="text-gray-600">La URL debe incluir un ID único válido</p>
+          <p className="text-sm text-gray-500 mt-2">Ejemplo: /datos-comercio/5XJ1J37F</p>
+        </div>
+      </div>
+    );
+  }
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);

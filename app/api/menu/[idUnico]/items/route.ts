@@ -18,43 +18,63 @@ export async function POST(
     if (!price || isNaN(parseFloat(price))) {
       return NextResponse.json({ error: 'El precio es obligatorio y debe ser un número' }, { status: 400 });
     }
-    if (!categoryId) {
-      return NextResponse.json({ error: 'La categoría es obligatoria' }, { status: 400 });
-    }
-
     // Buscar menú
     const menu = await prisma.menu.findFirst({
-      where: { restaurantId: idUnico },
-      include: {
-        categories: {
-          where: { id: categoryId, isActive: true }
-        }
-      }
+      where: { restaurantId: idUnico }
     });
 
     if (!menu) {
       return NextResponse.json({ error: 'Menú no encontrado' }, { status: 404 });
     }
 
-    const category = menu.categories[0];
-    if (!category) {
-      return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
-    }
-
-    // Obtener posición siguiente en la categoría
-    const existingItems = await prisma.menuItem.findMany({
-      where: { categoryId: category.id },
-      orderBy: { position: 'desc' },
-      take: 1
-    });
-    const nextPosition = existingItems.length > 0 ? (existingItems[0].position || 0) + 1 : 0;
-
-    // Generar código si no viene
+    // Si tiene categoryId, validar que existe
+    let category = null;
+    let nextPosition = 0;
     let itemCode = code?.trim() || '';
-    if (!itemCode) {
-      const categoryCode = category.code || '01';
-      const itemCount = existingItems.length;
-      itemCode = `${categoryCode}${String(itemCount + 1).padStart(2, '0')}`;
+
+    if (categoryId) {
+      category = await prisma.category.findFirst({
+        where: { 
+          id: categoryId, 
+          menuId: menu.id,
+          isActive: true 
+        }
+      });
+
+      if (!category) {
+        return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
+      }
+
+      // Obtener posición siguiente en la categoría
+      const existingItems = await prisma.menuItem.findMany({
+        where: { categoryId: category.id },
+        orderBy: { position: 'desc' },
+        take: 1
+      });
+      nextPosition = existingItems.length > 0 ? (existingItems[0].position || 0) + 1 : 0;
+
+      // Generar código si no viene
+      if (!itemCode) {
+        const categoryCode = category.code || '01';
+        const itemCount = existingItems.length;
+        itemCode = `${categoryCode}${String(itemCount + 1).padStart(2, '0')}`;
+      }
+    } else {
+      // Sin categoría - obtener posición siguiente de items sin categoría
+      const existingItems = await prisma.menuItem.findMany({
+        where: { 
+          menuId: menu.id,
+          categoryId: null
+        },
+        orderBy: { position: 'desc' },
+        take: 1
+      });
+      nextPosition = existingItems.length > 0 ? (existingItems[0].position || 0) + 1 : 0;
+
+      // Generar código genérico si no viene
+      if (!itemCode) {
+        itemCode = `9999${String(nextPosition + 1).padStart(2, '0')}`;
+      }
     }
 
     // Convertir precio a número
@@ -68,7 +88,7 @@ export async function POST(
         price: priceNumber,
         code: itemCode,
         position: nextPosition,
-        categoryId: category.id,
+        categoryId: category?.id || null, // Permite null para items sin categoría
         menuId: menu.id,
         imageUrl: imageUrl || null,
         isAvailable: isAvailable !== undefined ? isAvailable : true,
@@ -147,25 +167,45 @@ export async function PUT(request: NextRequest) {
       updateData.code = code.trim();
     }
 
-    // Si cambió de categoría
-    if (categoryId && categoryId !== currentItem.categoryId) {
-      const newCategory = await prisma.category.findUnique({
-        where: { id: categoryId }
-      });
-      if (!newCategory) {
-        return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
+    // Si cambió de categoría (o se quitó la categoría)
+    // Comparar considerando null y undefined como equivalentes
+    const currentCategoryId = currentItem.categoryId || null;
+    const newCategoryId = (categoryId && categoryId !== '' && categoryId !== 'null') ? categoryId : null;
+    
+    if (newCategoryId !== currentCategoryId) {
+      if (newCategoryId) {
+        // Mover a otra categoría
+        const newCategory = await prisma.category.findUnique({
+          where: { id: newCategoryId }
+        });
+        if (!newCategory) {
+          return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
+        }
+
+        // Obtener nueva posición en la categoría destino
+        const existingItems = await prisma.menuItem.findMany({
+          where: { categoryId: newCategoryId },
+          orderBy: { position: 'desc' },
+          take: 1
+        });
+        const nextPosition = existingItems.length > 0 ? (existingItems[0].position || 0) + 1 : 0;
+
+        updateData.categoryId = newCategoryId;
+        updateData.position = nextPosition;
+      } else {
+        // Mover a "Sin categoría" (categoryId = null)
+        const itemsWithoutCategory = await prisma.menuItem.findMany({
+          where: { 
+            menuId: currentItem.menuId,
+            categoryId: null
+          },
+          orderBy: { position: 'desc' },
+          take: 1
+        });
+        const newPosition = itemsWithoutCategory.length > 0 ? (itemsWithoutCategory[0].position || 0) + 1 : 0;
+        updateData.categoryId = null;
+        updateData.position = newPosition;
       }
-
-      // Obtener nueva posición en la categoría destino
-      const existingItems = await prisma.menuItem.findMany({
-        where: { categoryId: categoryId },
-        orderBy: { position: 'desc' },
-        take: 1
-      });
-      const nextPosition = existingItems.length > 0 ? (existingItems[0].position || 0) + 1 : 0;
-
-      updateData.categoryId = categoryId;
-      updateData.position = nextPosition;
     }
 
     const updatedItem = await prisma.menuItem.update({
@@ -189,7 +229,13 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('❌ Error actualizando item:', error);
-    return NextResponse.json({ error: 'Error al actualizar item' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Detalles del error:', { errorMessage, errorStack, categoryId, body });
+    return NextResponse.json({ 
+      error: 'Error al actualizar item',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }

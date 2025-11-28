@@ -123,8 +123,8 @@ model MenuItem {
   isAvailable Boolean  @default(true)
   position    Int      @default(0)
   
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   menuId      String
   menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
