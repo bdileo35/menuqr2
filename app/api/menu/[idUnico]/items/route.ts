@@ -93,8 +93,7 @@ export async function POST(
         imageUrl: imageUrl || null,
         isAvailable: isAvailable !== undefined ? isAvailable : true,
         isPopular: isPopular || false,
-        isPromo: isPromo || false,
-        hasImage: !!imageUrl
+        isPromo: isPromo || false
       }
     });
 
@@ -148,7 +147,6 @@ export async function PUT(request: NextRequest) {
       name: name.trim(),
       description: description?.trim() || null,
       imageUrl: imageUrl || null,
-      hasImage: !!imageUrl,
       isAvailable: isAvailable !== undefined ? isAvailable : currentItem.isAvailable,
       isPopular: isPopular !== undefined ? isPopular : currentItem.isPopular,
       isPromo: isPromo !== undefined ? isPromo : currentItem.isPromo
