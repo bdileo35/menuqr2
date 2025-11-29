@@ -227,13 +227,7 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('❌ Error actualizando item:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('Detalles del error:', { errorMessage, errorStack, categoryId, body });
-    return NextResponse.json({ 
-      error: 'Error al actualizar item',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Error al actualizar item' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }

@@ -12,8 +12,11 @@ interface MenuItem {
   price: string;
   description?: string;
   isAvailable?: boolean;
+  isPopular?: boolean;
+  isPromo?: boolean;
   code?: string;
   imageBase64?: string;
+  imageUrl?: string;
 }
 
 interface MenuCategory {
@@ -26,6 +29,8 @@ interface MenuCategory {
 
 interface RestaurantData {
   restaurantName: string;
+  address?: string;
+  phone?: string;
   categories: MenuCategory[];
 }
 
@@ -396,8 +401,7 @@ export default function Editor2() {
 
         if (!response.ok) {
           const error = await response.json();
-          console.error('❌ Error de la API:', error);
-          throw new Error(error.error || error.details || 'Error al actualizar item');
+          throw new Error(error.error || 'Error al actualizar item');
         }
 
         alert('✅ Producto actualizado correctamente');
@@ -436,6 +440,8 @@ export default function Editor2() {
                 price: `$${item.price}`,
                 description: item.description,
                 isAvailable: item.isAvailable,
+                isPopular: item.isPopular || false,
+                isPromo: item.isPromo || false,
                 code: item.code,
                 imageUrl: item.imageUrl || null,
                 imageBase64: item.imageUrl || null

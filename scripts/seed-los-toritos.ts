@@ -151,7 +151,6 @@ async function main() {
         menuId: menu.id,
         categoryId: categoryMap[item.cat],
         imageUrl: (item as any).imageUrl || null,
-        hasImage: (item as any).hasImage || false,
       },
     });
   }
