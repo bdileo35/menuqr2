@@ -89,9 +89,7 @@ export async function GET(
       socialInstagram: menu.socialInstagram || '',
       socialFacebook: menu.socialFacebook || '',
       logoUrl: menu.logoUrl || '',
-      logoPublicId: menu.logoPublicId || '',
       description: menu.description || '',
-      primaryColor: menu.primaryColor || '#2563eb',
       categories: [
         ...categoriesWithItems,
         ...(itemsWithoutCategory.length > 0 ? [{
