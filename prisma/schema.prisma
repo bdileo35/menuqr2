@@ -1,6 +1,3 @@
-// Schema para desarrollo local con SQLite
-// Uso: npx prisma generate --schema=./prisma/schema.sqlite.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,8 +7,162 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Copiar todos los modelos desde schema.prisma
-// (Los enums y modelos son compatibles entre SQLite y PostgreSQL para este caso)
+model User {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  password        String
+  restaurantId    String    @unique
+  restaurantName  String
+  phone           String?
+  address         String?
+  plan            String?   @default("basic")
+  role            Role      @default(ADMIN)
+  avatar          String?
+  isActive        Boolean   @default(true)
+  lastLogin       DateTime?
+  whatsappPhone   String?
+  whatsappToken   String?
+  whatsappPhoneId String?
+  whatsappEnabled Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  menus           Menu[]
+
+  @@map("users")
+}
+
+model Menu {
+  id               String     @id @default(cuid())
+  restaurantId     String     @unique
+  restaurantName   String
+  description      String?
+  logoUrl          String?
+  logoPublicId     String?
+  primaryColor     String     @default("#2563eb")
+  secondaryColor   String     @default("#64748b")
+  backgroundColor  String     @default("#ffffff")
+  textColor        String     @default("#1f2937")
+  fontFamily       String     @default("Inter")
+  contactPhone     String?
+  contactEmail     String?
+  contactAddress   String?
+  contactWebsite   String?
+  socialInstagram  String?
+  socialFacebook   String?
+  socialTwitter    String?
+  showPrices       Boolean    @default(true)
+  showImages       Boolean    @default(true)
+  showDescriptions Boolean    @default(true)
+  showNutritional  Boolean    @default(false)
+  allowOrdering    Boolean    @default(false)
+  currency         String     @default("$")
+  language         String     @default("es")
+  deliveryEnabled  Boolean    @default(false)
+  deliveryFee      Float      @default(0)
+  deliveryRadius   Float?
+  deliveryMinOrder Float?
+  isActive         Boolean    @default(true)
+  ownerId          String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  categories       Category[]
+  items            MenuItem[]
+  owner            User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  orders           Order[]
+
+  @@map("menus")
+}
+
+model Category {
+  id            String     @id @default(cuid())
+  name          String
+  description   String?
+  position      Int        @default(0)
+  isActive      Boolean    @default(true)
+  imageUrl      String?
+  imagePublicId String?
+  menuId        String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  code          String?    @unique
+  menu          Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items         MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id              String      @id @default(cuid())
+  name            String
+  description     String?
+  price           Float
+  originalPrice   Float?
+  position        Int         @default(0)
+  imageUrl        String?
+  imagePublicId   String?
+  galleryImages   String?
+  hasImage        Boolean     @default(false)
+  isAvailable     Boolean     @default(true)
+  isPopular       Boolean     @default(false)
+  isPromo         Boolean     @default(false)
+  spicyLevel      Int         @default(0)
+  preparationTime Int?
+  tags            String?
+  menuId          String
+  categoryId      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  code            String?
+  category        Category?   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  menu            Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
+
+  @@map("menu_items")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     Int
+  mode            OrderMode
+  status          OrderStatus @default(PENDING)
+  tableNumber     String?
+  customerName    String?
+  customerPhone   String?
+  customerAddress String?
+  deliveryNotes   String?
+  restaurantId    String
+  menuId          String
+  subtotal        Float
+  deliveryFee     Float       @default(0)
+  total           Float
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  whatsappSent    Boolean     @default(false)
+  whatsappMessage String?
+  items           OrderItem[]
+  menu            Menu        @relation(fields: [menuId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  itemName   String
+  itemPrice  Float
+  quantity   Int      @default(1)
+  subtotal   Float
+  notes      String?
+  createdAt  DateTime @default(now())
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
 
 enum Role {
   USER
@@ -34,144 +185,3 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
 }
-
-model User {
-  id             String   @id @default(cuid())
-  name           String
-  email          String   @unique
-  password       String
-  restaurantId   String   @unique
-  restaurantName String
-  phone          String?
-  address        String?
-  plan           String?  @default("basic")
-  role           Role     @default(ADMIN)
-  avatar         String?
-  isActive       Boolean  @default(true)
-  lastLogin      DateTime?
-  
-  whatsappPhone       String?
-  whatsappToken       String?
-  whatsappPhoneId     String?
-  whatsappEnabled     Boolean @default(false)
-  
-  menus          Menu[]
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@map("users")
-}
-
-model Menu {
-  id             String   @id @default(cuid())
-  restaurantId   String   @unique
-  restaurantName String
-  description    String?
-  contactPhone   String?
-  contactEmail   String?
-  contactAddress String?
-  contactWebsite String?
-  socialInstagram String?
-  socialFacebook String?
-  socialTwitter  String?
-  logoUrl        String?
-  waiters        String?  // JSON string
-  allowOrdering  Boolean  @default(true)
-  deliveryEnabled Boolean @default(false)
-  deliveryFee    Float?   @default(0)
-  
-  ownerId        String
-  owner          User     @relation(fields: [ownerId], references: [id])
-  categories     Category[]
-  items          MenuItem[]
-  orders         Order[]
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@map("menus")
-}
-
-model Category {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  code        String?
-  position    Int      @default(0)
-  isActive    Boolean  @default(true)
-  
-  menuId      String
-  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  items       MenuItem[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("categories")
-}
-
-model MenuItem {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  code        String?
-  imageUrl    String?
-  isPopular   Boolean  @default(false)
-  isPromo     Boolean  @default(false)
-  isAvailable Boolean  @default(true)
-  position    Int      @default(0)
-  
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  menuId      String
-  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  orderItems  OrderItem[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("menu_items")
-}
-
-model Order {
-  id          String      @id @default(cuid())
-  code        String      @unique
-  mode        OrderMode
-  status      OrderStatus @default(PENDING)
-  customerName String?
-  customerPhone String?
-  customerAddress String?
-  tableNumber String?
-  waiterName  String?
-  total       Float
-  notes       String?
-  
-  menuId      String
-  menu        Menu        @relation(fields: [menuId], references: [id])
-  items       OrderItem[]
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@map("orders")
-}
-
-model OrderItem {
-  id          String   @id @default(cuid())
-  quantity    Int
-  price       Float
-  notes       String?
-  
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItemId  String
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("order_items")
-}
-
