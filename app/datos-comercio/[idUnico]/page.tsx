@@ -7,12 +7,10 @@ import NavBar from '../../components/NavBar';
 export default function DatosComercio() {
   const router = useRouter();
   const params = useParams();
-  const idUnico = params?.idUnico as string; // ✅ Sin default - debe venir de la URL
+  const idUnico = params?.idUnico as string;
   const { isDarkMode, toggleTheme } = useAppTheme();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searching, setSearching] = useState(false);
 
   // Estados del formulario
   const [formData, setFormData] = useState({
@@ -25,6 +23,8 @@ export default function DatosComercio() {
     instagram: '',
     facebook: '',
     logoUrl: '',
+    googleMapsUrl: '',
+    googleReviewsUrl: '',
     whatsappPhone: ''
   });
 
@@ -65,6 +65,8 @@ export default function DatosComercio() {
               instagram: data.menu.socialInstagram || '',
               facebook: data.menu.socialFacebook || '',
               logoUrl: data.menu.logoUrl || '',
+              googleMapsUrl: data.menu.googleMapsUrl || '',
+              googleReviewsUrl: data.menu.googleReviewsUrl || '',
               whatsappPhone: data.menu.whatsappPhone || ''
             });
           }
@@ -140,49 +142,6 @@ export default function DatosComercio() {
     }
   };
 
-  // Buscar en Google y extraer datos
-  const handleGoogleSearch = async () => {
-    if (!searchTerm.trim()) return;
-    
-    setSearching(true);
-    try {
-      console.log(`🔍 Buscando "${searchTerm}" en Google...`);
-      
-      const mockGoogleData = {
-        name: searchTerm,
-        address: 'Av. Corrientes 1234, CABA, Argentina',
-        phone: '+54 11 4567-8900',
-        email: 'contacto@esquinapompeya.com',
-        hours: 'Lun a Dom: 12:00 - 00:00',
-        description: 'Restaurante familiar especializado en parrilla y platos tradicionales argentinos',
-        instagram: '@esquinapompeya',
-        facebook: 'Esquina Pompeya Restaurante',
-        rating: '4.5',
-        reviews: '127 reseñas'
-      };
-      
-      setFormData(prev => ({
-        ...prev,
-        restaurantName: mockGoogleData.name,
-        address: mockGoogleData.address,
-        phone: mockGoogleData.phone,
-        email: mockGoogleData.email,
-        hours: mockGoogleData.hours,
-        description: mockGoogleData.description,
-        instagram: mockGoogleData.instagram,
-        facebook: mockGoogleData.facebook
-      }));
-      
-      alert(`✅ Datos encontrados para "${searchTerm}" y cargados automáticamente\n\n⭐ Búsqueda automática real disponible solo en Versión PRO`);
-      
-    } catch (error) {
-      console.error('Error en búsqueda:', error);
-      alert('❌ Error al buscar en Google. Intenta nuevamente.');
-    } finally {
-      setSearching(false);
-    }
-  };
-
   // Guardar datos
   const handleSave = async () => {
     setSaving(true);
@@ -199,6 +158,8 @@ export default function DatosComercio() {
           socialFacebook: formData.facebook,
           description: formData.description,
           logoUrl: formData.logoUrl,
+          googleMapsUrl: formData.googleMapsUrl,
+          googleReviewsUrl: formData.googleReviewsUrl,
           whatsappPhone: formData.whatsappPhone || null
         })
       });
@@ -222,68 +183,35 @@ export default function DatosComercio() {
       isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
     }`}>
       
-      {/* Header - Misma estructura que el editor */}
+      {/* Header - Simplificado sin buscador */}
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 pt-1 pb-2">
+        <div className="max-w-4xl mx-auto px-4 py-3">
           
-          {/* LÍNEA 1: Título Panel de Control */}
-          <div className="flex items-center justify-between mb-3">
+          {/* Título y botones */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-bold">📋 Datos del Comercio</h1>
             </div>
 
-            {/* Botones del lado derecho */}
-            <div className="flex items-center gap-2">
-              {/* Botón modo claro/oscuro */}
-              <button
-                onClick={toggleTheme}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
-                  isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
-                    : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
-                }`}
-                title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-            </div>
-          </div>
-
-          {/* LÍNEA 2: Buscador */}
-          <div className="flex items-center justify-center">
-            <div className="relative w-full max-w-lg">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleGoogleSearch()}
-                placeholder="Buscar restaurante en Google..."
-                className={`w-full pl-4 pr-20 py-2 rounded-lg border transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-gray-500' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-500'
-                }`}
-              />
-              <button
-                onClick={handleGoogleSearch}
-                disabled={searching || !searchTerm.trim()}
-                className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 rounded text-xs transition-colors ${
-                  searching || !searchTerm.trim()
-                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                    : 'bg-gray-800 hover:bg-gray-900 text-white'
-                }`}
-              >
-                {searching ? 'Buscando...' : 'Buscar'}
-              </button>
-            </div>
+            {/* Botón modo claro/oscuro */}
+            <button
+              onClick={toggleTheme}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                  : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
+              }`}
+              title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
           </div>
         </div>
       </div>
 
-
-      {/* Contenido Principal - Una sola card */}
+      {/* Contenido Principal */}
       <div className="max-w-6xl mx-auto px-4 py-6">
         
         {/* Loading inicial */}
@@ -319,7 +247,7 @@ export default function DatosComercio() {
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-gray-100 border-gray-300'
         }`}>
-          {/* Header de Categoría - Estilo como "Platos del Día" */}
+          {/* Header de Categoría */}
           <div className={`px-4 py-2 cursor-pointer transition-colors duration-300 ${
             isDarkMode 
               ? 'bg-gray-700 hover:bg-gray-600' 
@@ -332,8 +260,8 @@ export default function DatosComercio() {
             </div>
           </div>
           
-          {/* Contenido de la card */}
-          <div className="p-6 space-y-6">
+          {/* Contenido de la card - COMPACTO */}
+          <div className="p-6 space-y-3">
               
               {/* Nombre del Restaurante */}
               <div className="flex items-center gap-4">
@@ -344,7 +272,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.restaurantName}
                   onChange={(e) => handleInputChange('restaurantName', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -362,7 +290,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -380,7 +308,7 @@ export default function DatosComercio() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -398,7 +326,7 @@ export default function DatosComercio() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -416,7 +344,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.hours}
                   onChange={(e) => handleInputChange('hours', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -425,77 +353,77 @@ export default function DatosComercio() {
                 />
               </div>
 
-              {/* Logo del Restaurante */}
-              <div>
-                <label className={`block text-sm font-semibold mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Logo del Restaurante
+              {/* Logo - EN LÍNEA */}
+              <div className="flex items-start gap-4">
+                <label className="w-24 text-sm font-medium pt-2">
+                  Logo
                 </label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    className="hidden"
-                    id="logoInput"
-                  />
-                  <label
-                    htmlFor="logoInput"
-                    className={`block w-full h-40 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-blue-400 ${
-                      isDarkMode 
-                        ? 'border-gray-600 bg-gray-700/50 hover:bg-gray-700' 
-                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    {formData.logoUrl ? (
-                      <div className="w-full h-full flex items-center justify-center p-4">
-                        <img 
-                          src={formData.logoUrl} 
-                          alt="Logo" 
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-2xl mb-2">📷</div>
-                          <div className="text-sm text-gray-500">data:image/jpeg;base64</div>
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                      id="logoInput"
+                    />
+                    <label
+                      htmlFor="logoInput"
+                      className={`block w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-blue-400 ${
+                        isDarkMode 
+                          ? 'border-gray-600 bg-gray-700/50 hover:bg-gray-700' 
+                          : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      {formData.logoUrl ? (
+                        <div className="w-full h-full flex items-center justify-center p-2">
+                          <img 
+                            src={formData.logoUrl} 
+                            alt="Logo" 
+                            className="max-w-full max-h-full object-contain"
+                          />
                         </div>
-                      </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-2xl mb-1">📷</div>
+                            <div className="text-xs text-gray-500">Subir imagen</div>
+                          </div>
+                        </div>
+                      )}
+                    </label>
+                    {formData.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, logoUrl: '' }))}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ✕
+                      </button>
                     )}
-                  </label>
+                  </div>
                   {formData.logoUrl && (
                     <button
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, logoUrl: '' }))}
-                      className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                      onClick={() => document.getElementById('logoInput')?.click()}
+                      className="mt-1 text-xs text-gray-600 hover:text-gray-700 underline"
                     >
-                      ✕
+                      Cambiar logo
                     </button>
                   )}
                 </div>
-                {formData.logoUrl && (
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('logoInput')?.click()}
-                    className="mt-2 text-sm text-gray-600 hover:text-gray-700 underline"
-                  >
-                    Cambiar logo
-                  </button>
-                )}
               </div>
 
-              {/* Descripción */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
+              {/* Descripción - EN LÍNEA */}
+              <div className="flex items-start gap-4">
+                <label className="w-24 text-sm font-medium pt-2">
                   Descripción
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  rows={4}
-                  className={`w-full p-3 rounded-lg border transition-colors resize-none ${
+                  rows={3}
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors resize-none ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -503,7 +431,6 @@ export default function DatosComercio() {
                   placeholder="Breve descripción del restaurante"
                 />
               </div>
-
 
               {/* Instagram */}
               <div className="flex items-center gap-4">
@@ -514,7 +441,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.instagram}
                   onChange={(e) => handleInputChange('instagram', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -532,13 +459,55 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.facebook}
                   onChange={(e) => handleInputChange('facebook', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
                   }`}
                   placeholder="Página de Facebook"
                 />
+              </div>
+
+              {/* Google Maps URL */}
+              <div className="flex items-center gap-4">
+                <label className="w-24 text-sm font-medium">
+                  Google Maps
+                </label>
+                <input
+                  type="url"
+                  value={formData.googleMapsUrl}
+                  onChange={(e) => handleInputChange('googleMapsUrl', e.target.value)}
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
+                  }`}
+                  placeholder="https://www.google.com/maps?q=... o link de compartir"
+                />
+                <span className="text-xs text-gray-500 w-40">
+                  URL de Google Maps (opcional)
+                </span>
+              </div>
+
+              {/* Google Reviews URL */}
+              <div className="flex items-center gap-4">
+                <label className="w-24 text-sm font-medium">
+                  Google Reviews
+                </label>
+                <input
+                  type="url"
+                  value={formData.googleReviewsUrl}
+                  onChange={(e) => handleInputChange('googleReviewsUrl', e.target.value)}
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
+                  }`}
+                  placeholder="https://www.google.com/search?q=... o link de Google Business"
+                />
+                <span className="text-xs text-gray-500 w-40">
+                  URL de Google Reviews (opcional)
+                </span>
               </div>
 
               {/* WhatsApp para Pedidos */}
@@ -550,7 +519,7 @@ export default function DatosComercio() {
                   type="tel"
                   value={formData.whatsappPhone}
                   onChange={(e) => handleInputChange('whatsappPhone', e.target.value)}
-                  className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -563,11 +532,11 @@ export default function DatosComercio() {
               </div>
 
               {/* Botones de acción */}
-              <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-600">
+              <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-gray-600">
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className={`px-6 py-3 rounded-lg transition-colors ${
+                  className={`px-6 py-2 rounded-lg transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
                       : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
@@ -579,7 +548,7 @@ export default function DatosComercio() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-3 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-500 text-white rounded-lg transition-colors font-medium"
+                  className="px-6 py-2 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-500 text-white rounded-lg transition-colors font-medium"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>

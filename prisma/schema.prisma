@@ -76,6 +76,8 @@ model Menu {
   socialFacebook String?
   socialTwitter  String?
   logoUrl        String?
+  googleMapsUrl  String?  // URL específica de Google Maps (embed o share)
+  googleReviewsUrl String? // URL específica de Google Reviews/Business
   waiters        String?  // JSON string
   allowOrdering  Boolean  @default(true)
   deliveryEnabled Boolean @default(false)

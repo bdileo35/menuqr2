@@ -89,6 +89,8 @@ export async function GET(
       socialInstagram: menu.socialInstagram || '',
       socialFacebook: menu.socialFacebook || '',
       logoUrl: menu.logoUrl || '',
+      googleMapsUrl: menu.googleMapsUrl || '',
+      googleReviewsUrl: menu.googleReviewsUrl || '',
       description: menu.description || '',
       categories: [
         ...categoriesWithItems,

@@ -27,6 +27,8 @@ interface RestaurantData {
   address: string;
   phone: string;
   logoUrl?: string | null;
+  googleMapsUrl?: string | null;
+  googleReviewsUrl?: string | null;
   categories: MenuCategory[];
 }
 
@@ -384,6 +386,8 @@ export default function CartaPage() {
             address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
             phone: data.menu.contactPhone || '+54 11 1234-5678',
             logoUrl: data.menu.logoUrl || null,
+            googleMapsUrl: data.menu.googleMapsUrl || null,
+            googleReviewsUrl: data.menu.googleReviewsUrl || null,
             categories: data.menu.categories.map((cat: any) => ({
               id: cat.id,
               name: cat.name,
@@ -1171,7 +1175,7 @@ export default function CartaPage() {
             </div>
             <iframe
               className="w-full h-full"
-              src={`https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || 'Esquina Pompeya')}&output=embed`}
+              src={menuData?.googleMapsUrl || `https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || menuData?.address || 'Esquina Pompeya')}&output=embed`}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />
@@ -1192,7 +1196,7 @@ export default function CartaPage() {
                 Abrí Google para ver y escribir reseñas del local. Por políticas de Google, no se puede embeber esta vista dentro del sitio.
               </p>
               <a
-                href={`https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`}
+                href={menuData?.googleReviewsUrl || `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
@@ -1201,7 +1205,7 @@ export default function CartaPage() {
               </a>
               <button
                 onClick={()=>{ 
-                  const reviewUrl = `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`;
+                  const reviewUrl = menuData?.googleReviewsUrl || `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`;
                   navigator.clipboard?.writeText(reviewUrl); 
                   alert('Link copiado al portapapeles'); 
                 }}
