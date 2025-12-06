@@ -1,17 +1,17 @@
-// Schema para desarrollo local con SQLite
-// Uso: npx prisma generate --schema=./prisma/schema.sqlite.prisma
+// Schema para PostgreSQL (Supabase)
+// Uso: npx prisma generate
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Copiar todos los modelos desde schema.prisma
-// (Los enums y modelos son compatibles entre SQLite y PostgreSQL para este caso)
+// Schema completo para PostgreSQL
+// Compatible con Supabase
 
 enum Role {
   USER
@@ -77,8 +77,6 @@ model Menu {
   socialFacebook String?
   socialTwitter  String?
   logoUrl        String?
-  googleMapsUrl  String?
-  googleReviewsUrl String?
   waiters        String?  // JSON string
   allowOrdering  Boolean  @default(true)
   deliveryEnabled Boolean @default(false)
