@@ -107,8 +107,8 @@ export async function GET(
       socialInstagram: menu.socialInstagram || '',
       socialFacebook: menu.socialFacebook || '',
       logoUrl: menu.logoUrl || '',
-      googleMapsUrl: menu.googleMapsUrl || '',
-      googleReviewsUrl: menu.googleReviewsUrl || '',
+      googleMapsUrl: (menu as any).googleMapsUrl || '',
+      googleReviewsUrl: (menu as any).googleReviewsUrl || '',
       description: menu.description || '',
       hasPro: menu.owner?.hasPro || false,  // Si el usuario tiene PRO
       categories: [
