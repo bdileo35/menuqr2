@@ -27,8 +27,7 @@ interface RestaurantData {
   address: string;
   phone: string;
   logoUrl?: string | null;
-  googleMapsUrl?: string | null;
-  googleReviewsUrl?: string | null;
+  hasPro?: boolean;  // Si tiene versión PRO comprada
   categories: MenuCategory[];
 }
 
@@ -58,7 +57,7 @@ export default function CartaPage() {
   const [modalidad, setModalidad] = useState<'delivery' | 'retiro' | 'salon'>('delivery');
   const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
   const [animationActive, setAnimationActive] = useState(false);
-  const [showProCart, setShowProCart] = useState(true);
+  const [showProCart, setShowProCart] = useState(false);  // Por defecto false, se activa si hasPro=true
   const [showProCartModal, setShowProCartModal] = useState(false);
   const [showComandaPreview, setShowComandaPreview] = useState(false);
   const [comandaCode, setComandaCode] = useState('');
@@ -386,8 +385,7 @@ export default function CartaPage() {
             address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
             phone: data.menu.contactPhone || '+54 11 1234-5678',
             logoUrl: data.menu.logoUrl || null,
-            googleMapsUrl: data.menu.googleMapsUrl || null,
-            googleReviewsUrl: data.menu.googleReviewsUrl || null,
+            hasPro: data.menu.hasPro || false,
             categories: data.menu.categories.map((cat: any) => ({
               id: cat.id,
               name: cat.name,
@@ -447,7 +445,12 @@ export default function CartaPage() {
           }
 
           setMenuData(restaurantInfo);
-          try { if (data?.menu?.allowOrdering === true) setShowProCart(true); } catch {}
+          // TODO: Mostrar carrito PRO solo si el usuario tiene PRO comprado
+          // TEMPORAL: Carrito siempre visible (puenteado para otro momento)
+          // console.log('🔍 hasPro recibido de API:', data?.menu?.hasPro);
+          // console.log('🔍 showProCart se setea a:', data?.menu?.hasPro === true);
+          // setShowProCart(data?.menu?.hasPro === true);
+          setShowProCart(true); // TEMPORAL: siempre visible
           const initialExpanded: {[key: string]: boolean} = {};
           restaurantInfo.categories.forEach(cat => { initialExpanded[cat.id || cat.name] = true; });
           setExpandedCategories(initialExpanded);
@@ -497,11 +500,14 @@ export default function CartaPage() {
 
     try {
       const sp = new URLSearchParams(window.location.search);
-      if (sp.get('procart') === '1' || sp.get('pro') === '1' || process.env.NEXT_PUBLIC_CART_PRO === '1') {
-        setShowProCart(true);
-      } else if (sp.get('procart') === '0' || sp.get('pro') === '0') {
-        setShowProCart(false);
-      }
+      // TODO: Permitir override por URL (para testing), pero por defecto usar hasPro de la BD
+      // TEMPORAL: Carrito siempre visible
+      // if (sp.get('procart') === '1' || sp.get('pro') === '1') {
+      //   setShowProCart(true);  // Override: forzar PRO
+      // } else if (sp.get('procart') === '0' || sp.get('pro') === '0') {
+      //   setShowProCart(false);  // Override: forzar sin PRO
+      // }
+      // Si no hay override, se usa hasPro de la BD (se setea en loadMenuFromAPI)
       const wa = sp.get('wa');
       if (wa) setWaPhone(wa);
     } catch {}
@@ -822,7 +828,7 @@ export default function CartaPage() {
 
       {/* FAB Pro */}
       {showProCart && (
-        <button onClick={()=>setShowProCartModal(true)} className={`${isDarkMode? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600':'bg-white border-gray-300 text-gray-900 hover:bg-gray-100'} fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full shadow-lg border-2 flex items-center justify-center`} title="Ver carrito (POC)"> <span className="text-2xl">🛒</span>{cartItems.length>0 && (<span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">{cartItems.reduce((t,it)=>t+it.quantity,0)}</span>)}</button>
+        <button onClick={()=>setShowProCartModal(true)} className={`${isDarkMode? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600':'bg-white border-gray-300 text-gray-900 hover:bg-gray-100'} fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full shadow-lg border-2 flex items-center justify-center`} title="Ver carrito (POC)"> <span className="text-2xl">🛒</span>{cartItems.length>0 && (<span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">{cartItems.reduce((t,it)=>t+it.quantity,0)}</span>)}</button>
       )}
 
       {showProCart && showProCartModal && (
@@ -1175,7 +1181,7 @@ export default function CartaPage() {
             </div>
             <iframe
               className="w-full h-full"
-              src={menuData?.googleMapsUrl || `https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || menuData?.address || 'Esquina Pompeya')}&output=embed`}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || 'Esquina Pompeya')}&output=embed`}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />
@@ -1196,7 +1202,7 @@ export default function CartaPage() {
                 Abrí Google para ver y escribir reseñas del local. Por políticas de Google, no se puede embeber esta vista dentro del sitio.
               </p>
               <a
-                href={menuData?.googleReviewsUrl || `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`}
+                href={`https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
@@ -1205,7 +1211,7 @@ export default function CartaPage() {
               </a>
               <button
                 onClick={()=>{ 
-                  const reviewUrl = menuData?.googleReviewsUrl || `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`;
+                  const reviewUrl = `https://www.google.com/search?q=${encodeURIComponent(`${menuData?.restaurantName || ''} ${menuData?.address || ''} opiniones reseñas`.trim())}`;
                   navigator.clipboard?.writeText(reviewUrl); 
                   alert('Link copiado al portapapeles'); 
                 }}

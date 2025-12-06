@@ -23,8 +23,6 @@ export default function DatosComercio() {
     instagram: '',
     facebook: '',
     logoUrl: '',
-    googleMapsUrl: '',
-    googleReviewsUrl: '',
     whatsappPhone: ''
   });
 
@@ -65,8 +63,6 @@ export default function DatosComercio() {
               instagram: data.menu.socialInstagram || '',
               facebook: data.menu.socialFacebook || '',
               logoUrl: data.menu.logoUrl || '',
-              googleMapsUrl: data.menu.googleMapsUrl || '',
-              googleReviewsUrl: data.menu.googleReviewsUrl || '',
               whatsappPhone: data.menu.whatsappPhone || ''
             });
           }
@@ -158,8 +154,6 @@ export default function DatosComercio() {
           socialFacebook: formData.facebook,
           description: formData.description,
           logoUrl: formData.logoUrl,
-          googleMapsUrl: formData.googleMapsUrl,
-          googleReviewsUrl: formData.googleReviewsUrl,
           whatsappPhone: formData.whatsappPhone || null
         })
       });
@@ -466,48 +460,6 @@ export default function DatosComercio() {
                   }`}
                   placeholder="Página de Facebook"
                 />
-              </div>
-
-              {/* Google Maps URL */}
-              <div className="flex items-center gap-4">
-                <label className="w-24 text-sm font-medium">
-                  Google Maps
-                </label>
-                <input
-                  type="url"
-                  value={formData.googleMapsUrl}
-                  onChange={(e) => handleInputChange('googleMapsUrl', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-                  }`}
-                  placeholder="https://www.google.com/maps?q=... o link de compartir"
-                />
-                <span className="text-xs text-gray-500 w-40">
-                  URL de Google Maps (opcional)
-                </span>
-              </div>
-
-              {/* Google Reviews URL */}
-              <div className="flex items-center gap-4">
-                <label className="w-24 text-sm font-medium">
-                  Google Reviews
-                </label>
-                <input
-                  type="url"
-                  value={formData.googleReviewsUrl}
-                  onChange={(e) => handleInputChange('googleReviewsUrl', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-                  }`}
-                  placeholder="https://www.google.com/search?q=... o link de Google Business"
-                />
-                <span className="text-xs text-gray-500 w-40">
-                  URL de Google Reviews (opcional)
-                </span>
               </div>
 
               {/* WhatsApp para Pedidos */}

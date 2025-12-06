@@ -54,9 +54,8 @@ export async function POST(request: NextRequest) {
         contactEmail: 'info@esquinapompeya.com',
         socialInstagram: '@esquinapompeya',
         ownerId: user.id,
-        // @ts-ignore - waiters field exists in schema but may not be in generated types yet
         waiters: JSON.stringify(['Maria', 'Lucia', 'Carmen']), // Meseras por defecto
-      } as any,
+      },
     });
     console.log(`✅ Menú creado: ${menu.restaurantName}`);
 

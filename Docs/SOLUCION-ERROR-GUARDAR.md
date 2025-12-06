@@ -78,3 +78,5 @@ Después de ejecutar la migración, el error debería desaparecer y podrás:
 - ✅ Recuperar items moviéndolos a una categoría
 - ✅ Eliminar items definitivamente
 
+
+

@@ -16,20 +16,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/comprar?error=id_no_encontrado`);
     }
 
+    // Buscar usuario
+    let user = await prisma.user.findFirst({
+      where: { restaurantId: idUnico }
+    });
+
+    // Si el plan es PRO, activar hasPro
+    if (plan === 'pro' || plan === 'PRO') {
+      if (user) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { hasPro: true, plan: 'pro' }
+        });
+        console.log(`✅ PRO activado para: ${user.restaurantName} (${idUnico})`);
+      } else {
+        // Crear usuario con PRO
+        user = await prisma.user.create({
+          data: {
+            name: 'Usuario Demo',
+            email: `demo-${idUnico}@menuqr.com`,
+            password: 'demo123',
+            restaurantId: idUnico,
+            restaurantName: 'Restaurante Demo',
+            role: 'ADMIN',
+            hasPro: true,
+            plan: 'pro'
+          }
+        });
+      }
+    }
+
     // Buscar o crear el menú con el ID único
     let menu = await prisma.menu.findFirst({
       where: { restaurantId: idUnico }
     });
 
     if (!menu) {
-      // Crear un nuevo menú con el ID único
-      const user = await prisma.user.findFirst({
-        where: { restaurantId: idUnico }
-      });
-
       if (!user) {
         // Crear usuario básico
-        const newUser = await prisma.user.create({
+        user = await prisma.user.create({
           data: {
             name: 'Usuario Demo',
             email: `demo-${idUnico}@menuqr.com`,
@@ -39,25 +64,16 @@ export async function GET(request: NextRequest) {
             role: 'ADMIN'
           }
         });
-
-        // Crear menú
-        menu = await prisma.menu.create({
-          data: {
-            restaurantId: idUnico,
-            restaurantName: 'Restaurante Demo',
-            ownerId: newUser.id
-          }
-        });
-      } else {
-        // Crear menú para usuario existente
-        menu = await prisma.menu.create({
-          data: {
-            restaurantId: idUnico,
-            restaurantName: user.restaurantName,
-            ownerId: user.id
-          }
-        });
       }
+
+      // Crear menú
+      menu = await prisma.menu.create({
+        data: {
+          restaurantId: idUnico,
+          restaurantName: user.restaurantName,
+          ownerId: user.id
+        }
+      });
     }
 
     // Redirigir al editor con el ID único

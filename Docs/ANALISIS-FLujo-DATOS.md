@@ -351,3 +351,5 @@ menu_items (N por comercio)
 **Última actualización:** 2025-01-XX  
 **Estado:** 🔴 **REQUIERE ACCIÓN INMEDIATA**
 
+
+

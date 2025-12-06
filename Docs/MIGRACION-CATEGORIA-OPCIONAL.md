@@ -31,3 +31,5 @@ Después de ejecutar la migración, verifica:
 - Prisma intentará guardar `null` en un campo `NOT NULL`
 - La API fallará con error de base de datos
 
+
+

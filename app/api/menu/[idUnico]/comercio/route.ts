@@ -80,6 +80,8 @@ export async function PUT(
         socialFacebook: updatedMenu.socialFacebook,
         socialTwitter: updatedMenu.socialTwitter,
         logoUrl: updatedMenu.logoUrl,
+        googleMapsUrl: updatedMenu.googleMapsUrl,
+        googleReviewsUrl: updatedMenu.googleReviewsUrl,
         description: updatedMenu.description
       }
     });

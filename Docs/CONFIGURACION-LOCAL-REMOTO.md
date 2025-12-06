@@ -127,3 +127,5 @@ Get-Content .env.local | Select-String "DATABASE_URL"
 - [Prisma PostgreSQL Docs](https://www.prisma.io/docs/concepts/database-connectors/postgresql)
 - [Supabase Connection Strings](https://supabase.com/docs/guides/database/connecting-to-postgres)
 
+
+

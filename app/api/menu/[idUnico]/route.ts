@@ -9,12 +9,29 @@ export async function GET(
   
   try {
     console.log(`🔍 Cargando menú para ID único: ${idUnico}`);
+    
+    // Debug: Verificar qué menús existen
+    const allMenus = await prisma.menu.findMany({
+      select: { restaurantId: true, restaurantName: true }
+    });
+    console.log(`📋 Menús disponibles en BD:`, allMenus.map(m => `${m.restaurantName} (${m.restaurantId})`));
 
     const menu = await prisma.menu.findFirst({
-      where: { restaurantId: idUnico }
+      where: { restaurantId: idUnico },
+      include: { 
+        owner: {
+          select: {
+            id: true,
+            hasPro: true,
+            restaurantName: true
+          }
+        }
+      }
     });
 
     if (!menu) {
+      console.log(`❌ No se encontró menú para: ${idUnico}`);
+      console.log(`   Menús disponibles: ${allMenus.map(m => m.restaurantId).join(', ')}`);
       return NextResponse.json({
         success: false,
         error: 'Menú no encontrado'
@@ -22,6 +39,7 @@ export async function GET(
     }
 
     console.log(`✅ Menú encontrado: ${menu.restaurantName}`);
+    console.log(`🔍 Owner incluido:`, menu.owner ? `Sí (hasPro: ${menu.owner.hasPro})` : 'No');
 
     const categories = await prisma.category.findMany({
       where: { menuId: menu.id },
@@ -92,6 +110,7 @@ export async function GET(
       googleMapsUrl: menu.googleMapsUrl || '',
       googleReviewsUrl: menu.googleReviewsUrl || '',
       description: menu.description || '',
+      hasPro: menu.owner?.hasPro || false,  // Si el usuario tiene PRO
       categories: [
         ...categoriesWithItems,
         ...(itemsWithoutCategory.length > 0 ? [{
@@ -104,6 +123,8 @@ export async function GET(
         }] : [])
       ]
     };
+    
+    console.log(`🔍 hasPro para ${menu.restaurantName}:`, menu.owner?.hasPro, '→', formattedMenu.hasPro);
 
     console.log(`✅ Menú cargado: ${categoriesWithItems.length} categorías, ${allItems.length} items`);
     

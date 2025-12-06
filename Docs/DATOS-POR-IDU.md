@@ -287,3 +287,5 @@ SELECT waiters FROM menus WHERE "restaurantId" = '5XJ1J37F';
 **Última actualización:** 2025-01-XX
 **Versión del schema:** Prisma schema actual
 
+
+

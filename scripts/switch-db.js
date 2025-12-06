@@ -27,22 +27,16 @@ if (mode === 'local') {
 } else if (mode === 'remote') {
   console.log('🔄 Cambiando a PostgreSQL (Supabase)...');
   
-  // Leer schema PostgreSQL original (guardar backup primero)
-  const postgresSchema = `// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-// NOTA: Los modelos deben copiarse desde schema.sqlite.prisma
-// o mantener ambos schemas sincronizados manualmente
-`;
+  // Leer schema SQLite completo
+  const sqliteSchema = fs.readFileSync(sqliteSchemaPath, 'utf8');
+  
+  // Reemplazar provider y comentario
+  const postgresSchema = sqliteSchema
+    .replace(/provider = "sqlite"/g, 'provider = "postgresql"')
+    .replace(/\/\/ Schema para desarrollo local con SQLite/g, '// Schema para PostgreSQL (Supabase)')
+    .replace(/\/\/ Uso: npx prisma generate --schema=\.\/prisma\/schema\.sqlite\.prisma/g, '// Uso: npx prisma generate')
+    .replace(/\/\/ Copiar todos los modelos desde schema\.prisma/g, '// Schema completo para PostgreSQL')
+    .replace(/\/\/ \(Los enums y modelos son compatibles entre SQLite y PostgreSQL para este caso\)/g, '// Compatible con Supabase');
   
   fs.writeFileSync(schemaPath, postgresSchema);
   
@@ -50,7 +44,7 @@ datasource db {
   console.log('📋 Próximos pasos:');
   console.log('   1. DATABASE_URL="postgresql://..." en .env.local');
   console.log('   2. npx prisma generate');
-  console.log('   3. npx prisma migrate deploy (o db push)');
+  console.log('   3. npx prisma db push (o migrate deploy)');
   
 } else {
   console.error('❌ Modo inválido. Usa: local o remote');

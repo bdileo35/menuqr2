@@ -128,3 +128,5 @@ navigator.bluetooth.requestDevice({
 - [SPP vs BLE Comparison](https://www.bluetooth.com/learn-about-bluetooth/tech-overview/)
 
 
+
+
