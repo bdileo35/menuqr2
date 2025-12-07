@@ -64,7 +64,7 @@ export async function POST(
       const existingItems = await prisma.menuItem.findMany({
         where: { 
           menuId: menu.id,
-          categoryId: null
+          categoryId: undefined
         },
         orderBy: { position: 'desc' },
         take: 1
@@ -88,7 +88,7 @@ export async function POST(
         price: priceNumber,
         code: itemCode,
         position: nextPosition,
-        categoryId: category?.id || null, // Permite null para items sin categoría
+        categoryId: category?.id || undefined, // Permite undefined para items sin categoría
         menuId: menu.id,
         imageUrl: imageUrl || null,
         isAvailable: isAvailable !== undefined ? isAvailable : true,
@@ -167,8 +167,8 @@ export async function PUT(request: NextRequest) {
 
     // Si cambió de categoría (o se quitó la categoría)
     // Comparar considerando null y undefined como equivalentes
-    const currentCategoryId = currentItem.categoryId || null;
-    const newCategoryId = (categoryId && categoryId !== '' && categoryId !== 'null') ? categoryId : null;
+    const currentCategoryId = currentItem.categoryId || undefined;
+    const newCategoryId = (categoryId && categoryId !== '' && categoryId !== 'null') ? categoryId : undefined;
     
     if (newCategoryId !== currentCategoryId) {
       if (newCategoryId) {
@@ -195,13 +195,13 @@ export async function PUT(request: NextRequest) {
         const itemsWithoutCategory = await prisma.menuItem.findMany({
           where: { 
             menuId: currentItem.menuId,
-            categoryId: null
+            categoryId: undefined
           },
           orderBy: { position: 'desc' },
           take: 1
         });
         const newPosition = itemsWithoutCategory.length > 0 ? (itemsWithoutCategory[0].position || 0) + 1 : 0;
-        updateData.categoryId = null;
+        updateData.categoryId = undefined;
         updateData.position = newPosition;
       }
     }

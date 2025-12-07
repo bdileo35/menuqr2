@@ -193,7 +193,7 @@ export async function POST(
             position: idx,
             isAvailable: true,
             menuId: menu.id,
-            categoryId: null // Sin categoría
+            categoryId: undefined // Sin categoría
           }
         });
         totalItems++;
