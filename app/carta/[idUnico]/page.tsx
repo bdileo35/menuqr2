@@ -762,7 +762,7 @@ export default function CartaPage() {
                       </div>
                     ) : (
                       <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} title={`${item.code ? `#${item.code}` : ''}${(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const d = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return (item.code? ' ' : '') + (d||''); })()}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg']; setModalItemImage(item.imageBase64 || item.imageUrl || fallbacks[itemIndex % fallbacks.length]); }}}>
-                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1 flex items-center justify-center bg-gray-200">
                           {item.imageBase64 || item.imageUrl ? (
                             <img 
                               src={
@@ -774,14 +774,23 @@ export default function CartaPage() {
                               alt={item.name} 
                               className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} 
                               onError={(e) => {
-                                // Fallback si la imagen no se encuentra
+                                // Fallback: mostrar icono de cubiertos si la imagen falla
                                 const target = e.currentTarget as HTMLImageElement;
-                                const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg'];
-                                target.src = fallbacks[itemIndex % fallbacks.length];
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent && !parent.querySelector('.icon-cubiertos')) {
+                                  const icon = document.createElement('div');
+                                  icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400';
+                                  icon.innerHTML = '🍽️';
+                                  parent.appendChild(icon);
+                                }
                               }}
                             />
                           ) : (
-                            <img src={['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg'][itemIndex % 10]} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
+                            // Sin imagen: mostrar icono de cubiertos
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl">
+                              🍽️
+                            </div>
                           )}
                         </div>
                         <div className={`flex-1 flex items-center justify-between px-2 py-1 ${item.isAvailable === false ? 'text-gray-400' : isDarkMode ? 'text-white' : 'text-black'}`}>
@@ -809,7 +818,26 @@ export default function CartaPage() {
               <button onClick={()=>setModalItem(null)} className={`${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-gray-300':'bg-gray-200 hover:bg-gray-300 text-gray-700'} w-8 h-8 rounded-full flex items-center justify-center`}>✕</button>
             </div>
             <div className="w-full h-48 rounded-lg overflow-hidden mb-4">
-              <img src={modalItemImage || '/platos/albondigas.jpg'} alt={modalItem.name} className="w-full h-full object-cover" />
+              {modalItemImage ? (
+                <img 
+                  src={modalItemImage} 
+                  alt={modalItem.name} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent && !parent.querySelector('.icon-cubiertos-modal')) {
+                      const icon = document.createElement('div');
+                      icon.className = 'icon-cubiertos-modal w-full h-full flex items-center justify-center text-gray-400 text-6xl bg-gray-100';
+                      icon.innerHTML = '🍽️';
+                      parent.appendChild(icon);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-6xl bg-gray-100">🍽️</div>
+              )}
             </div>
             {modalItem.description && (<div className="mb-4"><p className={`${isDarkMode? 'text-gray-300':'text-gray-600'} text-sm`}>{modalItem.description}</p></div>)}
             <div className="flex items-center justify-between mb-4">
