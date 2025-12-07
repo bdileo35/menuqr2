@@ -57,7 +57,7 @@ export default function CartaPage() {
   const [modalidad, setModalidad] = useState<'delivery' | 'retiro' | 'salon'>('delivery');
   const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
   const [animationActive, setAnimationActive] = useState(false);
-  const [showProCart, setShowProCart] = useState(false);  // Por defecto false, se activa si hasPro=true
+  const [showProCart, setShowProCart] = useState(true);  // TEMPORAL: siempre visible (puenteado)
   const [showProCartModal, setShowProCartModal] = useState(false);
   const [showComandaPreview, setShowComandaPreview] = useState(false);
   const [comandaCode, setComandaCode] = useState('');
@@ -459,6 +459,8 @@ export default function CartaPage() {
         }
       } catch (error) {
         console.error('Error cargando menú desde API:', error);
+        // TEMPORAL: Asegurar que carrito esté visible incluso con errores
+        setShowProCart(true);
         
         // Intentar cargar desde localStorage primero
         const savedMenu = localStorage.getItem('editor-menu-data');
