@@ -77,6 +77,8 @@ model Menu {
   socialFacebook String?
   socialTwitter  String?
   logoUrl        String?
+  // googleMapsUrl  String?  // TODO: Implementar después
+  // googleReviewsUrl String? // TODO: Implementar después
   waiters        String?  // JSON string
   allowOrdering  Boolean  @default(true)
   deliveryEnabled Boolean @default(false)

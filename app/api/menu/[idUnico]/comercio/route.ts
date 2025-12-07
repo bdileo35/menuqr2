@@ -19,8 +19,8 @@ export async function PUT(
       socialFacebook,
       socialTwitter,
       logoUrl,
-      googleMapsUrl,
-      googleReviewsUrl,
+      // googleMapsUrl, // TODO: Implementar después
+      // googleReviewsUrl, // TODO: Implementar después
       whatsappPhone,
       description
     } = body;
@@ -46,8 +46,8 @@ export async function PUT(
     if (socialFacebook !== undefined) menuUpdateData.socialFacebook = socialFacebook?.trim() || null;
     if (socialTwitter !== undefined) menuUpdateData.socialTwitter = socialTwitter?.trim() || null;
     if (logoUrl !== undefined) menuUpdateData.logoUrl = logoUrl?.trim() || null;
-    if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null;
-    if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null;
+    // if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null; // TODO: Implementar después
+    // if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null; // TODO: Implementar después
     if (description !== undefined) menuUpdateData.description = description?.trim() || null;
 
     // Actualizar menú
@@ -80,8 +80,8 @@ export async function PUT(
         socialFacebook: updatedMenu.socialFacebook,
         socialTwitter: updatedMenu.socialTwitter,
         logoUrl: updatedMenu.logoUrl,
-        googleMapsUrl: (updatedMenu as any).googleMapsUrl,
-        googleReviewsUrl: (updatedMenu as any).googleReviewsUrl,
+        // googleMapsUrl: (updatedMenu as any).googleMapsUrl, // TODO: Implementar después
+        // googleReviewsUrl: (updatedMenu as any).googleReviewsUrl, // TODO: Implementar después
         description: updatedMenu.description
       }
     });
