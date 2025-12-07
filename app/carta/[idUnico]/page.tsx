@@ -645,8 +645,8 @@ export default function CartaPage() {
                 src={menuData.logoUrl || '/demo-images/logo.png?v=2'}
                 alt={`Logo ${menuData.restaurantName}`}
                 className="w-[180px] h-auto rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setShowMapsModal(true)}
-                title="Ver ubicación en Google Maps"
+                // onClick={() => setShowMapsModal(true)} // TODO: Implementar después (tenant)
+                // title="Ver ubicación en Google Maps" // TODO: Implementar después (tenant)
                 onError={(e) => { 
                   const target = e.currentTarget as HTMLImageElement;
                   if (target.src !== '/demo-images/Logo.jpg?v=2') {
