@@ -659,9 +659,10 @@ export default function CartaPage() {
             </div>
             <div className="flex flex-col gap-2 ml-auto">
               <div className="flex items-center gap-2 w-full">
-                <button onClick={(e)=>{e.preventDefault();e.stopPropagation();setShowMencionesModal(true);}} className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-gray-300':'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
+                {/* TODO: Implementar después (tenant) */}
+                {/* <button onClick={(e)=>{e.preventDefault();e.stopPropagation();setShowMencionesModal(true);}} className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-gray-300':'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
                   <span className="text-lg">🔍</span><span className="text-sm font-medium">Reseñas</span>
-                </button>
+                </button> */}
                 <button onClick={(e)=>{e.preventDefault();e.stopPropagation();toggleTheme();}} className={`flex-1 h-8 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${isDarkMode? 'bg-gray-700 hover:bg-gray-600 text-yellow-400':'bg-gray-200 hover:bg-gray-300 text-gray-800'}`} title={isDarkMode? 'Cambiar a modo claro':'Cambiar a modo oscuro'}> <span className="text-lg">{isDarkMode?'☀️':'🌙'}</span> <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{isDarkMode?'Claro':'Oscuro'}</span></button>
               </div>
               {showSearch ? (
