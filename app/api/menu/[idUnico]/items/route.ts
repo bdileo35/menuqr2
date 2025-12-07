@@ -195,7 +195,7 @@ export async function PUT(request: NextRequest) {
         const itemsWithoutCategory = await prisma.menuItem.findMany({
           where: { 
             menuId: currentItem.menuId,
-            categoryId: undefined
+            categoryId: null // En Prisma where se usa null para buscar
           },
           orderBy: { position: 'desc' },
           take: 1
