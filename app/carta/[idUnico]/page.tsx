@@ -764,7 +764,22 @@ export default function CartaPage() {
                       <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} title={`${item.code ? `#${item.code}` : ''}${(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const d = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return (item.code? ' ' : '') + (d||''); })()}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg']; setModalItemImage(item.imageBase64 || item.imageUrl || fallbacks[itemIndex % fallbacks.length]); }}}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1">
                           {item.imageBase64 || item.imageUrl ? (
-                            <img src={(item.imageBase64 || item.imageUrl) || ''} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
+                            <img 
+                              src={
+                                // Si es URL de archivo (/platos/{idUnico}/...), usarla directamente
+                                (item.imageUrl && item.imageUrl.startsWith('/platos/')) 
+                                  ? item.imageUrl 
+                                  : (item.imageBase64 || item.imageUrl) || ''
+                              } 
+                              alt={item.name} 
+                              className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} 
+                              onError={(e) => {
+                                // Fallback si la imagen no se encuentra
+                                const target = e.currentTarget as HTMLImageElement;
+                                const fallbacks = ['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg'];
+                                target.src = fallbacks[itemIndex % fallbacks.length];
+                              }}
+                            />
                           ) : (
                             <img src={['/platos/albondigas.jpg','/platos/rabas.jpg','/platos/IMG-20250926-WA0005.jpg','/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/IMG-20251002-WA0005.jpg','/platos/IMG-20251005-WA0007.jpg','/platos/IMG-20251005-WA0012.jpg','/platos/IMG-20251005-WA0014.jpg','/platos/IMG-20251010-WA0011.jpg'][itemIndex % 10]} alt={item.name} className={`w-full h-full object-cover ${item.isAvailable === false ? 'grayscale' : ''}`} />
                           )}

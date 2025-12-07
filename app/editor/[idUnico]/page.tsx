@@ -347,14 +347,43 @@ export default function Editor2() {
       }
       // Procesar imagen
       let imageDataBase64: string | undefined | null = editingItem?.imageBase64;
+      let finalImageUrl: string | null = null;
+      
       if (modalData.removeImage) {
         imageDataBase64 = '';
+        finalImageUrl = null;
       } else if (modalData.imageFile) {
         try {
           imageDataBase64 = await fileToDataURL(modalData.imageFile);
+          
+          // Subir imagen al servidor
+          const uploadResponse = await fetch(`/api/menu/${idUnico}/upload-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageBase64: imageDataBase64,
+              itemName: item.name
+            })
+          });
+          
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            finalImageUrl = uploadData.imageUrl; // /platos/{idUnico}/nombre.jpg
+            console.log('✅ Imagen subida:', finalImageUrl);
+          } else {
+            console.error('Error subiendo imagen, usando base64');
+            finalImageUrl = imageDataBase64; // Fallback a base64
+          }
         } catch (e) {
-          console.error('Error convirtiendo imagen a base64', e);
+          console.error('Error convirtiendo/subiendo imagen', e);
+          finalImageUrl = imageDataBase64 || null; // Fallback
         }
+      } else if (editingItem?.imageBase64 && editingItem.imageBase64.startsWith('/platos/')) {
+        // Si ya es una URL de archivo, mantenerla
+        finalImageUrl = editingItem.imageBase64;
+      } else if (editingItem?.imageBase64) {
+        // Si es base64 antiguo, mantenerlo por ahora
+        finalImageUrl = editingItem.imageBase64;
       }
       
       // Guardar en base de datos
@@ -382,7 +411,7 @@ export default function Editor2() {
         price: priceValue,
         code: item.code?.trim() || '',
         categoryId: categoryIdToSend, // null para sin categoría
-        imageUrl: imageDataBase64 || null,
+        imageUrl: finalImageUrl || null,
         isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
         isPopular: item.isPopular || false,
         isPromo: item.isPromo || false
