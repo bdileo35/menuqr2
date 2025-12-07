@@ -346,15 +346,14 @@ export default function Editor2() {
         return;
       }
       // Procesar imagen
-      let imageDataBase64: string | undefined | null = editingItem?.imageBase64;
       let finalImageUrl: string | null = null;
       
       if (modalData.removeImage) {
-        imageDataBase64 = '';
         finalImageUrl = null;
       } else if (modalData.imageFile) {
+        // Nueva imagen subida
         try {
-          imageDataBase64 = await fileToDataURL(modalData.imageFile);
+          const imageDataBase64 = await fileToDataURL(modalData.imageFile);
           
           // Subir imagen al servidor
           const uploadResponse = await fetch(`/api/menu/${idUnico}/upload-image`, {
@@ -376,14 +375,23 @@ export default function Editor2() {
           }
         } catch (e) {
           console.error('Error convirtiendo/subiendo imagen', e);
-          finalImageUrl = imageDataBase64 || null; // Fallback
+          finalImageUrl = null; // Fallback
         }
-      } else if (editingItem?.imageBase64 && editingItem.imageBase64.startsWith('/platos/')) {
-        // Si ya es una URL de archivo, mantenerla
-        finalImageUrl = editingItem.imageBase64;
-      } else if (editingItem?.imageBase64) {
-        // Si es base64 antiguo, mantenerlo por ahora
-        finalImageUrl = editingItem.imageBase64;
+      } else {
+        // No hay nueva imagen, mantener la existente
+        if (editingItem?.imageUrl && editingItem.imageUrl.startsWith('/platos/')) {
+          // Si ya es una URL de archivo, mantenerla
+          finalImageUrl = editingItem.imageUrl;
+        } else if (editingItem?.imageBase64 && editingItem.imageBase64.startsWith('/platos/')) {
+          // Si imageBase64 es una URL, mantenerla
+          finalImageUrl = editingItem.imageBase64;
+        } else if (editingItem?.imageBase64) {
+          // Si es base64 antiguo, mantenerlo por ahora
+          finalImageUrl = editingItem.imageBase64;
+        } else if (editingItem?.imageUrl) {
+          // Si hay imageUrl, mantenerla
+          finalImageUrl = editingItem.imageUrl;
+        }
       }
       
       // Guardar en base de datos
