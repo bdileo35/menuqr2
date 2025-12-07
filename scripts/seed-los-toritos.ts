@@ -17,16 +17,16 @@ async function main() {
       phone: '+54 11 3840-2399',
       address: 'Zañartu 1547, CABA (CLUB PEÑAROL)',
       role: Role.ADMIN,
-      restaurantId: 'los-toritos',
+      restaurantId: '5XJ1J39E', // ID único correcto
     },
   });
 
   // 2. Crear menú
   const menu = await prisma.menu.upsert({
-    where: { restaurantId: 'los-toritos' },
+    where: { restaurantId: '5XJ1J39E' },
     update: {},
     create: {
-      restaurantId: 'los-toritos',
+      restaurantId: '5XJ1J39E', // ID único correcto
       restaurantName: 'Los Toritos 🐃',
       description: 'El sabor de lo artesanal',
       contactPhone: '+54 11 3840-2399',
@@ -159,8 +159,8 @@ async function main() {
   console.log(`📊 Resumen:`);
   console.log(`   - Categorías: ${categories.length}`);
   console.log(`   - Items: ${items.length}`);
-  console.log(`   - Restaurant ID: los-toritos`);
-  console.log(`   - URL: /carta/los-toritos`);
+  console.log(`   - Restaurant ID: 5XJ1J39E`);
+  console.log(`   - URL: /carta/5XJ1J39E`);
 }
 
 main()
