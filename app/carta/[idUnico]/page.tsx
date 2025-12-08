@@ -748,12 +748,18 @@ export default function CartaPage() {
                 <div className={`px-3 pb-3 ${category.name.toUpperCase().includes('PROMO') ? 'pt-3 flex flex-wrap justify-evenly gap-2' : 'pt-0 space-y-0'}`}>
                   {filterItems(category.items).map((item, itemIndex) => (
                     category.name.toUpperCase().includes('PROMO') ? (
-                      <div key={item.id || itemIndex} className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full rounded-lg overflow-hidden" style={{ minHeight: '140px' }} onClick={()=>{setModalItem(item); const promoImages = ['/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/rabas.jpg']; setModalItemImage(promoImages[itemIndex % promoImages.length]);}} title="Click para ver detalles">
+                      <div key={item.id || itemIndex} className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full rounded-lg overflow-hidden" style={{ minHeight: '140px' }} onClick={()=>{setModalItem(item); const promoImages = [`/platos/${idUnico}/milanesa-completa.jpg`,`/platos/${idUnico}/vacio-papas.jpg`,`/platos/${idUnico}/rabas.jpg`]; const imageSrc = item.imageUrl && item.imageUrl.startsWith('/platos/') ? item.imageUrl : (item.imageBase64 || item.imageUrl || promoImages[itemIndex % promoImages.length]); setModalItemImage(imageSrc);}} title="Click para ver detalles">
                         <div className={`px-3 py-2 border-b ${isDarkMode? 'bg-gray-700 border-gray-600':'bg-gray-200 border-gray-300'}`}>
                           <h3 className={`text-sm font-bold text-center ${isDarkMode? 'text-white':'text-gray-800'}`}>{(/\([^\)]*\)\s*$/.test(item.name||'')) ? (item.name||'').replace(/\s*\([^)]*\)\s*$/, '').trim() : item.name}</h3>
                         </div>
-                        <div className="h-24 overflow-hidden">
-                          <img src={['/platos/milanesa-completa.jpg','/platos/vacio-papas.jpg','/platos/rabas.jpg'][itemIndex % 3]} alt={item.name} className="w-full h-full object-cover" />
+                        <div className="h-24 overflow-hidden flex items-center justify-center bg-gray-100">
+                          {item.imageUrl && item.imageUrl.startsWith('/platos/') ? (
+                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" onError={(e) => { const target = e.currentTarget; target.style.display = 'none'; const parent = target.parentElement; if (parent && !parent.querySelector('.icon-cubiertos')) { const icon = document.createElement('div'); icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl'; icon.innerHTML = '🍽️'; parent.appendChild(icon); }}} />
+                          ) : item.imageBase64 || item.imageUrl ? (
+                            <img src={item.imageBase64 || item.imageUrl || ''} alt={item.name} className="w-full h-full object-cover" onError={(e) => { const target = e.currentTarget; target.style.display = 'none'; const parent = target.parentElement; if (parent && !parent.querySelector('.icon-cubiertos')) { const icon = document.createElement('div'); icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl'; icon.innerHTML = '🍽️'; parent.appendChild(icon); }}} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">🍽️</div>
+                          )}
                         </div>
                         <div className={`${isDarkMode? 'bg-gray-700':'bg-gray-200'} p-2`}>
                           {(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const desc = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return desc ? (<p className={`${isDarkMode? 'text-gray-300':'text-gray-800'} text-xs text-center min-h-[2rem] flex items-center justify-center`}>{desc}</p>) : null; })()}
