@@ -21,13 +21,17 @@ export async function GET() {
   };
 
   // 2. Verificar formato de DATABASE_URL
-  if (hasDatabaseUrl) {
-    const dbUrl = process.env.DATABASE_URL;
+  if (hasDatabaseUrl && databaseUrl) {
     diagnostics.checks.databaseUrlFormat = {
-      startsWithPostgres: dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'),
-      hasSSL: dbUrl.includes('sslmode=require'),
-      hasHost: dbUrl.includes('@') && dbUrl.includes(':'),
+      startsWithPostgres: databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://'),
+      hasSSL: databaseUrl.includes('sslmode=require'),
+      hasHost: databaseUrl.includes('@') && databaseUrl.includes(':'),
       format: 'OK'
+    };
+  } else {
+    diagnostics.checks.databaseUrlFormat = {
+      status: 'NO_CONFIGURADA',
+      format: 'ERROR'
     };
   }
 
