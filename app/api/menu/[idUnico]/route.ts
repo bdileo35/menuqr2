@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: Request,
   { params }: { params: { idUnico: string } }
@@ -134,12 +136,30 @@ export async function GET(
       menu: formattedMenu
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error(`❌ Error:`, error);
+    console.error('Error stack:', error?.stack);
+    console.error('Error message:', error?.message);
+    
+    // Verificar si es error de conexión
+    const isConnectionError = error?.message?.includes('Can\'t reach database') || 
+                              error?.message?.includes('P1001') ||
+                              error?.message?.includes('connection') ||
+                              error?.code === 'P1001';
+    
     return NextResponse.json({
       success: false,
-      error: 'Error interno del servidor',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Error desconocido') : undefined
+      error: isConnectionError 
+        ? 'Error de conexión a la base de datos. Verifica DATABASE_URL en Vercel.'
+        : 'Error interno del servidor',
+      details: error?.message || 'Error desconocido',
+      type: isConnectionError ? 'CONNECTION_ERROR' : 'UNKNOWN_ERROR'
     }, { status: 500 });
+  } finally {
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignorar errores de desconexión
+    }
   }
 }

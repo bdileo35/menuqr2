@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🌱 Iniciando seed de "Los Toritos" (5XJ1J39E)...');
@@ -174,14 +176,31 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('❌ Error en seed Los Toritos:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    
+    // Verificar si es error de conexión
+    const isConnectionError = error.message?.includes('Can\'t reach database') || 
+                              error.message?.includes('P1001') ||
+                              error.message?.includes('connection');
+    
     return NextResponse.json(
       {
         success: false,
-        error: 'Error al ejecutar seed',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        error: isConnectionError 
+          ? 'Error de conexión a la base de datos. Verifica DATABASE_URL en Vercel.'
+          : 'Error al ejecutar seed',
+        details: error.message || 'Error desconocido',
+        type: isConnectionError ? 'CONNECTION_ERROR' : 'UNKNOWN_ERROR'
       },
       { status: 500 }
     );
+  } finally {
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignorar errores de desconexión
+    }
   }
 }
 
