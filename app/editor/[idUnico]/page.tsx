@@ -240,8 +240,9 @@ export default function Editor2() {
         
         // Error de conexión - usar datos demo solo si es el IDU por defecto
         console.log('⚠️ Error de conexión a la base de datos');
-        if (idUnico === '5XJ1J37F') {
-          console.log('⚠️ Usando datos demo para IDU por defecto (5XJ1J37F)');
+        // Removido fallback hardcodeado - sistema multitenant puro
+        if (false) { // Nunca se ejecuta, solo para mantener estructura
+          console.log('⚠️ Fallback deshabilitado - sistema multitenant');
           const tempData = getDemoMenuData();
           setMenuData(tempData);
           

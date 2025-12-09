@@ -35,7 +35,7 @@ export default function CartaPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const idUnico = (params?.idUnico as string) || '5XJ1J37F';
+  const idUnico = params?.idUnico as string;
   // Detectar si es modo interno (uso en cocina) - por parámetro o por defecto en Salón
   const isModoInterno = searchParams?.get('interno') === '1' || false;
   const [menuData, setMenuData] = useState<RestaurantData | null>(null);
@@ -93,7 +93,7 @@ export default function CartaPage() {
     const mode = modeOverride || modalidad;
     const code = codeOverride || orderCode;
     const lines: string[] = [];
-    lines.push(`Pedido - ${menuData?.restaurantName || 'Esquina Pompeya'}`);
+    lines.push(`Pedido - ${menuData?.restaurantName || 'Restaurante'}`);
     if (code) {
       const modeLabel = mode === 'delivery' ? 'Delivery' : mode === 'retiro' ? 'Take Away' : 'Salón';
       lines.push(`${modeLabel} - ${code}`);
@@ -474,18 +474,6 @@ export default function CartaPage() {
             phone: setup.telefono || 'Teléfono no especificado',
             logoUrl: setup.logoUrl || null,
             categories: menuData.categories || menuData || []
-          };
-          setMenuData(restaurantInfo);
-        } else if (idUnico === '5XJ1J37F') {
-          // Solo usar datos demo para el IDU por defecto
-          console.log('⚠️ Usando datos demo para IDU por defecto (5XJ1J37F)');
-          const demoData = getDemoMenuData();
-          const restaurantInfo: RestaurantData = {
-            restaurantName: demoData.restaurantName,
-            address: 'Av. Corrientes 1234, Buenos Aires',
-            phone: '+54 11 1234-5678',
-            logoUrl: null,
-            categories: demoData.categories
           };
           setMenuData(restaurantInfo);
         } else {
@@ -1183,7 +1171,7 @@ export default function CartaPage() {
                 {/* Footer solo si NO es uso interno (Salón) */}
                 {(modalidad !== 'salon' && !isModoInterno) && (
                   <div className="mt-3 pt-2 border-t border-dashed border-black text-center text-xs">
-                    <div>{menuData?.restaurantName || 'Esquina Pompeya'}</div>
+                    <div>{menuData?.restaurantName || 'Restaurante'}</div>
                     <div>{menuData?.address || ''}</div>
                   </div>
                 )}
@@ -1233,7 +1221,7 @@ export default function CartaPage() {
             </div>
             <iframe
               className="w-full h-full"
-              src={`https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || 'Esquina Pompeya')}&output=embed`}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(menuData?.restaurantName || 'Restaurante')}&output=embed`}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />

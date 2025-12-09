@@ -7,7 +7,19 @@ import NavBar from '../components/NavBar';
 export default function Configuracion() {
   const router = useRouter();
   const params = useParams();
-  const idUnico = (params?.idUnico as string) || '5XJ1J37F';
+  const idUnico = params?.idUnico as string;
+  
+  if (!idUnico) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">❌ ID Único requerido</h1>
+          <p className="text-gray-600">La URL debe incluir un ID único válido</p>
+          <p className="text-sm text-gray-500 mt-2">Ejemplo: /configuracion/5XJ1J37F</p>
+        </div>
+      </div>
+    );
+  }
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
 
   return (
@@ -31,7 +43,7 @@ export default function Configuracion() {
             <div className="flex items-center gap-2">
               {/* Botón Carta Menu */}
               <button 
-                onClick={() => router.push('/carta/5XJ1J37F')}
+                onClick={() => router.push(`/carta/${idUnico}`)}
                 className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors ${
                   isDarkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
