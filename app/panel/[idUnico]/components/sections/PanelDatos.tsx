@@ -127,196 +127,282 @@ export default function PanelDatos({ idUnico }: PanelDatosProps) {
         </p>
       </div>
 
-      <div className="space-y-4">
-        {/* Nombre del Restaurante */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Nombre</label>
-          <input
-            type="text"
-            value={formData.restaurantName}
-            onChange={(e) => handleInputChange('restaurantName', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Nombre del restaurante"
-          />
-        </div>
+      {/* Card principal con bordes y sombra */}
+      <div className={`rounded-xl border-2 transition-colors duration-300 overflow-hidden ${
+        isDarkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200 shadow-sm'
+      }`}>
+        <div className="p-6 space-y-5">
+          
+          {/* Sección: Información Básica */}
+          <div className="space-y-4">
+            <h3 className={`text-lg font-semibold mb-3 pb-2 border-b ${
+              isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-800 border-gray-200'
+            }`}>
+              🏢 Información Básica
+            </h3>
+            
+            {/* Nombre del Restaurante */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>🏷️</span> <span>Nombre</span>
+              </label>
+              <input
+                type="text"
+                value={formData.restaurantName}
+                onChange={(e) => handleInputChange('restaurantName', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Nombre del restaurante"
+              />
+            </div>
 
-        {/* Dirección */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Dirección</label>
-          <input
-            type="text"
-            value={formData.address}
-            onChange={(e) => handleInputChange('address', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Dirección completa"
-          />
-        </div>
+            {/* Dirección */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>📍</span> <span>Dirección</span>
+              </label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Dirección completa"
+              />
+            </div>
 
-        {/* Teléfono */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Teléfono</label>
-          <input
-            type="text"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Teléfono de contacto"
-          />
-        </div>
-
-        {/* WhatsApp */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">WhatsApp</label>
-          <input
-            type="text"
-            value={formData.whatsappPhone}
-            onChange={(e) => handleInputChange('whatsappPhone', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Número de WhatsApp para pedidos"
-          />
-        </div>
-
-        {/* Email */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Email</label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Email de contacto"
-          />
-        </div>
-
-        {/* Logo */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Logo</label>
-          <div className="flex-1 flex items-center gap-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleLogoChange}
-              className="hidden"
-              id="logoInput"
-            />
-            <input
-              type="text"
-              value={formData.logoUrl || ''}
-              onChange={(e) => handleInputChange('logoUrl', e.target.value)}
-              className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                  : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-              }`}
-              placeholder="URL del logo o data:image..."
-            />
-            <label
-              htmlFor="logoInput"
-              className={`px-3 py-1.5 rounded-lg border cursor-pointer text-sm transition-colors ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-200 border-gray-300 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              📁
-            </label>
-            {formData.logoUrl && (
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, logoUrl: '' }))}
-                className="px-2 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                ✕
-              </button>
-            )}
+            {/* Descripción */}
+            <div className="flex items-start gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2 pt-2">
+                <span>📝</span> <span>Descripción</span>
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                rows={3}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all resize-none focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Breve descripción del restaurante"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Descripción */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Descripción</label>
-          <input
-            type="text"
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Breve descripción del restaurante"
-          />
-        </div>
+          {/* Sección: Contacto */}
+          <div className="space-y-4 pt-4 border-t border-gray-700">
+            <h3 className={`text-lg font-semibold mb-3 pb-2 border-b ${
+              isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-800 border-gray-200'
+            }`}>
+              📞 Contacto
+            </h3>
+            
+            {/* Teléfono */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>☎️</span> <span>Teléfono</span>
+              </label>
+              <input
+                type="text"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Teléfono de contacto"
+              />
+            </div>
 
-        {/* Instagram */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Instagram</label>
-          <input
-            type="text"
-            value={formData.instagram}
-            onChange={(e) => handleInputChange('instagram', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="@usuario_instagram"
-          />
-        </div>
+            {/* WhatsApp */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>💬</span> <span>WhatsApp</span>
+              </label>
+              <input
+                type="text"
+                value={formData.whatsappPhone}
+                onChange={(e) => handleInputChange('whatsappPhone', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Número para pedidos (ej: 5491165695648)"
+              />
+            </div>
 
-        {/* Facebook */}
-        <div className="flex items-center gap-4">
-          <label className="w-32 text-sm font-medium">Facebook</label>
-          <input
-            type="text"
-            value={formData.facebook}
-            onChange={(e) => handleInputChange('facebook', e.target.value)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
-                : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
-            }`}
-            placeholder="Nombre de página de Facebook"
-          />
+            {/* Email */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>✉️</span> <span>Email</span>
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Email de contacto"
+              />
+            </div>
+          </div>
+
+          {/* Sección: Redes Sociales */}
+          <div className="space-y-4 pt-4 border-t border-gray-700">
+            <h3 className={`text-lg font-semibold mb-3 pb-2 border-b ${
+              isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-800 border-gray-200'
+            }`}>
+              🌐 Redes Sociales
+            </h3>
+            
+            {/* Instagram */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>📷</span> <span>Instagram</span>
+              </label>
+              <input
+                type="text"
+                value={formData.instagram}
+                onChange={(e) => handleInputChange('instagram', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="@usuario_instagram"
+              />
+            </div>
+
+            {/* Facebook */}
+            <div className="flex items-center gap-4">
+              <label className="w-28 text-sm font-medium flex items-center gap-2">
+                <span>👥</span> <span>Facebook</span>
+              </label>
+              <input
+                type="text"
+                value={formData.facebook}
+                onChange={(e) => handleInputChange('facebook', e.target.value)}
+                className={`flex-1 py-2 px-4 rounded-lg border transition-all focus:ring-2 focus:ring-blue-500/50 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                }`}
+                placeholder="Nombre de página de Facebook"
+              />
+            </div>
+          </div>
+
+          {/* Sección: Logo */}
+          <div className="pt-4 border-t border-gray-700">
+            <h3 className={`text-lg font-semibold mb-3 pb-2 border-b ${
+              isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-800 border-gray-200'
+            }`}>
+              🖼️ Logo del Restaurante
+            </h3>
+            
+            <div className="flex items-start gap-4">
+              <label className="w-28 text-sm font-medium pt-2">
+                Logo
+              </label>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="hidden"
+                  id="logoInput"
+                />
+                <div className="relative">
+                  <label
+                    htmlFor="logoInput"
+                    className={`block w-full min-h-[120px] border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-blue-400 ${
+                      isDarkMode 
+                        ? 'border-gray-600 bg-gray-700/50 hover:bg-gray-700' 
+                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    {formData.logoUrl ? (
+                      <div className="w-full h-full flex items-center justify-center p-4">
+                        <img 
+                          src={formData.logoUrl} 
+                          alt="Logo" 
+                          className="max-w-full max-h-32 object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center py-8">
+                        <div className="text-center">
+                          <div className="text-3xl mb-2">📷</div>
+                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Haz clic para subir imagen
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </label>
+                  {formData.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, logoUrl: '' }))}
+                      className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                      title="Eliminar logo"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {formData.logoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('logoInput')?.click()}
+                    className={`mt-2 text-xs underline ${isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-700'}`}
+                  >
+                    Cambiar logo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Botón Guardar y Siguiente */}
-      <div className="mt-6 flex justify-between items-center">
+      {/* Botón Guardar */}
+      <div className="mt-6 flex justify-end">
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-8 py-3 rounded-lg font-semibold transition-all shadow-lg ${
             saving
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
-          } text-white`}
+              : 'bg-blue-600 hover:bg-blue-700 hover:shadow-xl'
+          } text-white flex items-center gap-2`}
         >
-          {saving ? '⏳ Guardando...' : '💾 Guardar Datos'}
+          {saving ? (
+            <>
+              <span className="animate-spin">⏳</span>
+              <span>Guardando...</span>
+            </>
+          ) : (
+            <>
+              <span>💾</span>
+              <span>Guardar Datos</span>
+            </>
+          )}
         </button>
-        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          💡 Completa los datos y presiona "Siguiente" en el menú inferior
-        </div>
       </div>
     </div>
   );
