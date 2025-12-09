@@ -110,6 +110,7 @@ export async function GET(
       // googleMapsUrl: (menu as any).googleMapsUrl || '', // TODO: Implementar después
       // googleReviewsUrl: (menu as any).googleReviewsUrl || '', // TODO: Implementar después
       description: menu.description || '',
+      waiters: (menu as any).waiters || '',
       hasPro: menu.owner?.hasPro || false,  // Si el usuario tiene PRO
       categories: [
         ...categoriesWithItems,

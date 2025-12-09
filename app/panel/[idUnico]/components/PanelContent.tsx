@@ -64,9 +64,7 @@ export default function PanelContent({ idUnico, user, onLogout }: PanelContentPr
       {/* Contenedor principal con NavBar */}
       <div className="max-w-7xl mx-auto px-4 py-6 pb-24">
         {/* Contenido de la sección actual */}
-        <div className={`rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          {renderSection()}
-        </div>
+        {renderSection()}
       </div>
 
       {/* NavBar fijo en la parte inferior */}

@@ -22,7 +22,8 @@ export async function PUT(
       // googleMapsUrl, // TODO: Implementar después
       // googleReviewsUrl, // TODO: Implementar después
       whatsappPhone,
-      description
+      description,
+      waiters
     } = body;
 
     // Buscar menú
@@ -49,6 +50,7 @@ export async function PUT(
     // if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null; // TODO: Implementar después
     // if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null; // TODO: Implementar después
     if (description !== undefined) menuUpdateData.description = description?.trim() || null;
+    if (waiters !== undefined) menuUpdateData.waiters = waiters?.trim() || null;
 
     // Actualizar menú
     const updatedMenu = await prisma.menu.update({
