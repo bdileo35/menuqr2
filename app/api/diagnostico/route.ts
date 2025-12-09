@@ -11,11 +11,12 @@ export async function GET() {
   };
 
   // 1. Verificar DATABASE_URL
-  const hasDatabaseUrl = !!process.env.DATABASE_URL;
+  const databaseUrl = process.env.DATABASE_URL;
+  const hasDatabaseUrl = !!databaseUrl;
   diagnostics.checks.databaseUrl = {
     exists: hasDatabaseUrl,
-    preview: hasDatabaseUrl 
-      ? `${process.env.DATABASE_URL.substring(0, 30)}...` 
+    preview: hasDatabaseUrl && databaseUrl
+      ? `${databaseUrl.substring(0, 30)}...` 
       : 'NO CONFIGURADA'
   };
 
