@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getDemoMenuData } from '@/lib/demo-data';
+import { getDemoMenuData, getDemoMenuDataLosToritos } from '@/lib/demo-data';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useParams } from 'next/navigation';
 import NavBar from '@/components/NavBar';
@@ -238,12 +238,21 @@ export default function Editor2() {
     } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // Error de conexión - usar datos demo solo si es el IDU por defecto
+        // FALLBACK: Solo en Vercel (producción), usar datos demo si falla la conexión
         console.log('⚠️ Error de conexión a la base de datos');
-        // Removido fallback hardcodeado - sistema multitenant puro
-        if (false) { // Nunca se ejecuta, solo para mantener estructura
-          console.log('⚠️ Fallback deshabilitado - sistema multitenant');
-          const tempData = getDemoMenuData();
+        const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+        
+        if (isVercel && (idUnico === '5XJ1J37F' || idUnico === '5XJ1J39E')) {
+          console.log(`⚠️ Usando datos demo para ${idUnico} (fallback en Vercel)`);
+          
+          let tempData;
+          if (idUnico === '5XJ1J37F') {
+            tempData = getDemoMenuData();
+          } else {
+            // 5XJ1J39E - Los Toritos
+            tempData = getDemoMenuDataLosToritos();
+          }
+          
           setMenuData(tempData);
           
           // Expandir todas las categorías por defecto

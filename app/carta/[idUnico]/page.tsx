@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { getDemoMenuData } from '@/lib/demo-data';
+import { getDemoMenuData, getDemoMenuDataLosToritos } from '@/lib/demo-data';
 import { useAppTheme } from '../../hooks/useAppTheme';
 
 interface MenuItem {
@@ -462,26 +462,56 @@ export default function CartaPage() {
         // TEMPORAL: Asegurar que carrito esté visible incluso con errores
         setShowProCart(true);
         
-        // Intentar cargar desde localStorage primero
-        const savedMenu = localStorage.getItem('editor-menu-data');
-        const setupData = localStorage.getItem('setup-comercio-data');
-        if (savedMenu && setupData) {
-          const menuData = JSON.parse(savedMenu);
-          const setup = JSON.parse(setupData);
+        // FALLBACK: Solo en Vercel (producción), usar datos demo si falla la conexión
+        const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+        
+        if (isVercel && (idUnico === '5XJ1J37F' || idUnico === '5XJ1J39E')) {
+          console.log(`⚠️ Error de conexión en Vercel - usando datos demo para ${idUnico}`);
+          
+          let demoData;
+          let address, phone;
+          
+          if (idUnico === '5XJ1J37F') {
+            demoData = getDemoMenuData();
+            address = 'Av. Fernández de la Cruz 1100, Buenos Aires';
+            phone = '+54 11 4911-6666';
+          } else {
+            // 5XJ1J39E - Los Toritos
+            demoData = getDemoMenuDataLosToritos();
+            address = 'Zañartu 1547, CABA (CLUB PEÑAROL)';
+            phone = '+54 11 3840-2399';
+          }
+          
           const restaurantInfo: RestaurantData = {
-            restaurantName: setup.nombreComercio || 'Mi Restaurante',
-            address: setup.direccion || 'Dirección no especificada',
-            phone: setup.telefono || 'Teléfono no especificado',
-            logoUrl: setup.logoUrl || null,
-            categories: menuData.categories || menuData || []
+            restaurantName: demoData.restaurantName,
+            address: address,
+            phone: phone,
+            logoUrl: null,
+            categories: demoData.categories
           };
           setMenuData(restaurantInfo);
         } else {
-          // Para otros IDUs con error de conexión, NO marcar como "no encontrado"
-          // Solo mostrar error de conexión
-          console.log(`⚠️ Error de conexión para IDU: ${idUnico}. No se puede verificar si existe`);
-          setConnectionError(true);
-          setMenuData(null);
+          // Intentar cargar desde localStorage primero
+          const savedMenu = localStorage.getItem('editor-menu-data');
+          const setupData = localStorage.getItem('setup-comercio-data');
+          if (savedMenu && setupData) {
+            const menuData = JSON.parse(savedMenu);
+            const setup = JSON.parse(setupData);
+            const restaurantInfo: RestaurantData = {
+              restaurantName: setup.nombreComercio || 'Mi Restaurante',
+              address: setup.direccion || 'Dirección no especificada',
+              phone: setup.telefono || 'Teléfono no especificado',
+              logoUrl: setup.logoUrl || null,
+              categories: menuData.categories || menuData || []
+            };
+            setMenuData(restaurantInfo);
+          } else {
+            // Para otros IDUs con error de conexión, NO marcar como "no encontrado"
+            // Solo mostrar error de conexión
+            console.log(`⚠️ Error de conexión para IDU: ${idUnico}. No se puede verificar si existe`);
+            setConnectionError(true);
+            setMenuData(null);
+          }
         }
       } finally {
         setLoading(false);

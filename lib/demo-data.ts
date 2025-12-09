@@ -92,3 +92,49 @@ export function getDemoMenuData(): RestaurantData {
     ]
   };
 }
+
+// Datos demo para Los Toritos (5XJ1J39E)
+export function getDemoMenuDataLosToritos(): RestaurantData {
+  return {
+    restaurantName: 'Los Toritos 🐃',
+    categories: [
+      {
+        id: 'especiales',
+        name: 'Especiales',
+        code: '01',
+        items: [
+          { id: '1', name: 'Especial los toritos 🐃', price: '$12500', description: '1/4 panceta + huevo frito, 1/4 salchicha con mostaza, 1/4 papas fritas, 1/4 calabresa. Caos controlado.', isAvailable: true, code: '0101' }
+        ]
+      },
+      {
+        id: 'pizzas',
+        name: 'Pizzas',
+        code: '02',
+        items: [
+          { id: '2', name: 'Muzza', price: '$8500', description: 'Mozzarella clásica', isAvailable: true, code: '0201' },
+          { id: '3', name: 'Napolitana', price: '$9500', description: 'Muzza, tomate, ajo, albahaca', isAvailable: true, code: '0202' },
+          { id: '4', name: 'Calabresa', price: '$10500', description: 'Muzza, calabresa, morrón', isAvailable: true, code: '0203' }
+        ]
+      },
+      {
+        id: 'empanadas',
+        name: 'Empanadas',
+        code: '03',
+        items: [
+          { id: '5', name: 'Carne', price: '$800', description: 'Empanada de carne casera', isAvailable: true, code: '0301' },
+          { id: '6', name: 'Pollo', price: '$800', description: 'Empanada de pollo', isAvailable: true, code: '0302' },
+          { id: '7', name: 'Jamón y Queso', price: '$800', description: 'Empanada de jamón y queso', isAvailable: true, code: '0303' }
+        ]
+      },
+      {
+        id: 'promos',
+        name: 'Promos de la Semana',
+        code: '04',
+        items: [
+          { id: '8', name: 'PROMO 1: 2 muzza + 6 empanadas', price: '$20000', description: '2 pizzas muzza + 6 empanadas a elección', isAvailable: true, code: '0401' },
+          { id: '9', name: 'PROMO 2: 1 calzone + 4 empanadas', price: '$15000', description: '1 calzone a elección + 4 empanadas', isAvailable: true, code: '0402' }
+        ]
+      }
+    ]
+  };
+}
