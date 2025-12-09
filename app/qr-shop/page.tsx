@@ -8,16 +8,18 @@ export default function QRShopPage() {
   const [isDarkMode] = useState(true); // Modo oscuro por defecto
   const [loading, setLoading] = useState(false);
 
-  // COMENTADO: Funcionalidad de MercadoPago temporalmente deshabilitada
   const handleComprar = async (productId: string) => {
-    // setLoading(true);
+    setLoading(true);
     
-    // Redirigir al flujo FUNCIONAL real (con sello "En Desarrollo")
     if (productId === 'menuqr') {
-      router.push('/setup-comercio');
+      router.push('/comprar?plan=standard');
+    } else if (productId === 'menuqrpro') {
+      router.push('/comprar?plan=pro');
     } else {
       alert('Producto en desarrollo - ' + productId);
     }
+    
+    setLoading(false);
     
     /* COMENTADO - MERCADOPAGO
     try {
@@ -54,7 +56,6 @@ export default function QRShopPage() {
     */
   };
 
-  const [period, setPeriod] = useState<'mensual' | 'anual'>('mensual');
   const [menuPlan, setMenuPlan] = useState<'basic' | 'pro'>('basic');
   const products = [
     {
@@ -72,10 +73,10 @@ export default function QRShopPage() {
       id: 'menuqr',
       name: 'MenuQR',
       subtitle: 'Cartas Digitales + Scanner OCR',
-      priceBasicMonthly: 13999,
-      priceBasicYearly: 139990,
-      priceProMonthly: 17999,
-      priceProYearly: 179990,
+      priceBasicMonthly: 0, // No se usa (solo anual)
+      priceBasicYearly: 140000,
+      priceProMonthly: 0, // No se usa (solo anual)
+      priceProYearly: 190000,
       description: 'Digitaliza tu carta y crea menús digitales profesionales',
       featuresBasic: ['Scanner OCR automático', 'Menús responsivos', 'Pedidos por WhatsApp', 'Panel de gestión'],
       featuresPro: ['Carrito centralizado', 'Delivery/Retiro', 'Pago Mercado Pago', 'Ticket por WhatsApp'],
@@ -158,19 +159,16 @@ export default function QRShopPage() {
                   ) : (
                     <div className="mt-4">
                       <div className="flex items-center justify-center gap-2 mb-2">
-                        <button onClick={()=>setMenuPlan('basic')} className={`px-3 py-1 rounded ${menuPlan==='basic'?'bg-white text-emerald-700':'bg-emerald-700 text-white/90'}`}>MenuQR</button>
-                        <button onClick={()=>setMenuPlan('pro')} className={`px-3 py-1 rounded ${menuPlan==='pro'?'bg-white text-emerald-700':'bg-emerald-700 text-white/90'}`}>Pro</button>
-                        <div className="mx-2"/>
-                        <button onClick={()=>setPeriod('mensual')} className={`px-3 py-1 rounded ${period==='mensual'?'bg-black/20':'bg-black/10'}`}>Mensual</button>
-                        <button onClick={()=>setPeriod('anual')} className={`px-3 py-1 rounded ${period==='anual'?'bg-black/20':'bg-black/10'}`}>Anual</button>
+                        <button onClick={()=>setMenuPlan('basic')} className={`px-3 py-1 rounded ${menuPlan==='basic'?'bg-white text-emerald-700':'bg-emerald-700 text-white/90'}`}>Standard</button>
+                        <button onClick={()=>setMenuPlan('pro')} className={`px-3 py-1 rounded ${menuPlan==='pro'?'bg-white text-emerald-700':'bg-emerald-700 text-white/90'}`}>PRO</button>
                       </div>
                       <div className="text-3xl font-bold">
-                        {menuPlan==='basic' ? (
-                          period==='mensual' ? `$${(product as any).priceBasicMonthly.toLocaleString('es-AR')}/mes` : `$${(product as any).priceBasicYearly.toLocaleString('es-AR')}/año`
-                        ) : (
-                          period==='mensual' ? `$${(product as any).priceProMonthly.toLocaleString('es-AR')}/mes` : `$${(product as any).priceProYearly.toLocaleString('es-AR')}/año`
-                        )}
+                        {menuPlan==='basic' 
+                          ? `$${(product as any).priceBasicYearly.toLocaleString('es-AR')}/año`
+                          : `$${(product as any).priceProYearly.toLocaleString('es-AR')}/año`
+                        }
                       </div>
+                      <div className="text-sm opacity-90 mt-1">Plan Anual</div>
                     </div>
                   )}
                 </div>
@@ -200,19 +198,23 @@ export default function QRShopPage() {
                               { f: 'Carrito centralizado', b: false, p: true },
                               { f: 'Delivery / Retiro', b: false, p: true },
                               { f: 'Pago Mercado Pago', b: false, p: true },
-                              { f: 'Ticket por WhatsApp', b: true, p: true },
+                              { f: 'Ticket por WhatsApp', b: false, p: true },
+                              { f: 'Precio Anual', b: `$${(product as any).priceBasicYearly.toLocaleString('es-AR')}`, p: `$${(product as any).priceProYearly.toLocaleString('es-AR')}` },
                             ].map((row, i) => (
-                              <tr key={i} className="bg-gray-800">
-                                <td className="px-3 py-2 text-gray-300 text-left">{row.f}</td>
-                                <td className="px-3 py-2 text-center">{row.b ? '✔️' : '—'}</td>
-                                <td className="px-3 py-2 text-center">{row.p ? '✔️' : '—'}</td>
+                              <tr key={i} className={`bg-gray-800 ${i === 8 ? 'border-t-2 border-gray-600' : ''}`}>
+                                <td className={`px-3 py-2 text-left ${i === 8 ? 'font-bold text-white' : 'text-gray-300'}`}>
+                                  {row.f}
+                                </td>
+                                <td className={`px-3 py-2 text-center ${i === 8 ? 'font-bold text-white' : ''}`}>
+                                  {typeof row.b === 'boolean' ? (row.b ? '✔️' : '—') : row.b}
+                                </td>
+                                <td className={`px-3 py-2 text-center ${i === 8 ? 'font-bold text-white' : ''}`}>
+                                  {typeof row.p === 'boolean' ? (row.p ? '✔️' : '—') : row.p}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                        <div className="text-xs text-gray-400 mt-2">
-                          Mensual: ${ (product as any).priceBasicMonthly.toLocaleString('es-AR') } (MenuQR) / ${ (product as any).priceProMonthly.toLocaleString('es-AR') } (Pro) — Anual: ${ (product as any).priceBasicYearly.toLocaleString('es-AR') } / ${ (product as any).priceProYearly.toLocaleString('es-AR') } — Pagás 10 meses, ahorrás 2.
-                        </div>
                       </div>
                     </div>
                   )}
@@ -235,11 +237,14 @@ export default function QRShopPage() {
                         <button onClick={() => handleComprar(product.id)} disabled={loading} className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200">{loading ? '⏳ Procesando...' : '💳 Comprar'}</button>
                       </>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button onClick={() => router.push('/carta/5XJ1J37F')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">🎯 Demo MenuQR</button>
-                        <button onClick={() => router.push('/carta/5XJ1J37F?pro=1')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">🎯 Demo Pro</button>
-                        <button onClick={() => handleComprar('menuqr')} disabled={loading} className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200">{loading?'⏳':'💳 Comprar MenuQR'}</button>
-                        <button onClick={() => handleComprar('menuqrpro')} disabled={loading} className="w-full border-2 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-4 rounded-lg transition-all duration-200">{loading?'⏳':'💳 Comprar Pro'}</button>
+                      <div className="space-y-2">
+                        <button onClick={() => router.push('/trial/start')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">🎯 Probar gratis 7 días</button>
+                        <button onClick={() => handleComprar('menuqr')} disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">
+                          {loading ? '⏳' : `💳 Comprar Standard - $${(product as any).priceBasicYearly.toLocaleString('es-AR')}/año`}
+                        </button>
+                        <button onClick={() => handleComprar('menuqrpro')} disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200">
+                          {loading ? '⏳' : `💳 Comprar PRO - $${(product as any).priceProYearly.toLocaleString('es-AR')}/año`}
+                        </button>
                       </div>
                     )}
                   </div>

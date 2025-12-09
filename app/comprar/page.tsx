@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation';
 
 export default function ComprarPage() {
   const router = useRouter();
-  const [plan, setPlan] = useState<'mensual' | 'anual'>('mensual');
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const planFromUrl = searchParams.get('plan') as 'standard' | 'pro' | null;
+  const [plan, setPlan] = useState<'standard' | 'pro'>(planFromUrl || 'standard');
   const [loading, setLoading] = useState(false);
 
   const handleComprar = async () => {
@@ -23,8 +25,8 @@ export default function ComprarPage() {
       };
 
       const idUnico = generarIdUnico();
-      const precio = plan === 'mensual' ? 13999 : 139990;
-      const descripcion = `MenuQR - Plan ${plan === 'mensual' ? 'Mensual' : 'Anual'}`;
+      const precio = plan === 'standard' ? 140000 : 190000;
+      const descripcion = `MenuQR - Plan ${plan === 'standard' ? 'Standard' : 'PRO'} Anual`;
 
       // Crear preferencia de pago
       const response = await fetch('/api/tienda/crear-preferencia', {
@@ -89,31 +91,33 @@ export default function ComprarPage() {
             <div className="mb-6">
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => setPlan('mensual')}
+                  onClick={() => setPlan('standard')}
                   className={`p-4 rounded-lg border-2 transition-colors ${
-                    plan === 'mensual'
+                    plan === 'standard'
                       ? 'border-blue-500 bg-blue-600 text-white'
                       : 'border-gray-600 bg-gray-700 text-gray-300'
                   }`}
                 >
                     <div className="text-center">
-                      <div className="text-lg font-bold">$13,999</div>
-                      <div className="text-sm">por mes</div>
+                      <div className="text-lg font-bold">$140,000</div>
+                      <div className="text-sm">Standard</div>
+                      <div className="text-xs text-gray-400 mt-1">Anual</div>
                     </div>
                   </button>
                   
                   <button
-                    onClick={() => setPlan('anual')}
+                    onClick={() => setPlan('pro')}
                     className={`p-4 rounded-lg border-2 transition-colors ${
-                      plan === 'anual'
-                        ? 'border-blue-500 bg-blue-600 text-white'
+                      plan === 'pro'
+                        ? 'border-green-500 bg-green-600 text-white'
                         : 'border-gray-600 bg-gray-700 text-gray-300'
                     }`}
                   >
                     <div className="text-center">
-                      <div className="text-lg font-bold">$139,990</div>
-                      <div className="text-sm">por año</div>
-                      <div className="text-xs text-green-400 mt-1">¡Ahorra 2 meses!</div>
+                      <div className="text-lg font-bold">$190,000</div>
+                      <div className="text-sm font-semibold">PRO</div>
+                      <div className="text-xs text-gray-400 mt-1">Anual</div>
+                      <div className="text-xs text-green-300 mt-1">+ Carrito</div>
                     </div>
                 </button>
               </div>
@@ -121,28 +125,42 @@ export default function ComprarPage() {
 
             {/* Características incluidas */}
             <div className="mb-6">
-              <h3 className="text-white font-semibold mb-3">✅ Incluye:</h3>
+              <h3 className="text-white font-semibold mb-3">
+                ✅ {plan === 'pro' ? 'Plan PRO incluye:' : 'Plan Standard incluye:'}
+              </h3>
               <div className="space-y-2 text-sm text-gray-300">
-                <div className="flex items-center space-x-2">
-                  <span className="text-green-500">✓</span>
-                  <span>Scanner OCR automático</span>
-                </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-500">✓</span>
                   <span>Menús digitales responsivos</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-500">✓</span>
-                  <span>Pedidos por WhatsApp</span>
+                  <span>Editor de carta completo</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-500">✓</span>
-                  <span>Panel de gestión completo</span>
+                  <span>Panel de gestión</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-500">✓</span>
-                  <span>Soporte técnico 24/7</span>
+                  <span>QR personalizado</span>
                 </div>
+                {plan === 'pro' && (
+                  <>
+                    <div className="flex items-center space-x-2 mt-2 pt-2 border-t border-gray-600">
+                      <span className="text-green-400 font-bold">★</span>
+                      <span className="text-green-400 font-semibold">Carrito de pedidos PRO</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span>Pedidos en tiempo real</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span>Soporte prioritario</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -160,7 +178,7 @@ export default function ComprarPage() {
               ) : (
                 <>
                   <span>💳</span>
-                  <span>Guardar</span>
+                  <span>Comprar {plan === 'pro' ? 'PRO' : 'Standard'}</span>
                 </>
               )}
             </button>

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       where: { restaurantId: idUnico }
     });
 
-    // Si el plan es PRO, activar hasPro
+    // Si el plan es PRO, activar hasPro (solo PRO tiene carrito)
     if (plan === 'pro' || plan === 'PRO') {
       if (user) {
         await prisma.user.update({
@@ -41,6 +41,29 @@ export async function GET(request: NextRequest) {
             role: 'ADMIN',
             hasPro: true,
             plan: 'pro'
+          }
+        });
+      }
+    } else {
+      // Plan Standard: hasPro = false
+      if (user) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { hasPro: false, plan: 'standard' }
+        });
+        console.log(`✅ Standard activado para: ${user.restaurantName} (${idUnico})`);
+      } else {
+        // Crear usuario con Standard
+        user = await prisma.user.create({
+          data: {
+            name: 'Usuario Demo',
+            email: `demo-${idUnico}@menuqr.com`,
+            password: 'demo123',
+            restaurantId: idUnico,
+            restaurantName: 'Restaurante Demo',
+            role: 'ADMIN',
+            hasPro: false,
+            plan: 'standard'
           }
         });
       }

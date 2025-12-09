@@ -57,7 +57,7 @@ export default function CartaPage() {
   const [modalidad, setModalidad] = useState<'delivery' | 'retiro' | 'salon'>('delivery');
   const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
   const [animationActive, setAnimationActive] = useState(false);
-  const [showProCart, setShowProCart] = useState(true);  // TEMPORAL: siempre visible (puenteado)
+  const [showProCart, setShowProCart] = useState(false);  // Solo visible si hasPro=true
   const [showProCartModal, setShowProCartModal] = useState(false);
   const [showComandaPreview, setShowComandaPreview] = useState(false);
   const [comandaCode, setComandaCode] = useState('');
