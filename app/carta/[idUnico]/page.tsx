@@ -272,7 +272,7 @@ export default function CartaPage() {
   
   ${!esUsoInterno ? `
     <div class="footer">
-      ${menuData?.restaurantName || 'Esquina Pompeya'}<br>
+      ${menuData?.restaurantName || 'Restaurante'}<br>
       ${menuData?.address || ''}
     </div>
   ` : ''}
