@@ -463,18 +463,28 @@ export default function Editor2() {
               id: cat.id,
               name: cat.name,
               description: cat.description,
-              items: cat.items.map((item: any) => ({
-                id: item.id,
-                name: item.name,
-                price: `$${item.price}`,
-                description: item.description,
-                isAvailable: item.isAvailable,
-                isPopular: item.isPopular || false,
-                isPromo: item.isPromo || false,
-                code: item.code,
-                imageUrl: item.imageUrl || null,
-                imageBase64: (item.imageUrl && item.imageUrl.startsWith('/platos/')) ? item.imageUrl : (item.imageUrl || null)
-              }))
+              items: cat.items.map((item: any) => {
+                // Debug: verificar imageUrl
+                if (item.imageUrl) {
+                  console.log(`🖼️ Item "${item.name}": imageUrl =`, item.imageUrl);
+                }
+                return {
+                  id: item.id,
+                  name: item.name,
+                  price: `$${item.price}`,
+                  description: item.description,
+                  isAvailable: item.isAvailable,
+                  isPopular: item.isPopular || false,
+                  isPromo: item.isPromo || false,
+                  code: item.code,
+                  // Asegurar que imageUrl se mantenga si existe
+                  imageUrl: item.imageUrl || null,
+                  // Si imageUrl es una URL de archivo, también ponerla en imageBase64 para compatibilidad
+                  imageBase64: item.imageUrl && item.imageUrl.startsWith('/platos/') 
+                    ? item.imageUrl 
+                    : (item.imageUrl || null)
+                };
+              })
             }))
           };
           setMenuData(restaurantInfo);
@@ -1128,34 +1138,53 @@ export default function Editor2() {
                     >
                       {/* Imagen sin marco */}
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mr-2">
-                        {(item.imageUrl && item.imageUrl.startsWith('/platos/')) || item.imageBase64 ? (
-                          <img 
-                            src={
-                              // Priorizar imageUrl si es una URL de archivo
-                              (item.imageUrl && item.imageUrl.startsWith('/platos/'))
-                                ? item.imageUrl
-                                : (item.imageBase64 || item.imageUrl || '')
-                            }
-                            alt={item.name}
-                            className={`w-full h-full object-cover ${
-                              item.isAvailable === false ? 'grayscale' : ''
-                            }`}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const parent = e.currentTarget.parentElement;
-                              if (parent && !parent.querySelector('.icon-cubiertos')) {
-                                const icon = document.createElement('div');
-                                icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center bg-gray-200';
-                                icon.innerHTML = '<span class="text-xs">🍽️</span>';
-                                parent.appendChild(icon);
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                            <span className="text-xs">🍽️</span>
-                          </div>
-                        )}
+                        {(() => {
+                          // Determinar la URL de la imagen a mostrar
+                          let imageSrc = '';
+                          if (item.imageUrl && item.imageUrl.startsWith('/platos/')) {
+                            imageSrc = item.imageUrl;
+                          } else if (item.imageBase64) {
+                            imageSrc = item.imageBase64;
+                          } else if (item.imageUrl) {
+                            imageSrc = item.imageUrl;
+                          }
+                          
+                          // Debug: solo para el item que se está editando
+                          if (editingItem?.id === item.id && imageSrc) {
+                            console.log(`🖼️ Mostrando imagen para "${item.name}":`, imageSrc);
+                          }
+                          
+                          return imageSrc ? (
+                            <img 
+                              src={imageSrc}
+                              alt={item.name}
+                              className={`w-full h-full object-cover ${
+                                item.isAvailable === false ? 'grayscale' : ''
+                              }`}
+                              onError={(e) => {
+                                console.error(`❌ Error cargando imagen para "${item.name}":`, imageSrc);
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent && !parent.querySelector('.icon-cubiertos')) {
+                                  const icon = document.createElement('div');
+                                  icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center bg-gray-200';
+                                  icon.innerHTML = '<span class="text-xs">🍽️</span>';
+                                  parent.appendChild(icon);
+                                }
+                              }}
+                              onLoad={() => {
+                                // Debug: confirmar que la imagen se cargó
+                                if (editingItem?.id === item.id) {
+                                  console.log(`✅ Imagen cargada correctamente para "${item.name}"`);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                              <span className="text-xs">🍽️</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                             
                       {/* Contenido sin marco */}
