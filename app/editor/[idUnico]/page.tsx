@@ -465,13 +465,16 @@ export default function Editor2() {
               description: cat.description,
               items: cat.items.map((item: any) => {
                 // Normalizar imageUrl: convertir string vacío a null, mantener URLs válidas
-                const normalizedImageUrl = (item.imageUrl && item.imageUrl.trim() !== '') 
+                const normalizedImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') 
                   ? item.imageUrl.trim() 
                   : null;
                 
-                // Debug: verificar imageUrl
+                // Debug: verificar imageUrl (solo para items con imagen o items específicos)
                 if (normalizedImageUrl) {
                   console.log(`🖼️ Item "${item.name}": imageUrl =`, normalizedImageUrl);
+                } else if (item.imageUrl && typeof item.imageUrl !== 'string') {
+                  // Si imageUrl existe pero no es string, loguear para debug
+                  console.log(`⚠️ Item "${item.name}": imageUrl tipo inválido =`, item.imageUrl, typeof item.imageUrl);
                 }
                 
                 return {
@@ -486,9 +489,10 @@ export default function Editor2() {
                   // Asegurar que imageUrl se mantenga si existe (no string vacío)
                   imageUrl: normalizedImageUrl,
                   // Si imageUrl es una URL de archivo, también ponerla en imageBase64 para compatibilidad
-                  imageBase64: normalizedImageUrl && normalizedImageUrl.startsWith('/platos/') 
-                    ? normalizedImageUrl 
-                    : normalizedImageUrl
+                  // IMPORTANTE: Si normalizedImageUrl es null, imageBase64 también debe ser null
+                  imageBase64: normalizedImageUrl 
+                    ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
+                    : null
                 };
               })
             }))
