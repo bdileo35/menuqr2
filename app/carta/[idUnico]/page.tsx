@@ -471,22 +471,26 @@ export default function CartaPage() {
           let demoData;
           let address, phone;
           
+          let logoUrl: string | null = null;
+          
           if (idUnico === '5XJ1J37F') {
             demoData = getDemoMenuData();
             address = 'Av. Fernández de la Cruz 1100, Buenos Aires';
             phone = '+54 11 4911-6666';
+            logoUrl = '/demo-images/Logo.jpg'; // Logo de Esquina Pompeya
           } else {
             // 5XJ1J39E - Los Toritos
             demoData = getDemoMenuDataLosToritos();
             address = 'Zañartu 1547, CABA (CLUB PEÑAROL)';
             phone = '+54 11 3840-2399';
+            logoUrl = '/logo_los_toritos.jpg'; // Logo de Los Toritos
           }
           
           const restaurantInfo: RestaurantData = {
             restaurantName: demoData.restaurantName,
             address: address,
             phone: phone,
-            logoUrl: null,
+            logoUrl: logoUrl,
             categories: demoData.categories
           };
           setMenuData(restaurantInfo);
