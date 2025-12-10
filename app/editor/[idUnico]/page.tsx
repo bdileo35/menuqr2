@@ -532,58 +532,52 @@ export default function Editor2() {
     const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
     const ensuredCode = item.code && item.code.trim().length > 0 ? item.code : generateNextCodeForCategory(selectedCategory);
     
-    // Determinar la imagen a mostrar en el preview
-    // Priorizar imageUrl si es una URL de archivo, luego imageBase64, luego imageUrl
-    const imagePreview = (item.imageUrl && item.imageUrl.startsWith('/platos/'))
-      ? item.imageUrl
-      : (item.imageBase64 || item.imageUrl || '');
-    
-    // Debug: verificar el item completo
-    console.log(`🖼️ Abriendo modal para "${item.name}":`, {
-      itemId: item.id,
-      imageUrl: item.imageUrl,
-      imageBase64: item.imageBase64,
-      imagePreview,
-      itemCompleto: item // Para ver todo el objeto
-    });
-    
-    // Si no hay imagen pero debería haberla, buscar en menuData
-    if (!imagePreview && menuData) {
+    // Si el item no tiene imagen, buscar en menuData (puede estar desactualizado)
+    let itemConImagen = { ...item };
+    if ((!item.imageUrl && !item.imageBase64) && menuData) {
       const itemEnMenu = menuData.categories
         .flatMap(cat => cat.items)
         .find(i => (i.id || i.name) === (item.id || item.name));
       
       if (itemEnMenu && (itemEnMenu.imageUrl || itemEnMenu.imageBase64)) {
-        console.log(`🔍 Imagen encontrada en menuData:`, {
+        console.log(`🔍 Imagen encontrada en menuData para "${item.name}":`, {
           imageUrl: itemEnMenu.imageUrl,
           imageBase64: itemEnMenu.imageBase64
         });
-        // Usar la imagen del menuData si existe
-        const foundImage = (itemEnMenu.imageUrl && itemEnMenu.imageUrl.startsWith('/platos/'))
-          ? itemEnMenu.imageUrl
-          : (itemEnMenu.imageBase64 || itemEnMenu.imageUrl || '');
-        
-        if (foundImage) {
-          // Actualizar el item con la imagen encontrada
-          item.imageUrl = itemEnMenu.imageUrl || item.imageUrl;
-          item.imageBase64 = itemEnMenu.imageBase64 || item.imageBase64;
-          return openEditPlateModal(item, categoryId); // Recursión con item actualizado
-        }
+        itemConImagen = {
+          ...item,
+          imageUrl: itemEnMenu.imageUrl || item.imageUrl,
+          imageBase64: itemEnMenu.imageBase64 || item.imageBase64
+        };
       }
     }
     
+    // Determinar la imagen a mostrar en el preview
+    // Priorizar imageUrl si es una URL de archivo, luego imageBase64, luego imageUrl
+    const imagePreview = (itemConImagen.imageUrl && itemConImagen.imageUrl.startsWith('/platos/'))
+      ? itemConImagen.imageUrl
+      : (itemConImagen.imageBase64 || itemConImagen.imageUrl || '');
+    
+    // Debug: verificar el item completo
+    console.log(`🖼️ Abriendo modal para "${itemConImagen.name}":`, {
+      itemId: itemConImagen.id,
+      imageUrl: itemConImagen.imageUrl,
+      imageBase64: itemConImagen.imageBase64,
+      imagePreview
+    });
+    
     setModalData({
-      name: item.name,
+      name: itemConImagen.name,
       code: ensuredCode,
-      price: item.price,
-      description: item.description || '',
+      price: itemConImagen.price,
+      description: itemConImagen.description || '',
       categoryId: modalCategoryId, // '' para items sin categoría
       imageFile: null,
       imagePreview: imagePreview,
-      isAvailable: item.isAvailable ?? true,  // ✅ INCLUIR ESTADO DISPONIBLE
+      isAvailable: itemConImagen.isAvailable ?? true,  // ✅ INCLUIR ESTADO DISPONIBLE
       removeImage: !imagePreview
     });
-    setEditingItem(item);
+    setEditingItem(itemConImagen);
     setShowAddItem(true);
   };
 
