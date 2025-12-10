@@ -525,6 +525,19 @@ export default function Editor2() {
     const modalCategoryId = (categoryId === '__SIN_CATEGORIA__' || !categoryId) ? '' : categoryId;
     const selectedCategory = menuData?.categories.find(cat => (cat.id || cat.name) === categoryId);
     const ensuredCode = item.code && item.code.trim().length > 0 ? item.code : generateNextCodeForCategory(selectedCategory);
+    
+    // Determinar la imagen a mostrar en el preview
+    // Priorizar imageUrl si es una URL de archivo, luego imageBase64, luego imageUrl
+    const imagePreview = (item.imageUrl && item.imageUrl.startsWith('/platos/'))
+      ? item.imageUrl
+      : (item.imageBase64 || item.imageUrl || '');
+    
+    console.log(`🖼️ Abriendo modal para "${item.name}":`, {
+      imageUrl: item.imageUrl,
+      imageBase64: item.imageBase64,
+      imagePreview
+    });
+    
     setModalData({
       name: item.name,
       code: ensuredCode,
@@ -532,9 +545,9 @@ export default function Editor2() {
       description: item.description || '',
       categoryId: modalCategoryId, // '' para items sin categoría
       imageFile: null,
-      imagePreview: item.imageBase64 || '',
+      imagePreview: imagePreview,
       isAvailable: item.isAvailable ?? true,  // ✅ INCLUIR ESTADO DISPONIBLE
-      removeImage: !item.imageBase64
+      removeImage: !imagePreview
     });
     setEditingItem(item);
     setShowAddItem(true);
