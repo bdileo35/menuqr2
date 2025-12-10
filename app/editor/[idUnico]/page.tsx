@@ -723,8 +723,11 @@ export default function Editor2() {
                   description: item.description,
                   isAvailable: item.isAvailable,
                   code: item.code,
-                  imageUrl: item.imageUrl || null,
-                  imageBase64: item.imageUrl || null
+                  // Normalizar imageUrl: convertir string vacío a null
+                  imageUrl: (item.imageUrl && item.imageUrl.trim() !== '') ? item.imageUrl.trim() : null,
+                  imageBase64: (item.imageUrl && item.imageUrl.trim() !== '' && item.imageUrl.startsWith('/platos/')) 
+                    ? item.imageUrl.trim() 
+                    : ((item.imageUrl && item.imageUrl.trim() !== '') ? item.imageUrl.trim() : null)
                 }))
               }))
             };
