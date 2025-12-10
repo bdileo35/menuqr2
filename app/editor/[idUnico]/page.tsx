@@ -464,10 +464,16 @@ export default function Editor2() {
               name: cat.name,
               description: cat.description,
               items: cat.items.map((item: any) => {
+                // Normalizar imageUrl: convertir string vacío a null, mantener URLs válidas
+                const normalizedImageUrl = (item.imageUrl && item.imageUrl.trim() !== '') 
+                  ? item.imageUrl.trim() 
+                  : null;
+                
                 // Debug: verificar imageUrl
-                if (item.imageUrl) {
-                  console.log(`🖼️ Item "${item.name}": imageUrl =`, item.imageUrl);
+                if (normalizedImageUrl) {
+                  console.log(`🖼️ Item "${item.name}": imageUrl =`, normalizedImageUrl);
                 }
+                
                 return {
                   id: item.id,
                   name: item.name,
@@ -477,12 +483,12 @@ export default function Editor2() {
                   isPopular: item.isPopular || false,
                   isPromo: item.isPromo || false,
                   code: item.code,
-                  // Asegurar que imageUrl se mantenga si existe
-                  imageUrl: item.imageUrl || null,
+                  // Asegurar que imageUrl se mantenga si existe (no string vacío)
+                  imageUrl: normalizedImageUrl,
                   // Si imageUrl es una URL de archivo, también ponerla en imageBase64 para compatibilidad
-                  imageBase64: item.imageUrl && item.imageUrl.startsWith('/platos/') 
-                    ? item.imageUrl 
-                    : (item.imageUrl || null)
+                  imageBase64: normalizedImageUrl && normalizedImageUrl.startsWith('/platos/') 
+                    ? normalizedImageUrl 
+                    : normalizedImageUrl
                 };
               })
             }))
