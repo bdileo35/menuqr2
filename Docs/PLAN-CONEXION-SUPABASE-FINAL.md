@@ -53,11 +53,26 @@ Conectar Vercel a Supabase para que ambos restaurantes (5XJ1J37F y 5XJ1J39E) fun
    postgresql://postgres.vzcniaopxflpgrwarnvn:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
    ```
 
-### **2.2. Verificar credenciales**
+### **2.2. Obtener o Resetear la Contraseña**
 
-1. En la misma página, buscar **Connection string** (Direct connection)
-2. Verificar la contraseña
-3. Si es diferente a `bat33man`, anotarla
+**⚠️ IMPORTANTE:** Supabase nunca muestra la contraseña por seguridad. Siempre verás `[YOUR_PASSWORD]` como placeholder.
+
+**Si NO recuerdas la contraseña:**
+1. Supabase Dashboard → **Settings** → **Database**
+2. Buscar sección **"Database password"** o **"Reset database password"**
+3. Hacer clic en **"Reset database password"**
+4. **Copiar la nueva contraseña inmediatamente** (solo se muestra UNA VEZ)
+5. Guardarla en un lugar seguro
+
+**Si ya tienes la contraseña configurada en Vercel:**
+1. Vercel Dashboard → Settings → Environment Variables
+2. Buscar `DATABASE_URL`
+3. La contraseña está después de `postgres:` y antes de `@`
+   ```
+   postgresql://postgres:TU_PASSWORD_AQUI@db.vzcniaopxflpgrwarnvn.supabase.co:5432/postgres
+   ```
+
+**Ver más detalles:** Ver `OBTENER-PASSWORD-SUPABASE.md`
 
 ---
 
