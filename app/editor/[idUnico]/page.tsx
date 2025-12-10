@@ -538,11 +538,39 @@ export default function Editor2() {
       ? item.imageUrl
       : (item.imageBase64 || item.imageUrl || '');
     
+    // Debug: verificar el item completo
     console.log(`🖼️ Abriendo modal para "${item.name}":`, {
+      itemId: item.id,
       imageUrl: item.imageUrl,
       imageBase64: item.imageBase64,
-      imagePreview
+      imagePreview,
+      itemCompleto: item // Para ver todo el objeto
     });
+    
+    // Si no hay imagen pero debería haberla, buscar en menuData
+    if (!imagePreview && menuData) {
+      const itemEnMenu = menuData.categories
+        .flatMap(cat => cat.items)
+        .find(i => (i.id || i.name) === (item.id || item.name));
+      
+      if (itemEnMenu && (itemEnMenu.imageUrl || itemEnMenu.imageBase64)) {
+        console.log(`🔍 Imagen encontrada en menuData:`, {
+          imageUrl: itemEnMenu.imageUrl,
+          imageBase64: itemEnMenu.imageBase64
+        });
+        // Usar la imagen del menuData si existe
+        const foundImage = (itemEnMenu.imageUrl && itemEnMenu.imageUrl.startsWith('/platos/'))
+          ? itemEnMenu.imageUrl
+          : (itemEnMenu.imageBase64 || itemEnMenu.imageUrl || '');
+        
+        if (foundImage) {
+          // Actualizar el item con la imagen encontrada
+          item.imageUrl = itemEnMenu.imageUrl || item.imageUrl;
+          item.imageBase64 = itemEnMenu.imageBase64 || item.imageBase64;
+          return openEditPlateModal(item, categoryId); // Recursión con item actualizado
+        }
+      }
+    }
     
     setModalData({
       name: item.name,
