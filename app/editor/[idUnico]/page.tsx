@@ -473,7 +473,7 @@ export default function Editor2() {
                 isPromo: item.isPromo || false,
                 code: item.code,
                 imageUrl: item.imageUrl || null,
-                imageBase64: item.imageUrl || null
+                imageBase64: (item.imageUrl && item.imageUrl.startsWith('/platos/')) ? item.imageUrl : (item.imageUrl || null)
               }))
             }))
           };
@@ -1128,37 +1128,34 @@ export default function Editor2() {
                     >
                       {/* Imagen sin marco */}
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mr-2">
-                        <img 
-                          src={item.imageBase64 || (() => {
-                            const platosImages = [
-                              '/platos/albondigas.jpg',
-                              '/platos/rabas.jpg',
-                              '/platos/IMG-20251002-WA0005.jpg',
-                              '/platos/milanesa-completa.jpg',
-                              '/platos/vacio-papas.jpg',
-                              '/platos/IMG-20251005-WA0007.jpg',
-                              '/platos/IMG-20251005-WA0012.jpg',
-                              '/platos/IMG-20251005-WA0014.jpg',
-                              '/platos/IMG-20251010-WA0011.jpg'
-                            ];
-                            return platosImages[itemIndex % platosImages.length];
-                          })()}
-                          alt={item.name}
-                          className={`w-full h-full object-cover ${
-                            item.isAvailable === false ? 'grayscale' : ''
-                          }`}
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `
-                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                  <span class="text-xs">🍽️</span>
-                                </div>
-                              `;
+                        {(item.imageUrl && item.imageUrl.startsWith('/platos/')) || item.imageBase64 ? (
+                          <img 
+                            src={
+                              // Priorizar imageUrl si es una URL de archivo
+                              (item.imageUrl && item.imageUrl.startsWith('/platos/'))
+                                ? item.imageUrl
+                                : (item.imageBase64 || item.imageUrl || '')
                             }
-                          }}
-                        />
+                            alt={item.name}
+                            className={`w-full h-full object-cover ${
+                              item.isAvailable === false ? 'grayscale' : ''
+                            }`}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent && !parent.querySelector('.icon-cubiertos')) {
+                                const icon = document.createElement('div');
+                                icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center bg-gray-200';
+                                icon.innerHTML = '<span class="text-xs">🍽️</span>';
+                                parent.appendChild(icon);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                            <span className="text-xs">🍽️</span>
+                          </div>
+                        )}
                       </div>
                             
                       {/* Contenido sin marco */}
