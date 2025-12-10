@@ -462,40 +462,22 @@ export default function CartaPage() {
         // TEMPORAL: Asegurar que carrito esté visible incluso con errores
         setShowProCart(true);
         
-        // FALLBACK: Solo en Vercel (producción), usar datos demo si falla la conexión
-        const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+        // ⚠️ IMPORTANTE: NO mostrar datos demo a clientes en producción
+        // Solo mostrar error de conexión o menú no encontrado
+        console.log(`❌ Error cargando menú para ${idUnico}:`, error);
         
-        if (isVercel && (idUnico === '5XJ1J37F' || idUnico === '5XJ1J39E')) {
-          console.log(`⚠️ Error de conexión en Vercel - usando datos demo para ${idUnico}`);
-          
-          let demoData;
-          let address, phone;
-          
-          let logoUrl: string | null = null;
-          
-          if (idUnico === '5XJ1J37F') {
-            demoData = getDemoMenuData();
-            address = 'Av. Fernández de la Cruz 1100, Buenos Aires';
-            phone = '+54 11 4911-6666';
-            logoUrl = '/demo-images/Logo.jpg'; // Logo de Esquina Pompeya
-          } else {
-            // 5XJ1J39E - Los Toritos
-            demoData = getDemoMenuDataLosToritos();
-            address = 'Zañartu 1547, CABA (CLUB PEÑAROL)';
-            phone = '+54 11 3840-2399';
-            logoUrl = '/logo_los_toritos.jpg'; // Logo de Los Toritos
-          }
-          
-          const restaurantInfo: RestaurantData = {
-            restaurantName: demoData.restaurantName,
-            address: address,
-            phone: phone,
-            logoUrl: logoUrl,
-            categories: demoData.categories
-          };
-          setMenuData(restaurantInfo);
+        // Verificar si es error de conexión (500) o menú no encontrado (404)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isConnectionError = errorMessage.includes('conexión') || 
+                                  errorMessage.includes('connection') ||
+                                  errorMessage.includes('500');
+        
+        if (isConnectionError) {
+          // Error de conexión: mostrar mensaje de error, NO datos demo
+          setConnectionError(true);
+          setMenuData(null);
         } else {
-          // Intentar cargar desde localStorage primero
+          // Intentar cargar desde localStorage primero (solo para desarrollo)
           const savedMenu = localStorage.getItem('editor-menu-data');
           const setupData = localStorage.getItem('setup-comercio-data');
           if (savedMenu && setupData) {
@@ -510,10 +492,8 @@ export default function CartaPage() {
             };
             setMenuData(restaurantInfo);
           } else {
-            // Para otros IDUs con error de conexión, NO marcar como "no encontrado"
-            // Solo mostrar error de conexión
-            console.log(`⚠️ Error de conexión para IDU: ${idUnico}. No se puede verificar si existe`);
-            setConnectionError(true);
+            // Menú no encontrado: mostrar mensaje, NO datos demo
+            setMenuNotFound(true);
             setMenuData(null);
           }
         }

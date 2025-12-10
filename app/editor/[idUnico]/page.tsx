@@ -238,36 +238,18 @@ export default function Editor2() {
     } catch (error) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // FALLBACK: Solo en Vercel (producción), usar datos demo si falla la conexión
+        // ⚠️ IMPORTANTE: NO mostrar datos demo a clientes en producción
+        // Solo mostrar error de conexión
         console.log('⚠️ Error de conexión a la base de datos');
-        const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+        console.log(`❌ Error cargando menú para ${idUnico}:`, error);
         
-        if (isVercel && (idUnico === '5XJ1J37F' || idUnico === '5XJ1J39E')) {
-          console.log(`⚠️ Usando datos demo para ${idUnico} (fallback en Vercel)`);
-          
-          let tempData;
-          if (idUnico === '5XJ1J37F') {
-            tempData = getDemoMenuData();
-          } else {
-            // 5XJ1J39E - Los Toritos
-            tempData = getDemoMenuDataLosToritos();
-          }
-          
-          setMenuData(tempData);
-          
-          // Expandir todas las categorías por defecto
-          const initialExpanded: {[key: string]: boolean} = {};
-          tempData.categories.forEach(cat => {
-            initialExpanded[cat.id || cat.name] = true;
-          });
-          setExpandedCategories(initialExpanded);
-        } else {
-          // Para otros IDUs con error de conexión, NO marcar como "no encontrado"
-          // Solo mostrar error de conexión
-          console.log(`⚠️ Error de conexión para IDU: ${idUnico}. No se puede verificar si existe`);
-          setConnectionError(true);
-          setMenuData(null);
-        }
+        // FALLBACK REMOVIDO: No mostrar datos demo a clientes
+        // Los datos demo solo deben usarse en desarrollo local
+        setConnectionError(true);
+        setMenuData(null);
+        
+        // Código comentado - fallback removido por seguridad
+        // Los datos demo NO deben mostrarse a clientes en producción
         
     } finally {
       setLoading(false);
