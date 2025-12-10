@@ -464,13 +464,31 @@ export default function Editor2() {
               name: cat.name,
               description: cat.description,
               items: cat.items.map((item: any) => {
+                // Debug: verificar imageUrl ANTES de normalizar (especialmente para "Coca")
+                if (item.name.includes('Coca') || item.name.includes('Linea')) {
+                  console.log(`🔍 EDITOR - Item "${item.name}" ANTES de normalizar:`, {
+                    imageUrl: item.imageUrl,
+                    tipo: typeof item.imageUrl,
+                    esString: typeof item.imageUrl === 'string',
+                    esNull: item.imageUrl === null,
+                    esUndefined: item.imageUrl === undefined
+                  });
+                }
+                
                 // Normalizar imageUrl: convertir string vacío a null, mantener URLs válidas
                 const normalizedImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') 
                   ? item.imageUrl.trim() 
-                  : null;
+                  : (item.imageUrl !== null && item.imageUrl !== undefined ? item.imageUrl : null);
                 
-                // Debug: verificar imageUrl (solo para items con imagen o items específicos)
-                if (normalizedImageUrl) {
+                // Debug: verificar imageUrl DESPUÉS de normalizar
+                if (item.name.includes('Coca') || item.name.includes('Linea')) {
+                  console.log(`🖼️ EDITOR - Item "${item.name}" DESPUÉS de normalizar:`, {
+                    normalizedImageUrl,
+                    imageBase64: normalizedImageUrl 
+                      ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
+                      : null
+                  });
+                } else if (normalizedImageUrl) {
                   console.log(`🖼️ Item "${item.name}": imageUrl =`, normalizedImageUrl);
                 } else if (item.imageUrl && typeof item.imageUrl !== 'string') {
                   // Si imageUrl existe pero no es string, loguear para debug

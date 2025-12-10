@@ -67,14 +67,21 @@ export async function GET(
     const categoriesWithItems = categories.map(cat => {
       const items = allItems
         .filter(item => item.categoryId === cat.id)
-        .map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          description: item.description,
-          imageUrl: item.imageUrl || '',
-          isAvailable: true
-        }));
+        .map(item => {
+          // Debug: verificar imageUrl antes de mapear
+          if (item.imageUrl && item.name.includes('Coca')) {
+            console.log(`🔍 API - Item "${item.name}": imageUrl =`, item.imageUrl, typeof item.imageUrl);
+          }
+          return {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            description: item.description,
+            // IMPORTANTE: Devolver null en lugar de string vacío para que el editor lo maneje correctamente
+            imageUrl: item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl : null,
+            isAvailable: true
+          };
+        });
 
       console.log(`  └─ ${cat.name}: ${items.length} items`);
 
@@ -95,7 +102,8 @@ export async function GET(
         name: item.name,
         price: item.price,
         description: item.description,
-        imageUrl: item.imageUrl || '',
+        // IMPORTANTE: Devolver null en lugar de string vacío
+        imageUrl: item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl : null,
         isAvailable: true
       }));
 
