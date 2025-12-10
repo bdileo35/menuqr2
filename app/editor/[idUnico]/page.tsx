@@ -1184,12 +1184,23 @@ export default function Editor2() {
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 mr-2">
                         {(() => {
                           // Determinar la URL de la imagen a mostrar
+                          // Prioridad: imageUrl (si es /platos/...) > imageBase64 > imageUrl (genérico)
                           let imageSrc = '';
-                          if (item.imageUrl && item.imageUrl.startsWith('/platos/')) {
+                          
+                          // Debug: verificar valores del item
+                          if (item.name.includes('ESQUINA') || item.name.includes('Milanesa')) {
+                            console.log(`🔍 Item "${item.name}":`, {
+                              imageUrl: item.imageUrl,
+                              imageBase64: item.imageBase64,
+                              id: item.id
+                            });
+                          }
+                          
+                          if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/platos/')) {
                             imageSrc = item.imageUrl;
-                          } else if (item.imageBase64) {
+                          } else if (item.imageBase64 && typeof item.imageBase64 === 'string') {
                             imageSrc = item.imageBase64;
-                          } else if (item.imageUrl) {
+                          } else if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
                             imageSrc = item.imageUrl;
                           }
                           
