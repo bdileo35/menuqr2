@@ -1234,21 +1234,36 @@ export default function Editor2() {
                           // Prioridad: imageUrl (si es /platos/...) > imageBase64 > imageUrl (genérico)
                           let imageSrc = '';
                           
-                          // Debug: verificar valores del item
-                          if (item.name.includes('ESQUINA') || item.name.includes('Milanesa')) {
-                            console.log(`🔍 Item "${item.name}":`, {
+                          // Debug: verificar valores del item (especialmente para "Vacío")
+                          if (item.name.includes('Vacío') || item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Chupin') || item.name.includes('Croquetas')) {
+                            console.log(`🔍 RENDER - Item "${item.name}":`, {
                               imageUrl: item.imageUrl,
                               imageBase64: item.imageBase64,
-                              id: item.id
+                              id: item.id,
+                              tipoImageUrl: typeof item.imageUrl,
+                              tipoImageBase64: typeof item.imageBase64
                             });
                           }
                           
                           if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/platos/')) {
                             imageSrc = item.imageUrl;
+                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
+                              console.log(`✅ RENDER - Usando imageUrl para "${item.name}":`, imageSrc);
+                            }
                           } else if (item.imageBase64 && typeof item.imageBase64 === 'string') {
                             imageSrc = item.imageBase64;
+                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
+                              console.log(`✅ RENDER - Usando imageBase64 para "${item.name}":`, imageSrc);
+                            }
                           } else if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
                             imageSrc = item.imageUrl;
+                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
+                              console.log(`✅ RENDER - Usando imageUrl genérico para "${item.name}":`, imageSrc);
+                            }
+                          } else {
+                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
+                              console.log(`❌ RENDER - NO hay imagen para "${item.name}" - Mostrando fallback`);
+                            }
                           }
                           
                           // Debug: solo para el item que se está editando

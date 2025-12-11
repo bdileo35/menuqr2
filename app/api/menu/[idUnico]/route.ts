@@ -68,18 +68,34 @@ export async function GET(
       const items = allItems
         .filter(item => item.categoryId === cat.id)
         .map(item => {
-          // Debug: verificar imageUrl antes de mapear
-          if (item.imageUrl && item.name.includes('Coca')) {
-            console.log(`🔍 API - Item "${item.name}": imageUrl =`, item.imageUrl, typeof item.imageUrl);
+          // Debug: verificar imageUrl ANTES de mapear (para items con imágenes o específicos)
+          if (item.imageUrl || item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Chupin') || item.name.includes('Croquetas') || item.name.includes('Coca')) {
+            console.log(`🔍 API - Item "${item.name}":`, {
+              imageUrl: item.imageUrl,
+              tipo: typeof item.imageUrl,
+              esNull: item.imageUrl === null,
+              esUndefined: item.imageUrl === undefined,
+              esString: typeof item.imageUrl === 'string',
+              longitud: typeof item.imageUrl === 'string' ? item.imageUrl.length : 'N/A'
+            });
           }
+          
+          // Normalizar imageUrl: si es string vacío o null, devolver null; si tiene valor, devolverlo
+          const normalizedImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') 
+            ? item.imageUrl.trim() 
+            : null;
+          
           return {
             id: item.id,
             name: item.name,
             price: item.price,
             description: item.description,
             // IMPORTANTE: Devolver null en lugar de string vacío para que el editor lo maneje correctamente
-            imageUrl: item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl : null,
-            isAvailable: true
+            imageUrl: normalizedImageUrl,
+            isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+            isPopular: item.isPopular || false,
+            isPromo: item.isPromo || false,
+            code: item.code || null
           };
         });
 
@@ -97,15 +113,25 @@ export async function GET(
 
     const itemsWithoutCategory = allItems
       .filter(item => item.categoryId === null)
-      .map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        description: item.description,
-        // IMPORTANTE: Devolver null en lugar de string vacío
-        imageUrl: item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl : null,
-        isAvailable: true
-      }));
+      .map(item => {
+        // Normalizar imageUrl igual que en categoriesWithItems
+        const normalizedImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') 
+          ? item.imageUrl.trim() 
+          : null;
+        
+        return {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          // IMPORTANTE: Devolver null en lugar de string vacío
+          imageUrl: normalizedImageUrl,
+          isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+          isPopular: item.isPopular || false,
+          isPromo: item.isPromo || false,
+          code: item.code || null
+        };
+      });
 
     const formattedMenu = {
       id: menu.id,
