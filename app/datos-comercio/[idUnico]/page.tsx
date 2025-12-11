@@ -111,6 +111,22 @@ export default function DatosComercio() {
             if (response.ok) {
               const data = await response.json();
               if (data.success && data.menu) {
+                // Parsear waiters desde JSON string a array y luego a string separado por comas
+                let waitersString = '';
+                if (data.menu.waiters) {
+                  try {
+                    const waitersArray = typeof data.menu.waiters === 'string' 
+                      ? JSON.parse(data.menu.waiters) 
+                      : data.menu.waiters;
+                    if (Array.isArray(waitersArray)) {
+                      waitersString = waitersArray.join(', ');
+                    }
+                  } catch (e) {
+                    // Si no es JSON válido, usar como string directo
+                    waitersString = data.menu.waiters;
+                  }
+                }
+                
                 setFormData({
                   restaurantName: data.menu.restaurantName || '',
                   address: data.menu.contactAddress || '',
@@ -121,7 +137,10 @@ export default function DatosComercio() {
                   instagram: data.menu.socialInstagram || '',
                   facebook: data.menu.socialFacebook || '',
                   logoUrl: data.menu.logoUrl || '',
-                  whatsappPhone: data.menu.whatsappPhone || ''
+                  whatsappPhone: data.menu.whatsappPhone || '',
+                  waiters: waitersString,
+                  googleMapsUrl: data.menu.googleMapsUrl || '',
+                  googleReviewsUrl: data.menu.googleReviewsUrl || ''
                 });
               }
             }
