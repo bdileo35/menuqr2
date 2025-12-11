@@ -451,10 +451,28 @@ export default function Editor2() {
       }
 
       // Recargar menú desde BD para tener datos actualizados
+      console.log('🔄 Recargando menú después de guardar...');
       const menuResponse = await fetch(`/api/menu/${idUnico}`);
       if (menuResponse.ok) {
         const menuDataResponse = await menuResponse.json();
+        console.log('📦 Respuesta de API al recargar:', menuDataResponse);
+        
         if (menuDataResponse.success && menuDataResponse.menu) {
+          // Debug: verificar items con imágenes antes de mapear
+          console.log('🔍 Verificando items de la API antes de mapear...');
+          menuDataResponse.menu.categories.forEach((cat: any) => {
+            cat.items.forEach((item: any) => {
+              if (item.imageUrl) {
+                console.log(`✅ API devuelve imageUrl para "${item.name}":`, item.imageUrl);
+              } else if (item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Coca')) {
+                console.log(`❌ API NO devuelve imageUrl para "${item.name}":`, {
+                  imageUrl: item.imageUrl,
+                  itemCompleto: item
+                });
+              }
+            });
+          });
+          
           const restaurantInfo: RestaurantData = {
             restaurantName: menuDataResponse.menu.restaurantName,
             address: menuDataResponse.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
@@ -464,14 +482,15 @@ export default function Editor2() {
               name: cat.name,
               description: cat.description,
               items: cat.items.map((item: any) => {
-                // Debug: verificar imageUrl ANTES de normalizar (especialmente para "Coca")
-                if (item.name.includes('Coca') || item.name.includes('Linea')) {
+                // Debug: verificar imageUrl ANTES de normalizar
+                if (item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Coca') || item.name.includes('Chupin') || item.name.includes('Croquetas')) {
                   console.log(`🔍 EDITOR - Item "${item.name}" ANTES de normalizar:`, {
                     imageUrl: item.imageUrl,
                     tipo: typeof item.imageUrl,
                     esString: typeof item.imageUrl === 'string',
                     esNull: item.imageUrl === null,
-                    esUndefined: item.imageUrl === undefined
+                    esUndefined: item.imageUrl === undefined,
+                    itemCompleto: item
                   });
                 }
                 
@@ -481,12 +500,18 @@ export default function Editor2() {
                   : (item.imageUrl !== null && item.imageUrl !== undefined ? item.imageUrl : null);
                 
                 // Debug: verificar imageUrl DESPUÉS de normalizar
-                if (item.name.includes('Coca') || item.name.includes('Linea')) {
+                if (item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Coca') || item.name.includes('Chupin') || item.name.includes('Croquetas')) {
                   console.log(`🖼️ EDITOR - Item "${item.name}" DESPUÉS de normalizar:`, {
                     normalizedImageUrl,
                     imageBase64: normalizedImageUrl 
                       ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
-                      : null
+                      : null,
+                    resultadoFinal: {
+                      imageUrl: normalizedImageUrl,
+                      imageBase64: normalizedImageUrl 
+                        ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
+                        : null
+                    }
                   });
                 } else if (normalizedImageUrl) {
                   console.log(`🖼️ Item "${item.name}": imageUrl =`, normalizedImageUrl);
