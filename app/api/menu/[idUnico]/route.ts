@@ -168,8 +168,8 @@ export async function GET(
       socialInstagram: menu.socialInstagram || '',
       socialFacebook: menu.socialFacebook || '',
       logoUrl: menu.logoUrl || '',
-      googleMapsUrl: (menu as any).googleMapsUrl || '',
-      googleReviewsUrl: (menu as any).googleReviewsUrl || '',
+      // googleMapsUrl: (menu as any).googleMapsUrl || '', // TODO: Descomentar cuando se agreguen columnas en Supabase
+      // googleReviewsUrl: (menu as any).googleReviewsUrl || '', // TODO: Descomentar cuando se agreguen columnas en Supabase
       description: menu.description || '',
       waiters: (menu as any).waiters || '',
       hasPro: menu.owner?.hasPro || false,  // Si el usuario tiene PRO

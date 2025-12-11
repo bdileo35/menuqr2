@@ -87,8 +87,10 @@ export default function DatosComercio() {
               logoUrl: data.menu.logoUrl || '',
               whatsappPhone: data.menu.whatsappPhone || '',
               waiters: waitersString,
-              googleMapsUrl: data.menu.googleMapsUrl || '',
-              googleReviewsUrl: data.menu.googleReviewsUrl || ''
+              // googleMapsUrl: data.menu.googleMapsUrl || '', // TODO: Descomentar cuando se agreguen columnas en Supabase
+              // googleReviewsUrl: data.menu.googleReviewsUrl || '' // TODO: Descomentar cuando se agreguen columnas en Supabase
+              googleMapsUrl: '', // Temporalmente vacío
+              googleReviewsUrl: '' // Temporalmente vacío
             });
           }
         }
@@ -139,8 +141,10 @@ export default function DatosComercio() {
                   logoUrl: data.menu.logoUrl || '',
                   whatsappPhone: data.menu.whatsappPhone || '',
                   waiters: waitersString,
-                  googleMapsUrl: data.menu.googleMapsUrl || '',
-                  googleReviewsUrl: data.menu.googleReviewsUrl || ''
+                  // googleMapsUrl: data.menu.googleMapsUrl || '', // TODO: Descomentar cuando se agreguen columnas en Supabase
+                  // googleReviewsUrl: data.menu.googleReviewsUrl || '' // TODO: Descomentar cuando se agreguen columnas en Supabase
+                  googleMapsUrl: '', // Temporalmente vacío
+                  googleReviewsUrl: '' // Temporalmente vacío
                 });
               }
             }
@@ -211,9 +215,9 @@ export default function DatosComercio() {
           description: formData.description,
           logoUrl: formData.logoUrl,
           whatsappPhone: formData.whatsappPhone || null,
-          waiters: waitersJson,
-          googleMapsUrl: formData.googleMapsUrl || null,
-          googleReviewsUrl: formData.googleReviewsUrl || null
+          waiters: waitersJson
+          // googleMapsUrl: formData.googleMapsUrl || null, // TODO: Descomentar cuando se agreguen columnas en Supabase
+          // googleReviewsUrl: formData.googleReviewsUrl || null // TODO: Descomentar cuando se agreguen columnas en Supabase
         })
       });
 

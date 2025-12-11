@@ -19,9 +19,9 @@ export async function PUT(
       socialFacebook,
       socialTwitter,
       logoUrl,
-      googleMapsUrl,
-      googleReviewsUrl,
-      whatsappPhone,
+      // googleMapsUrl, // TODO: Descomentar cuando se agreguen columnas en Supabase
+      // googleReviewsUrl, // TODO: Descomentar cuando se agreguen columnas en Supabase
+      whatsappPhone
       description,
       waiters
     } = body;
@@ -47,8 +47,8 @@ export async function PUT(
     if (socialFacebook !== undefined) menuUpdateData.socialFacebook = socialFacebook?.trim() || null;
     if (socialTwitter !== undefined) menuUpdateData.socialTwitter = socialTwitter?.trim() || null;
     if (logoUrl !== undefined) menuUpdateData.logoUrl = logoUrl?.trim() || null;
-    if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null;
-    if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null;
+    // if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null; // TODO: Descomentar cuando se agreguen columnas en Supabase
+    // if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null; // TODO: Descomentar cuando se agreguen columnas en Supabase
     if (description !== undefined) menuUpdateData.description = description?.trim() || null;
     if (waiters !== undefined) menuUpdateData.waiters = waiters?.trim() || null;
 
