@@ -370,15 +370,33 @@ export default function CartaPage() {
         
         const data = await response.json();
         if (data.success && data.menu) {
-          // Cargar meseras desde el menú (o usar valores por defecto)
-          if (data.menu.waiters && Array.isArray(data.menu.waiters) && data.menu.waiters.length > 0) {
-            setWaiters(data.menu.waiters);
-          } else {
-            // Valores por defecto para demo
-            setWaiters(['Maria', 'Lucia', 'Carmen']);
+          // Cargar meseras desde el menú (parsear JSON string si es necesario)
+          let waitersArray: string[] = [];
+          if (data.menu.waiters) {
+            try {
+              // Si es string JSON, parsearlo
+              if (typeof data.menu.waiters === 'string') {
+                waitersArray = JSON.parse(data.menu.waiters);
+              } else if (Array.isArray(data.menu.waiters)) {
+                waitersArray = data.menu.waiters;
+              }
+            } catch (e) {
+              console.warn('Error parseando waiters:', e);
+              // Si falla el parseo, intentar como string separado por comas
+              if (typeof data.menu.waiters === 'string') {
+                waitersArray = data.menu.waiters.split(',').map((w: string) => w.trim()).filter((w: string) => w.length > 0);
+              }
+            }
           }
           
-          console.log('Meseras cargadas:', data.menu.waiters || ['Maria', 'Lucia', 'Carmen']);
+          if (waitersArray.length > 0) {
+            setWaiters(waitersArray);
+            console.log('Meseras cargadas:', waitersArray);
+          } else {
+            // Valores por defecto solo si no hay waiters en BD
+            setWaiters(['Maria', 'Lucia', 'Carmen']);
+            console.log('Usando meseras por defecto:', ['Maria', 'Lucia', 'Carmen']);
+          }
           
           let restaurantInfo: RestaurantData = {
             restaurantName: data.menu.restaurantName,
@@ -747,28 +765,49 @@ export default function CartaPage() {
                 </div>
               </div>
               {expandedCategories[category.id || category.name] !== false && (
-                <div className={`px-3 pb-3 ${category.name.toUpperCase().includes('PROMO') ? 'pt-3 flex flex-wrap justify-evenly gap-2' : 'pt-0 space-y-0'}`}>
-                  {filterItems(category.items).map((item, itemIndex) => (
-                    category.name.toUpperCase().includes('PROMO') ? (
-                      <div key={item.id || itemIndex} className="flex flex-col hover:opacity-90 transition-opacity duration-300 w-[calc(33.333%-0.5rem)] cursor-pointer h-full rounded-lg overflow-hidden" style={{ minHeight: '140px' }} onClick={()=>{setModalItem(item); const promoImages = [`/platos/${idUnico}/milanesa-completa.jpg`,`/platos/${idUnico}/vacio-papas.jpg`,`/platos/${idUnico}/rabas.jpg`]; const imageSrc = item.imageUrl && item.imageUrl.startsWith('/platos/') ? item.imageUrl : (item.imageBase64 || item.imageUrl || promoImages[itemIndex % promoImages.length]); setModalItemImage(imageSrc);}} title="Click para ver detalles">
-                        <div className={`px-3 py-2 border-b ${isDarkMode? 'bg-gray-700 border-gray-600':'bg-gray-200 border-gray-300'}`}>
-                          <h3 className={`text-sm font-bold text-center ${isDarkMode? 'text-white':'text-gray-800'}`}>{(/\([^\)]*\)\s*$/.test(item.name||'')) ? (item.name||'').replace(/\s*\([^)]*\)\s*$/, '').trim() : item.name}</h3>
-                        </div>
-                        <div className="h-24 overflow-hidden flex items-center justify-center bg-gray-100">
-                          {item.imageUrl && item.imageUrl.startsWith('/platos/') ? (
-                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" onError={(e) => { const target = e.currentTarget; target.style.display = 'none'; const parent = target.parentElement; if (parent && !parent.querySelector('.icon-cubiertos')) { const icon = document.createElement('div'); icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl'; icon.innerHTML = '🍽️'; parent.appendChild(icon); }}} />
-                          ) : item.imageBase64 || item.imageUrl ? (
-                            <img src={item.imageBase64 || item.imageUrl || ''} alt={item.name} className="w-full h-full object-cover" onError={(e) => { const target = e.currentTarget; target.style.display = 'none'; const parent = target.parentElement; if (parent && !parent.querySelector('.icon-cubiertos')) { const icon = document.createElement('div'); icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl'; icon.innerHTML = '🍽️'; parent.appendChild(icon); }}} />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">🍽️</div>
-                          )}
-                        </div>
-                        <div className={`${isDarkMode? 'bg-gray-700':'bg-gray-200'} p-2`}>
-                          {(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const desc = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return desc ? (<p className={`${isDarkMode? 'text-gray-300':'text-gray-800'} text-xs text-center min-h-[2rem] flex items-center justify-center`}>{desc}</p>) : null; })()}
-                          <div className="text-sm font-bold text-center text-blue-500 mt-2">{item.price.replace('$$','$')}</div>
-                        </div>
+                <div className={`px-3 pb-3 ${category.name.toUpperCase().includes('PROMO') ? 'pt-3' : 'pt-0 space-y-0'}`}>
+                  {category.name.toUpperCase().includes('PROMO') ? (
+                    // Contenedor con scroll horizontal para promos
+                    <div className="overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: isDarkMode ? '#4B5563 #1F2937' : '#9CA3AF #E5E7EB' }}>
+                      <div className="flex gap-3" style={{ width: 'max-content' }}>
+                        {filterItems(category.items).map((item, itemIndex) => (
+                          <div key={item.id || itemIndex} className="flex flex-col hover:opacity-90 transition-opacity duration-300 cursor-pointer rounded-lg overflow-hidden shadow-md flex-shrink-0" style={{ minHeight: '180px', width: '180px', minWidth: '180px', maxWidth: '180px' }} onClick={()=>{setModalItem(item); const promoImages = [`/platos/${idUnico}/milanesa-completa.jpg`,`/platos/${idUnico}/vacio-papas.jpg`,`/platos/${idUnico}/rabas.jpg`]; const imageSrc = item.imageUrl && item.imageUrl.startsWith('/platos/') ? item.imageUrl : (item.imageBase64 || item.imageUrl || promoImages[itemIndex % promoImages.length]); setModalItemImage(imageSrc);}} title="Click para ver detalles">
+                            {/* Imagen con número de promo en círculo */}
+                            <div className="relative h-32 overflow-hidden flex items-center justify-center bg-gray-100">
+                              {/* Número de promo en círculo */}
+                              <div className={`absolute top-2 left-2 z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
+                                isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+                              }`}>
+                                {itemIndex + 1}
+                              </div>
+                              {item.imageUrl && item.imageUrl.startsWith('/platos/') ? (
+                                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" onError={(e) => { const target = e.currentTarget; target.style.display = 'none'; const parent = target.parentElement; if (parent && !parent.querySelector('.icon-cubiertos')) { const icon = document.createElement('div'); icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl'; icon.innerHTML = '🍽️'; parent.appendChild(icon); }}} />
+                              ) : item.imageBase64 || item.imageUrl ? (
+                                <img src={item.imageBase64 || item.imageUrl || ''} alt={item.name} className="w-full h-full object-cover" onError={(e) => { const target = e.currentTarget; target.style.display = 'none'; const parent = target.parentElement; if (parent && !parent.querySelector('.icon-cubiertos')) { const icon = document.createElement('div'); icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl'; icon.innerHTML = '🍽️'; parent.appendChild(icon); }}} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">🍽️</div>
+                              )}
+                            </div>
+                            {/* Nombre del plato - 2 líneas */}
+                            <div className={`px-3 py-2 border-b ${isDarkMode? 'bg-gray-700 border-gray-600':'bg-gray-200 border-gray-300'}`}>
+                              <h3 className={`text-xs font-bold text-center line-clamp-2 ${isDarkMode? 'text-white':'text-gray-800'}`} style={{ minHeight: '2.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                {(() => {
+                                  const hasParens = /\([^\)]*\)\s*$/.test(item.name||'');
+                                  return hasParens ? (item.name||'').replace(/\s*\([^)]*\)\s*$/, '').trim() : item.name;
+                                })()}
+                              </h3>
+                            </div>
+                            {/* Precio - sin descripción */}
+                            <div className={`${isDarkMode? 'bg-gray-700':'bg-gray-200'} p-2`}>
+                              <div className="text-sm font-bold text-center text-blue-500">{item.price.replace('$$','$')}</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ) : (
+                    </div>
+                  ) : (
+                    // Items normales (no promos)
+                    filterItems(category.items).map((item, itemIndex) => (
                       <div key={item.id || itemIndex} className={`flex items-center border-b ${isDarkMode? 'border-gray-700':'border-gray-200'} ${item.isAvailable === false ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer'}`} title={`${item.code ? `#${item.code}` : ''}${(() => { const hasParens = /\([^\)]*\)\s*$/.test(item.name||''); const d = item.description && item.description.length>0 ? item.description : (hasParens ? (item.name.match(/\(([^)]*)\)\s*$/)?.[1] || '' ) : ''); return (item.code? ' ' : '') + (d||''); })()}`} onClick={()=>{ if (item.isAvailable !== false) { setModalItem(item); const fallbacks = [`/platos/${idUnico}/albondigas.jpg`,`/platos/${idUnico}/rabas.jpg`,`/platos/${idUnico}/milanesa-completa.jpg`,`/platos/${idUnico}/vacio-papas.jpg`]; setModalItemImage(item.imageBase64 || item.imageUrl || fallbacks[itemIndex % fallbacks.length]); }}}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ml-0 mr-2 my-1 flex items-center justify-center bg-gray-200">
                           {item.imageBase64 || item.imageUrl ? (

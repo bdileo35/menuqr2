@@ -19,8 +19,8 @@ export async function PUT(
       socialFacebook,
       socialTwitter,
       logoUrl,
-      // googleMapsUrl, // TODO: Implementar después
-      // googleReviewsUrl, // TODO: Implementar después
+      googleMapsUrl,
+      googleReviewsUrl,
       whatsappPhone,
       description,
       waiters
@@ -47,8 +47,8 @@ export async function PUT(
     if (socialFacebook !== undefined) menuUpdateData.socialFacebook = socialFacebook?.trim() || null;
     if (socialTwitter !== undefined) menuUpdateData.socialTwitter = socialTwitter?.trim() || null;
     if (logoUrl !== undefined) menuUpdateData.logoUrl = logoUrl?.trim() || null;
-    // if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null; // TODO: Implementar después
-    // if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null; // TODO: Implementar después
+    if (googleMapsUrl !== undefined) menuUpdateData.googleMapsUrl = googleMapsUrl?.trim() || null;
+    if (googleReviewsUrl !== undefined) menuUpdateData.googleReviewsUrl = googleReviewsUrl?.trim() || null;
     if (description !== undefined) menuUpdateData.description = description?.trim() || null;
     if (waiters !== undefined) menuUpdateData.waiters = waiters?.trim() || null;
 

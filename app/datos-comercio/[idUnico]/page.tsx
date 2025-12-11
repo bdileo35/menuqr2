@@ -23,8 +23,14 @@ export default function DatosComercio() {
     instagram: '',
     facebook: '',
     logoUrl: '',
-    whatsappPhone: ''
+    whatsappPhone: '',
+    waiters: '', // Lista de meseros separados por comas
+    googleMapsUrl: '',
+    googleReviewsUrl: ''
   });
+  
+  // Estado para modal de links de Google
+  const [showGoogleLinksModal, setShowGoogleLinksModal] = useState(false);
 
   // Validar que idUnico existe
   if (!idUnico) {
@@ -53,6 +59,22 @@ export default function DatosComercio() {
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.menu) {
+            // Parsear waiters desde JSON string a array y luego a string separado por comas
+            let waitersString = '';
+            if (data.menu.waiters) {
+              try {
+                const waitersArray = typeof data.menu.waiters === 'string' 
+                  ? JSON.parse(data.menu.waiters) 
+                  : data.menu.waiters;
+                if (Array.isArray(waitersArray)) {
+                  waitersString = waitersArray.join(', ');
+                }
+              } catch (e) {
+                // Si no es JSON válido, usar como string directo
+                waitersString = data.menu.waiters;
+              }
+            }
+            
             setFormData({
               restaurantName: data.menu.restaurantName || '',
               address: data.menu.contactAddress || '',
@@ -63,7 +85,10 @@ export default function DatosComercio() {
               instagram: data.menu.socialInstagram || '',
               facebook: data.menu.socialFacebook || '',
               logoUrl: data.menu.logoUrl || '',
-              whatsappPhone: data.menu.whatsappPhone || ''
+              whatsappPhone: data.menu.whatsappPhone || '',
+              waiters: waitersString,
+              googleMapsUrl: data.menu.googleMapsUrl || '',
+              googleReviewsUrl: data.menu.googleReviewsUrl || ''
             });
           }
         }
@@ -142,6 +167,18 @@ export default function DatosComercio() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Convertir waiters de string separado por comas a JSON string
+      let waitersJson = null;
+      if (formData.waiters && formData.waiters.trim()) {
+        const waitersArray = formData.waiters
+          .split(',')
+          .map(w => w.trim())
+          .filter(w => w.length > 0);
+        if (waitersArray.length > 0) {
+          waitersJson = JSON.stringify(waitersArray);
+        }
+      }
+
       const response = await fetch(`/api/menu/${idUnico}/comercio`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -154,7 +191,10 @@ export default function DatosComercio() {
           socialFacebook: formData.facebook,
           description: formData.description,
           logoUrl: formData.logoUrl,
-          whatsappPhone: formData.whatsappPhone || null
+          whatsappPhone: formData.whatsappPhone || null,
+          waiters: waitersJson,
+          googleMapsUrl: formData.googleMapsUrl || null,
+          googleReviewsUrl: formData.googleReviewsUrl || null
         })
       });
 
@@ -258,7 +298,7 @@ export default function DatosComercio() {
           <div className="p-6 space-y-3">
               
               {/* Nombre del Restaurante */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Nombre *
                 </label>
@@ -266,7 +306,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.restaurantName}
                   onChange={(e) => handleInputChange('restaurantName', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -276,7 +316,7 @@ export default function DatosComercio() {
               </div>
 
               {/* Dirección */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Dirección
                 </label>
@@ -284,7 +324,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -294,7 +334,7 @@ export default function DatosComercio() {
               </div>
 
               {/* Teléfono */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Teléfono
                 </label>
@@ -302,7 +342,7 @@ export default function DatosComercio() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -312,7 +352,7 @@ export default function DatosComercio() {
               </div>
 
               {/* Email */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Email
                 </label>
@@ -320,7 +360,7 @@ export default function DatosComercio() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -330,7 +370,7 @@ export default function DatosComercio() {
               </div>
 
               {/* Horarios */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Horarios
                 </label>
@@ -338,7 +378,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.hours}
                   onChange={(e) => handleInputChange('hours', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -348,8 +388,8 @@ export default function DatosComercio() {
               </div>
 
               {/* Logo - EN LÍNEA */}
-              <div className="flex items-start gap-4">
-                <label className="w-24 text-sm font-medium pt-2">
+              <div className="flex items-start gap-3 mb-2">
+                <label className="w-24 text-sm font-medium pt-1.5">
                   Logo
                 </label>
                 <div className="flex-1">
@@ -396,28 +436,19 @@ export default function DatosComercio() {
                       </button>
                     )}
                   </div>
-                  {formData.logoUrl && (
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById('logoInput')?.click()}
-                      className="mt-1 text-xs text-gray-600 hover:text-gray-700 underline"
-                    >
-                      Cambiar logo
-                    </button>
-                  )}
                 </div>
               </div>
 
               {/* Descripción - EN LÍNEA */}
-              <div className="flex items-start gap-4">
-                <label className="w-24 text-sm font-medium pt-2">
+              <div className="flex items-start gap-3 mb-2">
+                <label className="w-24 text-sm font-medium pt-1.5">
                   Descripción
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  rows={3}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors resize-none ${
+                  rows={2}
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors resize-y ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -427,7 +458,7 @@ export default function DatosComercio() {
               </div>
 
               {/* Instagram */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Instagram
                 </label>
@@ -435,7 +466,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.instagram}
                   onChange={(e) => handleInputChange('instagram', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -445,7 +476,7 @@ export default function DatosComercio() {
               </div>
 
               {/* Facebook */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   Facebook
                 </label>
@@ -453,7 +484,7 @@ export default function DatosComercio() {
                   type="text"
                   value={formData.facebook}
                   onChange={(e) => handleInputChange('facebook', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -463,7 +494,7 @@ export default function DatosComercio() {
               </div>
 
               {/* WhatsApp para Pedidos */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="w-24 text-sm font-medium">
                   WhatsApp
                 </label>
@@ -471,7 +502,7 @@ export default function DatosComercio() {
                   type="tel"
                   value={formData.whatsappPhone}
                   onChange={(e) => handleInputChange('whatsappPhone', e.target.value)}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
@@ -480,6 +511,52 @@ export default function DatosComercio() {
                 />
                 <span className="text-xs text-gray-500 w-32">
                   Número para recibir pedidos
+                </span>
+              </div>
+
+              {/* Camareros/as */}
+              <div className="flex items-center gap-3 mb-2">
+                <label className="w-24 text-sm font-medium">
+                  Camareros/as
+                </label>
+                <input
+                  type="text"
+                  value={formData.waiters}
+                  onChange={(e) => handleInputChange('waiters', e.target.value)}
+                  className={`flex-1 px-3 py-1.5 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
+                  }`}
+                  placeholder="ej: Maria, Lucia, Carmen"
+                />
+                <span className="text-xs text-gray-500 w-32">
+                  Separados por comas
+                </span>
+              </div>
+
+              {/* Links de Google */}
+              <div className="flex items-center gap-3 mb-2">
+                <label className="w-24 text-sm font-medium">
+                  Google Maps
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleLinksModal(true)}
+                  className={`flex-1 px-3 py-2 rounded-lg border transition-colors text-left ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' 
+                      : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  {formData.googleMapsUrl ? (
+                    <span className="text-sm text-blue-500 truncate">{formData.googleMapsUrl.substring(0, 50)}...</span>
+                  ) : (
+                    <span className="text-sm text-gray-500">Configurar links de Google</span>
+                  )}
+                </button>
+                <span className="text-xs text-gray-500 w-32">
+                  Maps y Reseñas
                 </span>
               </div>
 
@@ -507,6 +584,77 @@ export default function DatosComercio() {
               </div>
           </div>
         </div>
+        )}
+
+        {/* Modal de Links de Google */}
+        {showGoogleLinksModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 w-full max-w-md mx-4`}>
+              <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Links de Google
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Google Maps (URL del lugar)
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.googleMapsUrl}
+                    onChange={(e) => handleInputChange('googleMapsUrl', e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg border transition-colors ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
+                    }`}
+                    placeholder="https://www.google.com/maps/place/..."
+                  />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Google Reviews (URL de reseñas)
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.googleReviewsUrl}
+                    onChange={(e) => handleInputChange('googleReviewsUrl', e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg border transition-colors ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500' 
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-gray-500'
+                    }`}
+                    placeholder="https://www.google.com/maps/place/.../reviews"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleLinksModal(false)}
+                  className={`px-6 py-2 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                      : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                  }`}
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGoogleLinksModal(false);
+                    handleSave();
+                  }}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  Guardar Links
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       
