@@ -79,6 +79,7 @@ model Menu {
   logoUrl        String?
   // googleMapsUrl  String?  // TODO: Descomentar cuando se agreguen columnas en Supabase
   // googleReviewsUrl String? // TODO: Descomentar cuando se agreguen columnas en Supabase
+  // Nota: Campos comentados para evitar error 500 - Prisma Client debe coincidir con BD
   waiters        String?  // JSON string
   allowOrdering  Boolean  @default(true)
   deliveryEnabled Boolean @default(false)
