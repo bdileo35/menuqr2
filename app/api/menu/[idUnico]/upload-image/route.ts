@@ -32,14 +32,21 @@ export async function POST(
     const imageType = base64Match[1]; // jpeg, png, etc.
     const base64Data = base64Match[2];
 
-    // Generar nombre de archivo único
-    const timestamp = Date.now();
-    const sanitizedName = (itemName || 'item')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .substring(0, 30);
-    const fileName = `${sanitizedName}-${timestamp}.${imageType === 'jpeg' ? 'jpg' : imageType}`;
-
+    // Normalizar acentos y caracteres especiales
+    const normalizeString = (str: string) => {
+      return str
+        .normalize('NFD') // Descompone caracteres con acentos
+        .replace(/[\u0300-\u036f]/g, '') // Elimina diacríticos (acentos)
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '') // Elimina caracteres especiales excepto espacios
+        .replace(/\s+/g, '-') // Reemplaza espacios con guiones
+        .replace(/-+/g, '-') // Elimina guiones múltiples
+        .replace(/^-|-$/g, ''); // Elimina guiones al inicio/final
+    };
+    
+    // Generar nombre base más corto (máximo 25 caracteres)
+    const sanitizedName = normalizeString(itemName || 'item').substring(0, 25);
+    
     // Ruta del directorio: public/platos/{idUnico}
     const uploadDir = path.join(process.cwd(), 'public', 'platos', idUnico);
     
@@ -48,8 +55,23 @@ export async function POST(
       await mkdir(uploadDir, { recursive: true });
     }
 
-    // Ruta completa del archivo
-    const filePath = path.join(uploadDir, fileName);
+    // Verificar si ya existe un archivo con el mismo nombre base
+    const { readdir } = await import('fs/promises');
+    const existingFiles = await readdir(uploadDir).catch(() => []);
+    const baseFileName = sanitizedName;
+    const fileExtension = imageType === 'jpeg' ? 'jpg' : imageType;
+    
+    // Buscar archivo existente con el mismo nombre base
+    let fileName = `${baseFileName}.${fileExtension}`;
+    let filePath = path.join(uploadDir, fileName);
+    
+    // Si el archivo ya existe, agregar timestamp solo si es necesario
+    if (existingFiles.some(f => f.startsWith(baseFileName) && f.endsWith(`.${fileExtension}`))) {
+      // Archivo existe, usar timestamp para evitar sobrescribir
+      const timestamp = Date.now();
+      fileName = `${baseFileName}-${timestamp}.${fileExtension}`;
+      filePath = path.join(uploadDir, fileName);
+    }
 
     // Convertir base64 a buffer y guardar
     const imageBuffer = Buffer.from(base64Data, 'base64');

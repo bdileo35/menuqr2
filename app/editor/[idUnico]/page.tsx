@@ -156,19 +156,34 @@ export default function Editor2() {
     
         let restaurantInfo: RestaurantData = {
           restaurantName: data.menu.restaurantName,
+          address: data.menu.contactAddress || 'Av. Fernández de la Cruz 1100',
+          phone: data.menu.contactPhone || '+54 11 1234-5678',
           categories: data.menu.categories.map((cat: any) => ({
-          id: cat.id,
-          name: cat.name,
-          description: cat.description,
-          code: cat.code,
-          items: cat.items.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            price: `$${item.price}`,
-              description: item.description,
-          isAvailable: item.isAvailable
-        }))
-      }))
+            id: cat.id,
+            name: cat.name,
+            description: cat.description,
+            code: cat.code,
+            items: cat.items.map((item: any) => {
+              // Normalizar imageUrl igual que en handleSaveItem
+              const normalizedImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') 
+                ? item.imageUrl.trim() 
+                : (item.imageUrl !== null && item.imageUrl !== undefined ? item.imageUrl : null);
+              
+              return {
+                id: item.id,
+                name: item.name,
+                price: `$${item.price}`,
+                description: item.description,
+                isAvailable: item.isAvailable,
+                isPopular: item.isPopular || false,
+                isPromo: item.isPromo || false,
+                code: item.code,
+                // IMPORTANTE: Incluir imageUrl e imageBase64 desde la API
+                imageUrl: normalizedImageUrl,
+                imageBase64: normalizedImageUrl || null
+              };
+            })
+          }))
         };
 
         // Fusionar con ediciones locales (fotos/isAvailable) si existen
@@ -195,10 +210,12 @@ export default function Editor2() {
                 const mergedExisting = rc.items.map(ri => {
                   const si = savedItemMap.get(ri.id || ri.name);
                   if (!si) return ri;
+                  // Priorizar imageUrl de la API, luego imageBase64 de localStorage
                   const hasLocalImageProp = Object.prototype.hasOwnProperty.call(si, 'imageBase64');
-                  const mergedImage = hasLocalImageProp ? si.imageBase64 : ri.imageBase64;
+                  const mergedImage = ri.imageUrl || (hasLocalImageProp ? si.imageBase64 : ri.imageBase64);
                   return {
                     ...ri,
+                    imageUrl: ri.imageUrl || si.imageUrl || null, // Priorizar API
                     imageBase64: mergedImage,
                     isAvailable: typeof si.isAvailable === 'boolean' ? si.isAvailable : ri.isAvailable,
                     name: si.name || ri.name,
@@ -458,20 +475,27 @@ export default function Editor2() {
         console.log('📦 Respuesta de API al recargar:', menuDataResponse);
         
         if (menuDataResponse.success && menuDataResponse.menu) {
-          // Debug: verificar items con imágenes antes de mapear
-          console.log('🔍 Verificando items de la API antes de mapear...');
+          // Debug: contar items con imágenes (solo una vez, no en cada render)
+          const itemsConImagen = [];
           menuDataResponse.menu.categories.forEach((cat: any) => {
             cat.items.forEach((item: any) => {
               if (item.imageUrl) {
-                console.log(`✅ API devuelve imageUrl para "${item.name}":`, item.imageUrl);
-              } else if (item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Coca')) {
-                console.log(`❌ API NO devuelve imageUrl para "${item.name}":`, {
-                  imageUrl: item.imageUrl,
-                  itemCompleto: item
-                });
+                itemsConImagen.push({ nombre: item.name, imageUrl: item.imageUrl });
               }
             });
           });
+          // Verificar items sin categoría también
+          if (menuDataResponse.menu.categories.find((c: any) => c.id === '__SIN_CATEGORIA__')) {
+            const sinCat = menuDataResponse.menu.categories.find((c: any) => c.id === '__SIN_CATEGORIA__');
+            if (sinCat && sinCat.items) {
+              sinCat.items.forEach((item: any) => {
+                if (item.imageUrl) {
+                  itemsConImagen.push({ nombre: item.name, imageUrl: item.imageUrl });
+                }
+              });
+            }
+          }
+          console.log(`📊 Items con imagen en API: ${itemsConImagen.length}`);
           
           const restaurantInfo: RestaurantData = {
             restaurantName: menuDataResponse.menu.restaurantName,
@@ -482,43 +506,10 @@ export default function Editor2() {
               name: cat.name,
               description: cat.description,
               items: cat.items.map((item: any) => {
-                // Debug: verificar imageUrl ANTES de normalizar
-                if (item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Coca') || item.name.includes('Chupin') || item.name.includes('Croquetas')) {
-                  console.log(`🔍 EDITOR - Item "${item.name}" ANTES de normalizar:`, {
-                    imageUrl: item.imageUrl,
-                    tipo: typeof item.imageUrl,
-                    esString: typeof item.imageUrl === 'string',
-                    esNull: item.imageUrl === null,
-                    esUndefined: item.imageUrl === undefined,
-                    itemCompleto: item
-                  });
-                }
-                
                 // Normalizar imageUrl: convertir string vacío a null, mantener URLs válidas
                 const normalizedImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') 
                   ? item.imageUrl.trim() 
                   : (item.imageUrl !== null && item.imageUrl !== undefined ? item.imageUrl : null);
-                
-                // Debug: verificar imageUrl DESPUÉS de normalizar
-                if (item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Coca') || item.name.includes('Chupin') || item.name.includes('Croquetas')) {
-                  console.log(`🖼️ EDITOR - Item "${item.name}" DESPUÉS de normalizar:`, {
-                    normalizedImageUrl,
-                    imageBase64: normalizedImageUrl 
-                      ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
-                      : null,
-                    resultadoFinal: {
-                      imageUrl: normalizedImageUrl,
-                      imageBase64: normalizedImageUrl 
-                        ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
-                        : null
-                    }
-                  });
-                } else if (normalizedImageUrl) {
-                  console.log(`🖼️ Item "${item.name}": imageUrl =`, normalizedImageUrl);
-                } else if (item.imageUrl && typeof item.imageUrl !== 'string') {
-                  // Si imageUrl existe pero no es string, loguear para debug
-                  console.log(`⚠️ Item "${item.name}": imageUrl tipo inválido =`, item.imageUrl, typeof item.imageUrl);
-                }
                 
                 return {
                   id: item.id,
@@ -529,13 +520,10 @@ export default function Editor2() {
                   isPopular: item.isPopular || false,
                   isPromo: item.isPromo || false,
                   code: item.code,
-                  // Asegurar que imageUrl se mantenga si existe (no string vacío)
+                  // IMPORTANTE: Usar la misma lógica que carta para mantener consistencia
                   imageUrl: normalizedImageUrl,
-                  // Si imageUrl es una URL de archivo, también ponerla en imageBase64 para compatibilidad
-                  // IMPORTANTE: Si normalizedImageUrl es null, imageBase64 también debe ser null
-                  imageBase64: normalizedImageUrl 
-                    ? (normalizedImageUrl.startsWith('/platos/') ? normalizedImageUrl : normalizedImageUrl)
-                    : null
+                  // Si imageUrl existe, también ponerla en imageBase64 (igual que carta)
+                  imageBase64: normalizedImageUrl || null
                 };
               })
             }))
@@ -1234,41 +1222,12 @@ export default function Editor2() {
                           // Prioridad: imageUrl (si es /platos/...) > imageBase64 > imageUrl (genérico)
                           let imageSrc = '';
                           
-                          // Debug: verificar valores del item (especialmente para "Vacío")
-                          if (item.name.includes('Vacío') || item.name.includes('Entraña') || item.name.includes('Peceto') || item.name.includes('Chupin') || item.name.includes('Croquetas')) {
-                            console.log(`🔍 RENDER - Item "${item.name}":`, {
-                              imageUrl: item.imageUrl,
-                              imageBase64: item.imageBase64,
-                              id: item.id,
-                              tipoImageUrl: typeof item.imageUrl,
-                              tipoImageBase64: typeof item.imageBase64
-                            });
-                          }
-                          
                           if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/platos/')) {
                             imageSrc = item.imageUrl;
-                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
-                              console.log(`✅ RENDER - Usando imageUrl para "${item.name}":`, imageSrc);
-                            }
                           } else if (item.imageBase64 && typeof item.imageBase64 === 'string') {
                             imageSrc = item.imageBase64;
-                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
-                              console.log(`✅ RENDER - Usando imageBase64 para "${item.name}":`, imageSrc);
-                            }
                           } else if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
                             imageSrc = item.imageUrl;
-                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
-                              console.log(`✅ RENDER - Usando imageUrl genérico para "${item.name}":`, imageSrc);
-                            }
-                          } else {
-                            if (item.name.includes('Vacío') || item.name.includes('Entraña')) {
-                              console.log(`❌ RENDER - NO hay imagen para "${item.name}" - Mostrando fallback`);
-                            }
-                          }
-                          
-                          // Debug: solo para el item que se está editando
-                          if (editingItem?.id === item.id && imageSrc) {
-                            console.log(`🖼️ Mostrando imagen para "${item.name}":`, imageSrc);
                           }
                           
                           return imageSrc ? (

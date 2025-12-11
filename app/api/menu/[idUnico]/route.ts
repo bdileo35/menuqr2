@@ -62,6 +62,31 @@ export async function GET(
     });
 
     console.log(`📦 Items totales: ${allItems.length}`);
+    
+    // 🔍 DEBUG: Verificar qué devuelve Prisma directamente (sin filtros)
+    const itemsConImagen = allItems.filter(item => item.imageUrl && item.imageUrl.trim() !== '');
+    console.log(`🖼️ Items con imageUrl en BD: ${itemsConImagen.length}`);
+    if (itemsConImagen.length > 0) {
+      console.log(`📸 Primeros 3 items con imagen:`, itemsConImagen.slice(0, 3).map(item => ({
+        nombre: item.name,
+        imageUrl: item.imageUrl,
+        tipo: typeof item.imageUrl
+      })));
+    }
+    
+    // 🔍 DEBUG: Verificar items específicos que sabemos que tienen imagen
+    const itemsEspecificos = allItems.filter(item => 
+      item.name.includes('Vacío') || 
+      item.name.includes('Entraña') || 
+      item.name.includes('Peceto') ||
+      item.name.includes('Coca') ||
+      item.name.includes('Chupin') ||
+      item.name.includes('Croquetas')
+    );
+    console.log(`🔍 Items específicos encontrados: ${itemsEspecificos.length}`);
+    itemsEspecificos.forEach(item => {
+      console.log(`  - "${item.name}": imageUrl =`, item.imageUrl, `(tipo: ${typeof item.imageUrl}, esNull: ${item.imageUrl === null}, esUndefined: ${item.imageUrl === undefined})`);
+    });
 
     // ✅ FILTRAR EN MEMORIA (sin async)
     const categoriesWithItems = categories.map(cat => {
