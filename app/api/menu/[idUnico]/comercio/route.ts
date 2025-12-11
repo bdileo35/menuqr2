@@ -21,7 +21,7 @@ export async function PUT(
       logoUrl,
       // googleMapsUrl, // TODO: Descomentar cuando se agreguen columnas en Supabase
       // googleReviewsUrl, // TODO: Descomentar cuando se agreguen columnas en Supabase
-      whatsappPhone
+      whatsappPhone,
       description,
       waiters
     } = body;
