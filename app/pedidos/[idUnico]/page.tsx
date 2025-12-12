@@ -35,6 +35,12 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true);
   const [previousStatuses, setPreviousStatuses] = useState<Map<string, Order['status']>>(new Map());
   
+  // Estados para modales de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
+  const [confirmNewStatus, setConfirmNewStatus] = useState<Order['status'] | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
+  
   // Estados para el modal de pedido
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -122,7 +128,6 @@ export default function PedidosPage() {
 
   // Filtrar pedidos por estado
   const pendingOrders = orders.filter(o => o.status === 'PENDING' || o.status === 'CONFIRMED');
-  const preparingOrders = orders.filter(o => o.status === 'PREPARING');
   const readyOrders = orders.filter(o => o.status === 'READY');
   const completedOrders = orders.filter(o => o.status === 'DELIVERED');
 
@@ -130,31 +135,67 @@ export default function PedidosPage() {
   const sortByDate = (a: Order, b: Order) => 
     new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 
-  // Función para cambiar estado (por ahora solo mock)
-  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
-    // Guardar estado anterior antes de cambiar
+  // Función para guardar pedidos en localStorage
+  const saveOrdersToStorage = (ordersToSave: Order[]) => {
+    try {
+      const ordersKey = `orders-${idUnico}`;
+      localStorage.setItem(ordersKey, JSON.stringify(ordersToSave));
+    } catch (e) {
+      console.error('Error guardando pedidos en localStorage:', e);
+    }
+  };
+
+  // Función para abrir modal de confirmación
+  const handleStatusChangeClick = (orderId: string, newStatus: Order['status']) => {
     const currentOrder = orders.find(o => o.id === orderId);
-    if (currentOrder) {
-      setPreviousStatuses(prev => {
-        const newMap = new Map(prev);
-        newMap.set(orderId, currentOrder.status);
-        return newMap;
-      });
+    if (!currentOrder) return;
+    
+    setConfirmOrderId(orderId);
+    setConfirmNewStatus(newStatus);
+    
+    if (newStatus === 'READY') {
+      setConfirmMessage('¿Desea marcar como A cobrar?');
+    } else if (newStatus === 'DELIVERED') {
+      setConfirmMessage('¿Desea marcar como Cobrado?');
+    } else {
+      setConfirmMessage('¿Confirmar cambio de estado?');
     }
     
-    // TODO: Llamar a API para actualizar estado
-    setOrders(prev => prev.map(o => 
-      o.id === orderId ? { ...o, status: newStatus } : o
-    ));
+    setShowConfirmModal(true);
+  };
+
+  // Función para confirmar cambio de estado
+  const confirmStatusChange = () => {
+    if (!confirmOrderId || !confirmNewStatus) return;
+    
+    // Actualizar estado en memoria
+    const updatedOrders = orders.map(o => 
+      o.id === confirmOrderId ? { ...o, status: confirmNewStatus } : o
+    );
+    setOrders(updatedOrders);
+    
+    // Persistir en localStorage
+    saveOrdersToStorage(updatedOrders);
+    
+    // Cerrar modal
+    setShowConfirmModal(false);
+    setConfirmOrderId(null);
+    setConfirmNewStatus(null);
+    setConfirmMessage('');
   };
 
   // Función para revertir al estado anterior
   const handleRevertStatus = (orderId: string) => {
     const previousStatus = previousStatuses.get(orderId);
     if (previousStatus) {
-      setOrders(prev => prev.map(o => 
+      const updatedOrders = orders.map(o => 
         o.id === orderId ? { ...o, status: previousStatus } : o
-      ));
+      );
+      setOrders(updatedOrders);
+      
+      // Persistir en localStorage
+      saveOrdersToStorage(updatedOrders);
+      
       // Limpiar el estado anterior guardado
       setPreviousStatuses(prev => {
         const newMap = new Map(prev);
@@ -169,9 +210,7 @@ export default function PedidosPage() {
     switch (currentStatus) {
       case 'PENDING':
       case 'CONFIRMED':
-        return 'PREPARING';
-      case 'PREPARING':
-        return 'READY';
+        return 'READY'; // Saltar PREPARING, ir directo a READY
       case 'READY':
         return 'DELIVERED';
       default:
@@ -185,8 +224,6 @@ export default function PedidosPage() {
       case 'PENDING':
       case 'CONFIRMED':
         return 'En Preparación';
-      case 'PREPARING':
-        return 'Listo para Cobrar';
       case 'READY':
         return 'Marcar como Cobrado';
       default:
@@ -295,87 +332,266 @@ export default function PedidosPage() {
         className={`flex flex-col rounded-lg overflow-hidden shadow-md flex-shrink-0 ${
           isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
         }`}
-        style={{ width: '180px', minWidth: '180px', maxWidth: '180px', minHeight: '240px' }}
+        style={{ width: '180px', minWidth: '180px', maxWidth: '180px', minHeight: 'auto' }}
       >
-        {/* Header: 2 líneas - Código y Mesa */}
+        {/* Header: 2 líneas - Código con fecha/hora y DATO */}
         <div className={`px-3 py-2 border-b ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'}`}>
           <div className="flex flex-col gap-1">
-            <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-              #{order.code}
-            </span>
-            {order.tableNumber && (
-              <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Mesa {order.tableNumber}
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                {order.code}
               </span>
-            )}
+              {(() => {
+                const fecha = new Date(order.createdAt);
+                const hora = fecha.getHours();
+                const minutos = fecha.getMinutes();
+                return (
+                  <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    {hora.toString().padStart(2, '0')}:<span className="font-bold">{minutos.toString().padStart(2, '0')}</span>
+                  </span>
+                );
+              })()}
+            </div>
+            {(() => {
+              const modalidad = (order as any).modalidad;
+              let dato = '';
+              if (modalidad === 'salon') {
+                dato = order.tableNumber ? `Mesa ${order.tableNumber}` : '';
+                if (order.waiterName) {
+                  dato += dato ? ` - ${order.waiterName}` : order.waiterName;
+                }
+              } else if (modalidad === 'delivery') {
+                dato = order.customerName || '';
+              } else if (modalidad === 'retiro') {
+                dato = order.customerName || '';
+              } else if (order.tableNumber) {
+                dato = `Mesa ${order.tableNumber}`;
+                if (order.waiterName) {
+                  dato += ` - ${order.waiterName}`;
+                }
+              }
+              return dato ? (
+                <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {dato}
+                </span>
+              ) : null;
+            })()}
           </div>
         </div>
 
-        {/* Imagen del primer item */}
-        <div className="relative h-24 overflow-hidden flex items-center justify-center bg-gray-100">
-          {mainItem?.imageUrl ? (
-            <img 
-              src={mainItem.imageUrl} 
-              alt={mainItem.name} 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.currentTarget;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent && !parent.querySelector('.icon-cubiertos')) {
-                  const icon = document.createElement('div');
-                  icon.className = 'icon-cubiertos w-full h-full flex items-center justify-center text-gray-400 text-4xl';
-                  icon.innerHTML = '🍽️';
-                  parent.appendChild(icon);
-                }
-              }}
-            />
+        {/* Body blanco para items */}
+        <div className={`px-3 py-2 flex-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          {order.status === 'READY' ? (
+            /* Mostrar items individuales con precios cuando está en "A Cobrar" */
+            <div className="space-y-1">
+              {order.items.map((item, idx) => (
+                <div key={idx} className={`text-xs flex justify-between items-start ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <span className="flex-1 pr-2">{item.quantity} {item.name}</span>
+                  <span className={`font-semibold whitespace-nowrap ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    ${(item.price * item.quantity).toLocaleString('es-AR')}
+                  </span>
+                </div>
+              ))}
+              <div className={`text-xs flex justify-between items-center pt-1 border-t ${isDarkMode ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>
+                <span className="font-bold">Total:</span>
+                <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  ${order.total.toLocaleString('es-AR')}
+                </span>
+              </div>
+            </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">🍽️</div>
+            /* Mostrar items completos sin precios en Pendientes */
+            <div className="space-y-1">
+              {order.items.map((item, idx) => (
+                <div key={idx} className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {item.quantity} {item.name}
+                </div>
+              ))}
+              <div className={`text-xs flex justify-between items-center pt-1 border-t ${isDarkMode ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>
+                <span>Total:</span>
+                <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  ${order.total.toLocaleString('es-AR')}
+                </span>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Body blanco para items - Info: Items y Total en una sola línea */}
-        <div className={`px-3 py-2 flex-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`text-xs flex justify-between items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            <span>Items: {order.items.length}</span>
-            <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-              ${order.total.toLocaleString('es-AR')}
-            </span>
-          </div>
-        </div>
-
-        {/* Botones: Revertir y Cambiar estado */}
+        {/* Botones: Cambiar estado (sin botón revertir) */}
         {nextStatus && (
           <div className="px-3 py-2 border-t">
-            <div className="flex gap-2">
-              {/* Botón revertir (solo si hay estado anterior) - pequeño a la izquierda */}
-              {previousStatuses.has(order.id) && (
-                <button
-                  onClick={() => handleRevertStatus(order.id)}
-                  className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                      : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                  }`}
-                  title="Revertir al estado anterior"
-                >
-                  <MdArrowBack size={18} />
-                </button>
-              )}
-              {/* Botón principal - ocupa el resto del espacio */}
-              <button
-                onClick={() => handleStatusChange(order.id, nextStatus)}
-                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold text-white transition-colors ${getButtonColor(order.status)}`}
-              >
-                {getButtonText(order.status)}
-              </button>
-            </div>
+            <button
+              onClick={() => handleStatusChangeClick(order.id, nextStatus)}
+              className={`w-full py-2 px-3 rounded-lg text-xs font-bold text-white transition-colors ${getButtonColor(order.status)}`}
+            >
+              {getButtonText(order.status)}
+            </button>
           </div>
         )}
       </div>
     );
   };
+
+  // Función para generar pedidos de ejemplo (disponible en consola)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).generarPedidosDemo = (customIdUnico?: string) => {
+        const targetId = customIdUnico || idUnico;
+        const ordersKey = `orders-${targetId}`;
+        
+        const pedidosDemo = [
+          {
+            id: `pedido-${Date.now()}-1`,
+            code: 'S9636',
+            status: 'PENDING',
+            customerName: 'Mesa 12',
+            tableNumber: '12',
+            waiterName: 'Juan Pérez',
+            total: 65000,
+            notes: 'Sin cebolla en el vacío',
+            modalidad: 'salon',
+            paymentMethod: 'efectivo',
+            items: [
+              { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 2, price: 14000 },
+              { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+              { id: '0107', name: 'Peceto al verdeo c/ puré', quantity: 1, price: 15000 },
+              { id: 'bebida-1', name: 'Coca Cola 1.5L', quantity: 2, price: 3000 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+          },
+          {
+            id: `pedido-${Date.now()}-2`,
+            code: 'S9637',
+            status: 'PREPARING',
+            customerName: 'Mesa 8',
+            tableNumber: '8',
+            waiterName: 'Ana',
+            total: 45000,
+            notes: 'Bien cocido',
+            modalidad: 'salon',
+            paymentMethod: 'mp',
+            items: [
+              { id: '0104', name: 'Pechuga rellena c/ f. españolas', quantity: 1, price: 12000 },
+              { id: '0103', name: 'Chupín de merluza c/ papa natural', quantity: 1, price: 10000 },
+              { id: '0108', name: 'Correntinos caseros a la Vangoli', quantity: 1, price: 13000 },
+              { id: 'bebida-2', name: 'Agua sin gas', quantity: 2, price: 3000 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+          },
+          {
+            id: `pedido-${Date.now()}-3`,
+            code: 'S9638',
+            status: 'READY',
+            customerName: 'Mesa 5',
+            tableNumber: '5',
+            waiterName: 'Juan Pérez',
+            total: 62000,
+            notes: null,
+            modalidad: 'salon',
+            paymentMethod: 'efectivo',
+            items: [
+              { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 2, price: 14000 },
+              { id: '0102', name: 'Croquetas de carne c/ ensalada', quantity: 1, price: 9000 },
+              { id: '0101', name: 'Riñoncitos al jerez c/ puré', quantity: 1, price: 9000 },
+              { id: 'bebida-3', name: 'Vino tinto copa', quantity: 2, price: 6500 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+          },
+          {
+            id: `pedido-${Date.now()}-4`,
+            code: 'D9639',
+            status: 'PENDING',
+            customerName: 'María González',
+            tableNumber: null,
+            waiterName: null,
+            total: 28000,
+            notes: 'Timbre 3B',
+            modalidad: 'delivery',
+            paymentMethod: 'mp',
+            items: [
+              { id: '0107', name: 'Peceto al verdeo c/ puré', quantity: 1, price: 15000 },
+              { id: 'bebida-4', name: 'Coca Cola 500ml', quantity: 2, price: 2000 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString()
+          },
+          {
+            id: `pedido-${Date.now()}-5`,
+            code: 'T9640',
+            status: 'PREPARING',
+            customerName: 'Carlos Rodríguez',
+            tableNumber: null,
+            waiterName: null,
+            total: 24000,
+            notes: null,
+            modalidad: 'retiro',
+            paymentMethod: 'efectivo',
+            items: [
+              { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+              { id: '0102', name: 'Croquetas de carne c/ ensalada', quantity: 1, price: 9000 },
+              { id: 'bebida-5', name: 'Agua con gas', quantity: 1, price: 3000 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString()
+          },
+          {
+            id: `pedido-${Date.now()}-6`,
+            code: 'S9641',
+            status: 'READY',
+            customerName: 'Mesa 15',
+            tableNumber: '15',
+            waiterName: 'Ana',
+            total: 55000,
+            notes: 'Sin sal en el peceto',
+            modalidad: 'salon',
+            paymentMethod: 'mp',
+            items: [
+              { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 2, price: 14000 },
+              { id: '0104', name: 'Pechuga rellena c/ f. españolas', quantity: 1, price: 12000 },
+              { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+              { id: 'bebida-6', name: 'Cerveza artesanal', quantity: 3, price: 3500 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
+          },
+          {
+            id: `pedido-${Date.now()}-7`,
+            code: 'S9642',
+            status: 'PENDING',
+            customerName: 'Mesa 3',
+            tableNumber: '3',
+            waiterName: 'Juan Pérez',
+            total: 18500,
+            notes: null,
+            modalidad: 'salon',
+            paymentMethod: 'efectivo',
+            items: [
+              { id: '0103', name: 'Chupín de merluza c/ papa natural', quantity: 1, price: 10000 },
+              { id: 'bebida-7', name: 'Cerveza artesanal', quantity: 1, price: 3500 }
+            ],
+            createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString()
+          }
+        ];
+        
+        const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+        const allOrders = [...pedidosDemo, ...existingOrders];
+        localStorage.setItem(ordersKey, JSON.stringify(allOrders));
+        
+        console.log(`✅ ${pedidosDemo.length} pedidos de ejemplo generados`);
+        console.log('Pedidos creados:');
+        pedidosDemo.forEach((p) => {
+          console.log(`  - ${p.code}: ${p.customerName || 'Cliente'} - $${p.total.toLocaleString('es-AR')} - ${p.status}`);
+        });
+        console.log(`\nTotal de pedidos en localStorage: ${allOrders.length}`);
+        console.log('\n🔄 Recarga la página para ver los nuevos pedidos');
+        
+        // Recargar pedidos en la página
+        setOrders(allOrders as Order[]);
+        
+        return pedidosDemo;
+      };
+      
+      console.log('📝 Función disponible: generarPedidosDemo(idUnico?)');
+      console.log('   Ejemplo: generarPedidosDemo() o generarPedidosDemo("5XJ1J37F")');
+    }
+  }, [idUnico]);
 
   if (!idUnico) {
     return (
@@ -437,7 +653,7 @@ export default function PedidosPage() {
                     <span className={`w-8 h-8 flex items-center justify-center text-sm font-semibold rounded-full border ${
                       isDarkMode ? 'bg-transparent border-gray-500 text-white' : 'bg-transparent border-gray-500 text-gray-800'
                     }`}>
-                      {pendingOrders.length + preparingOrders.length}
+                      {pendingOrders.length}
                     </span>
                     <div className="flex flex-col">
                       <h2 className={`text-base font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
@@ -453,8 +669,8 @@ export default function PedidosPage() {
               <div className="px-3 pb-3 pt-3">
                 <div className="overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: isDarkMode ? '#4B5563 #1F2937' : '#9CA3AF #E5E7EB' }}>
                   <div className="flex gap-3" style={{ width: 'max-content' }}>
-                    {[...pendingOrders, ...preparingOrders].sort(sortByDate).map(renderOrderCard)}
-                    {pendingOrders.length === 0 && preparingOrders.length === 0 && (
+                    {pendingOrders.sort(sortByDate).map(renderOrderCard)}
+                    {pendingOrders.length === 0 && (
                       <div className={`flex items-center justify-center w-64 h-32 rounded-lg border-2 border-dashed ${
                         isDarkMode ? 'border-gray-700 text-gray-500' : 'border-gray-300 text-gray-400'
                       }`}>
@@ -525,18 +741,73 @@ export default function PedidosPage() {
                 </div>
               </div>
               <div className="px-3 pb-3 pt-3">
-                <div className="overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: isDarkMode ? '#4B5563 #1F2937' : '#9CA3AF #E5E7EB' }}>
-                  <div className="flex gap-3" style={{ width: 'max-content' }}>
-                    {completedOrders.sort(sortByDate).map(renderOrderCard)}
-                    {completedOrders.length === 0 && (
-                      <div className={`flex items-center justify-center w-64 h-32 rounded-lg border-2 border-dashed ${
-                        isDarkMode ? 'border-gray-700 text-gray-500' : 'border-gray-300 text-gray-400'
-                      }`}>
-                        <p className="text-sm">No hay pedidos completados</p>
-                      </div>
-                    )}
+                {completedOrders.length === 0 ? (
+                  <div className={`flex items-center justify-center py-8 rounded-lg border-2 border-dashed ${
+                    isDarkMode ? 'border-gray-700 text-gray-500' : 'border-gray-300 text-gray-400'
+                  }`}>
+                    <p className="text-sm">No hay pedidos completados</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    {completedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((order) => {
+                      const fecha = new Date(order.createdAt);
+                      const fechaStr = fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                      const hora = fecha.getHours();
+                      const minutos = fecha.getMinutes();
+                      const horaStr = `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+                      
+                      // Dato según modalidad
+                      let datoModalidad = '';
+                      const modalidad = (order as any).modalidad;
+                      if (modalidad === 'salon') {
+                        datoModalidad = order.tableNumber ? `Mesa ${order.tableNumber}` : '';
+                        if (order.waiterName) {
+                          datoModalidad += datoModalidad ? ` - ${order.waiterName}` : order.waiterName;
+                        }
+                      } else if (modalidad === 'delivery') {
+                        datoModalidad = order.customerName || '';
+                      } else if (modalidad === 'retiro') {
+                        datoModalidad = order.customerName || '';
+                      }
+                      
+                      const paymentMethod = (order as any).paymentMethod;
+                      const formaPago = paymentMethod === 'mp' ? 'MP     ' : paymentMethod === 'efectivo' ? 'Efectivo' : '-      ';
+                      
+                      return (
+                        <div 
+                          key={order.id}
+                          className={`px-3 py-2 rounded border ${
+                            isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                                {order.code}
+                              </span>
+                              <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {fechaStr}
+                              </span>
+                              {datoModalidad && (
+                                <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  {datoModalidad}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                              <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                                ${order.total.toLocaleString('es-AR')}
+                              </span>
+                              <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} style={{ width: '70px', textAlign: 'right', fontFamily: 'monospace' }}>
+                                {formaPago}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </>
@@ -544,6 +815,47 @@ export default function PedidosPage() {
       </main>
 
       <NavBar idUnico={idUnico} />
+
+      {/* Modal de confirmación de cambio de estado */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowConfirmModal(false)}>
+          <div className={`rounded-xl shadow-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Confirmar
+              </h3>
+            </div>
+            <div className="px-6 py-4">
+              <p className={`text-base ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {confirmMessage}
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmOrderId(null);
+                  setConfirmNewStatus(null);
+                  setConfirmMessage('');
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                }`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                className="px-4 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Crear/Editar Pedido */}
       {showOrderModal && (
