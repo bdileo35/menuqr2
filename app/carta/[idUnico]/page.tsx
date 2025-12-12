@@ -60,6 +60,7 @@ export default function CartaPage() {
   const [showProCart, setShowProCart] = useState(false);  // Solo visible si hasPro=true
   const [showProCartModal, setShowProCartModal] = useState(false);
   const [showComandaPreview, setShowComandaPreview] = useState(false);
+  const [showTicketInModal, setShowTicketInModal] = useState(false); // Nuevo: ticket dentro del modal del carrito
   const [comandaCode, setComandaCode] = useState('');
   const [proName, setProName] = useState('');
   const [proAddress, setProAddress] = useState('');
@@ -75,7 +76,16 @@ export default function CartaPage() {
 
   function generateOrderCode(mode: 'delivery' | 'retiro' | 'salon') {
     const prefix = mode === 'delivery' ? 'D' : mode === 'retiro' ? 'T' : 'S';
-    const number = Math.floor(1000 + Math.random() * 9000);
+    
+    // Algoritmo: timestamp (últimos 2 dígitos) + random (2 dígitos)
+    // Ejemplo: S1234 = S + (12 de timestamp) + (34 random)
+    const timestamp = Date.now();
+    const lastTwoDigits = timestamp % 100; // Últimos 2 dígitos del timestamp
+    const randomTwo = Math.floor(Math.random() * 100); // 2 dígitos aleatorios
+    
+    // Combinar: últimos 2 del timestamp + 2 aleatorios = 4 dígitos
+    const number = (lastTwoDigits * 100 + randomTwo).toString().padStart(4, '0');
+    
     return `${prefix}${number}`;
   }
 
@@ -926,18 +936,118 @@ export default function CartaPage() {
 
       {showProCart && showProCartModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={()=>setShowProCartModal(false)} />
-          <div className={`relative w-full max-w-md mx-4 rounded-xl shadow-2xl bg-white`}>
+          <div className="absolute inset-0 bg-black/60" onClick={()=>{
+            setShowProCartModal(false);
+            setShowTicketInModal(false);
+            // NO limpiar datos - solo cerrar el modal
+          }} />
+          <div className={`relative w-full max-w-3xl mx-4 rounded-xl shadow-2xl bg-white`}>
             {/* Header con código */}
             <div className={`px-4 py-3 border-b border-gray-200`}>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-black flex items-center gap-2">
-                  Pedido <span className="text-sm font-semibold text-black">{orderCode}</span>
+                  {showTicketInModal ? (
+                    <>Comanda <span className="text-sm font-bold text-black">{comandaCode}</span></>
+                  ) : (
+                    <>Pedido <span className="text-sm font-semibold text-black">{orderCode}</span></>
+                  )}
                 </h3>
-                <button onClick={()=>setShowProCartModal(false)} className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-black`}>✕</button>
+                <button onClick={()=>{
+                  setShowProCartModal(false);
+                  setShowTicketInModal(false);
+                  // NO limpiar datos - solo cerrar el modal
+                  // Los datos se mantienen hasta que se confirme y se genere la comanda
+                }} className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-black`}>✕</button>
               </div>
             </div>
 
+            {/* Mostrar ticket o formulario según el estado */}
+            {showTicketInModal ? (
+              /* TICKET DE COMANDA */
+              <div className="p-4 overflow-y-auto max-h-[70vh]">
+                <div className="bg-white p-4 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '95%', width: '95%', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '14px' }}>
+                  <div className="mb-2">
+                    <div className="font-bold text-xl flex items-center justify-between">
+                      <span>COMANDA</span>
+                      <span className="text-base font-bold text-black">{comandaCode}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs my-1">
+                    <span>{new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })} {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                    {modalidad === 'salon' ? (
+                      <span>Mesa: {proMesa || '___'}-{proMesera || '__________'}</span>
+                    ) : modalidad === 'delivery' ? (
+                      <span>Delivery</span>
+                    ) : (
+                      <span>Take Away</span>
+                    )}
+                  </div>
+                  
+                  <div className="border-t border-dashed border-black my-2"></div>
+                  
+                  {cartItems.map((ci, idx) => {
+                    const nameNoParens = (ci.item.name || '').replace(/\s*\([^)]*\)\s*$/, '');
+                    const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
+                    const subtotal = price * ci.quantity;
+                    return (
+                      <div key={idx} className="my-2 flex justify-between items-start" style={{ fontSize: '13px' }}>
+                        <span>{ci.quantity} {nameNoParens}</span>
+                        <span className="whitespace-nowrap ml-2">${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex justify-between font-bold mt-2" style={{ fontSize: '14px' }}>
+                    <span>TOTAL:</span>
+                    <span>${cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0).toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                  </div>
+                  
+                  {(customerNotes.trim() || proPayment) && (
+                    <>
+                      <div className="border-t border-dashed border-black my-2"></div>
+                      {customerNotes.trim() && (
+                        <div className="text-xs mb-1">
+                          <span>Obs: {customerNotes.trim()}</span>
+                        </div>
+                      )}
+                      {proPayment && (
+                        <div className="text-xs">
+                          <span>Pago: {proPayment === 'mp' ? 'Mercado Pago' : 'Efectivo'}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                
+                {/* Botón Enviar Comanda */}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => {
+                      printComanda(comandaCode);
+                      // Limpiar datos y cerrar modal después de enviar
+                      setShowProCartModal(false);
+                      setShowTicketInModal(false);
+                      setCartItems([]);
+                      setProName('');
+                      setProAddress('');
+                      setProMesa('');
+                      setProMesera('');
+                      setProPayment(null);
+                      setCustomerNotes('');
+                      try {
+                        localStorage.removeItem(storageKey);
+                      } catch {}
+                    }}
+                    className="flex-1 px-2 py-1.5 rounded text-xs font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
+                  >
+                    Enviar Comanda
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* FORMULARIO DE PEDIDO */
+              <>
             {/* Items del pedido */}
             <div className="px-4 pt-4 pb-0 max-h-[60vh] overflow-y-auto">
               <div className="space-y-2 mb-4">
@@ -949,7 +1059,7 @@ export default function CartaPage() {
                     return (
                       <div key={index} className="flex items-center justify-between gap-2">
                         <div className="flex-1">
-                          <div className="text-sm font-medium text-black">{ci.item.name} <span className="text-xs text-black">({ci.code})</span></div>
+                          <div className="text-sm font-medium text-black">{ci.item.name}</div>
                         </div>
                         <div className="flex items-center gap-1 ml-auto">
                           <div className="inline-flex items-center rounded-full overflow-hidden border border-gray-300 bg-white">
@@ -972,11 +1082,6 @@ export default function CartaPage() {
                             >+</button>
                           </div>
                           <div className="w-16 text-right text-sm font-semibold text-black">{(price * ci.quantity).toLocaleString('es-AR',{style:'currency',currency:'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-                          <button 
-                            onClick={()=>setCartItems(prev=>prev.filter((_,i)=>i!==index))} 
-                            className="w-6 h-6 text-sm rounded hover:bg-gray-100 text-black" 
-                            title="Quitar"
-                          >✖</button>
                         </div>
                       </div>
                     );
@@ -1113,40 +1218,56 @@ export default function CartaPage() {
                       }
                       const effectiveCode = ensureOrderCodeForMode(mode);
                       
-                      if (mode === 'salon') {
-                        // Mostrar preview de comanda para salón
-                        setShowProCartModal(false);
-                        showComandaPreviewModal(effectiveCode);
-                      } else {
-                        // Enviar por WhatsApp para delivery/take away
+                      // Guardar pedido en localStorage para que aparezca en Pedidos
+                      const newOrder = {
+                        id: Date.now().toString(),
+                        code: effectiveCode,
+                        status: 'PENDING',
+                        customerName: mode === 'salon' ? (proMesa ? `Mesa ${proMesa}` : undefined) : (mode === 'delivery' ? proName : proName),
+                        tableNumber: mode === 'salon' ? proMesa : undefined,
+                        waiterName: mode === 'salon' ? proMesera : undefined,
+                        total: cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0),
+                        notes: customerNotes || undefined,
+                        modalidad: mode, // 'delivery' | 'retiro' | 'salon'
+                        paymentMethod: proPayment || undefined, // 'efectivo' | 'mp'
+                        items: cartItems.map(ci => ({
+                          id: ci.item.id || ci.code,
+                          name: ci.item.name,
+                          quantity: ci.quantity,
+                          price: parseFloat((ci.item.price || '').replace(/[$,\s]/g,'')) || 0
+                        })),
+                        createdAt: new Date().toISOString()
+                      };
+                      
+                      // Guardar en localStorage (clave específica para pedidos)
+                      try {
+                        const ordersKey = `orders-${idUnico}`;
+                        const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+                        existingOrders.unshift(newOrder); // Agregar al principio
+                        localStorage.setItem(ordersKey, JSON.stringify(existingOrders));
+                      } catch (e) {
+                        console.error('Error guardando pedido:', e);
+                      }
+                      
+                      // Mostrar ticket dentro del modal (reemplaza el contenido)
+                      setComandaCode(effectiveCode);
+                      setShowTicketInModal(true);
+                      
+                      // Para delivery/take away también enviar por WhatsApp
+                      if (mode !== 'salon') {
                         const mensaje = buildTicketMessage(mode, effectiveCode);
-                        
                         if (proPayment === 'mp') {
                           try {
                             window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
                           } catch {}
-                          alert('Te redirigimos a Mercado Pago para completar el pago.');
-                          setTimeout(() => {
-                            generateMPLink();
-                          }, 300);
+                          // No mostrar alert, solo enviar por WhatsApp
                         } else {
                           try {
                             window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
                           } catch {}
-                          alert(`Pedido confirmado!\n\n${mensaje}`);
                         }
-                        setShowProCartModal(false);
-                        setCartItems([]);
                       }
-                      setProName('');
-                      setProAddress('');
-                      setProMesa('');
-                      setProMesera('');
-                      setProPayment(null);
-                      setCustomerNotes('');
-                      try {
-                        localStorage.removeItem(storageKey);
-                      } catch {}
+                      // NO limpiar datos aquí - se limpian cuando se cierra el modal
                     }}
                     className="px-4 py-1.5 bg-green-600 text-white font-bold text-sm rounded-lg hover:bg-green-700 transition-colors"
                   >
@@ -1155,6 +1276,8 @@ export default function CartaPage() {
                 </div>
               </div>
             )}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1162,7 +1285,7 @@ export default function CartaPage() {
       {/* Modal Preview Comanda */}
       {showComandaPreview && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowComandaPreview(false)}>
-          <div className="bg-white rounded-xl w-full max-w-[200px] overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-xl w-full" style={{ maxWidth: '85%' }} onClick={(e) => e.stopPropagation()}>
             <div className="px-2 py-2 border-b flex items-center justify-between border-gray-200">
               <h3 className="text-sm font-semibold text-gray-900">Preview Comanda</h3>
               <button 
@@ -1174,9 +1297,9 @@ export default function CartaPage() {
             </div>
             
             {/* Preview del ticket */}
-            <div className="p-2 overflow-y-auto max-h-[70vh]">
-              <div className="bg-white p-3 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '58mm', width: '58mm', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '12px' }}>
-                <div className="mb-2 pb-2 border-b border-dashed border-black">
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              <div className="bg-white p-4 rounded border-2 border-dashed border-gray-300" style={{ maxWidth: '95%', width: '95%', margin: '0 auto', fontFamily: 'Courier New, monospace', fontSize: '14px' }}>
+                <div className="mb-2">
                   <div className="font-bold text-xl flex items-center justify-between">
                     <span>COMANDA</span>
                     <span className="text-base font-normal">{comandaCode}</span>
@@ -1185,9 +1308,13 @@ export default function CartaPage() {
                 
                 <div className="flex justify-between text-xs my-1">
                   <span>{new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })} {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                </div>
-                <div className="text-xs my-2" style={{ marginTop: '8px', marginBottom: '8px' }}>
-                  <span>Mesa: {proMesa || '___'}-{proMesera || '__________'}</span>
+                  {modalidad === 'salon' ? (
+                    <span>Mesa: {proMesa || '___'}-{proMesera || '__________'}</span>
+                  ) : modalidad === 'delivery' ? (
+                    <span>Delivery</span>
+                  ) : (
+                    <span>Take Away</span>
+                  )}
                 </div>
                 
                 <div className="text-center my-2" style={{ fontSize: '10px' }}>-------------------------</div>
@@ -1197,12 +1324,9 @@ export default function CartaPage() {
                   const price = parseFloat((ci.item.price || '').replace(/[$,\s]/g, '')) || 0;
                   const subtotal = price * ci.quantity;
                   return (
-                    <div key={idx} className="my-2">
-                      <div className="mb-1 break-words" style={{ fontSize: '11px', lineHeight: '1.4' }}>{nameNoParens}</div>
-                      <div className="flex justify-between" style={{ fontSize: '13px' }}>
-                        <span>Cant: {ci.quantity}</span>
-                        <span className="whitespace-nowrap">${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
-                      </div>
+                    <div key={idx} className="my-2 flex justify-between items-start" style={{ fontSize: '13px' }}>
+                      <span>{ci.quantity} {nameNoParens}</span>
+                      <span className="whitespace-nowrap ml-2">${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                     </div>
                   );
                 })}
@@ -1212,12 +1336,19 @@ export default function CartaPage() {
                   <span>${cartItems.reduce((sum, it) => sum + (parseFloat((it.item.price || '').replace(/[$,\s]/g,'')) || 0) * it.quantity, 0).toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                 </div>
                 
-                {customerNotes.trim() && (
+                {(customerNotes.trim() || proPayment) && (
                   <>
                     <div className="border-t border-dashed border-black my-2"></div>
-                    <div className="text-xs">
-                      <span>Obs: {customerNotes.trim()}</span>
-                    </div>
+                    {customerNotes.trim() && (
+                      <div className="text-xs mb-1">
+                        <span>Obs: {customerNotes.trim()}</span>
+                      </div>
+                    )}
+                    {proPayment && (
+                      <div className="text-xs">
+                        <span>Pago: {proPayment === 'mp' ? 'Mercado Pago' : 'Efectivo'}</span>
+                      </div>
+                    )}
                   </>
                 )}
                 
@@ -1231,8 +1362,8 @@ export default function CartaPage() {
               </div>
             </div>
             
-            {/* Botones - ancho del ticket (58mm) - siempre claro */}
-            <div className="px-2 py-2 border-t flex gap-2 border-gray-200" style={{ maxWidth: '58mm', margin: '0 auto', width: '100%' }}>
+            {/* Botones - siempre claro */}
+            <div className="px-4 py-3 border-t flex gap-2 border-gray-200">
               <button
                 onClick={() => setShowComandaPreview(false)}
                 className="flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors bg-gray-200 hover:bg-gray-300 text-gray-700"
@@ -1257,7 +1388,7 @@ export default function CartaPage() {
                 }}
                 className="flex-1 px-2 py-1.5 rounded text-xs font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
               >
-                Imprimir
+                Enviar Comanda
               </button>
             </div>
           </div>
