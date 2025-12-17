@@ -174,9 +174,31 @@ export default function Editor2() {
         return;
       }
       
-      // Si es 500, hay un error de conexión (NO significa que no existe)
+      // Si es 500, hay un error de conexión - intentar fallback con datos demo
       if (response.status === 500) {
         console.log('⚠️ Error de conexión a la base de datos (500)');
+        console.log('📦 Intentando fallback con datos demo para', idUnico);
+        
+        // FALLBACK: Intentar cargar datos demo para IDUs conocidos
+        try {
+          if (idUnico === '5XJ1J37F') {
+            console.log('📦 Usando datos demo de Esquina Pompeya');
+            const demoData = getDemoMenuData();
+            setMenuData(demoData);
+            setLoading(false);
+            return;
+          } else if (idUnico === '5XJ1J39E' || idUnico === 'LOS-TORITOS') {
+            console.log('📦 Usando datos demo de Los Toritos');
+            const demoData = getDemoMenuDataLosToritos();
+            setMenuData(demoData);
+            setLoading(false);
+            return;
+          }
+        } catch (fallbackError) {
+          console.error('❌ Error en fallback de datos demo:', fallbackError);
+        }
+        
+        // Si no hay fallback disponible, mostrar error
         setConnectionError(true);
         throw new Error('Error de conexión a la base de datos');
       }
