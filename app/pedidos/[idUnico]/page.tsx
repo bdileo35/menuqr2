@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import NavBar from '@/components/NavBar';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { MdArrowBack } from 'react-icons/md';
+import AuthGuard from '@/components/AuthGuard';
 
 // Tipos para pedidos
 interface OrderItem {
@@ -19,6 +20,7 @@ interface Order {
   code: string;
   status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'DELIVERED' | 'CANCELLED';
   customerName?: string | null;
+  address?: string | null;
   tableNumber?: string | null;
   waiterName?: string | null;
   total: number;
@@ -338,7 +340,7 @@ export default function PedidosPage() {
         <div className={`px-3 py-2 border-b ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'}`}>
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                 {order.code}
               </span>
               {(() => {
@@ -354,17 +356,24 @@ export default function PedidosPage() {
             </div>
             {(() => {
               const modalidad = (order as any).modalidad;
+              const code = order.code || '';
+              const prefix = code.charAt(0);
               let dato = '';
-              if (modalidad === 'salon') {
+              
+              if (prefix === 'S' || modalidad === 'salon') {
+                // Salón: Mesa - Mesero/a
                 dato = order.tableNumber ? `Mesa ${order.tableNumber}` : '';
                 if (order.waiterName) {
                   dato += dato ? ` - ${order.waiterName}` : order.waiterName;
                 }
-              } else if (modalidad === 'delivery') {
+              } else if (prefix === 'T' || modalidad === 'retiro') {
+                // Take Away: Nombre cliente
                 dato = order.customerName || '';
-              } else if (modalidad === 'retiro') {
-                dato = order.customerName || '';
+              } else if (prefix === 'D' || modalidad === 'delivery') {
+                // Delivery: Dirección
+                dato = order.address || '';
               } else if (order.tableNumber) {
+                // Fallback para pedidos antiguos sin modalidad
                 dato = `Mesa ${order.tableNumber}`;
                 if (order.waiterName) {
                   dato += ` - ${order.waiterName}`;
@@ -605,7 +614,8 @@ export default function PedidosPage() {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} pb-20`}>
+    <AuthGuard idUnico={idUnico}>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} pb-20`}>
       {/* Header Unificado */}
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
@@ -617,8 +627,183 @@ export default function PedidosPage() {
               <h1 className="text-xl font-bold">🍽️ Gestión de Pedidos</h1>
             </div>
 
-            {/* Derecha: Sol/Luna */}
+            {/* Derecha: Botón Demo + Sol/Luna */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (confirm('¿Limpiar pedidos actuales y generar pedidos demo?')) {
+                    const ordersKey = `orders-${idUnico}`;
+                    // Limpiar pedidos actuales
+                    localStorage.removeItem(ordersKey);
+                    
+                    // Generar pedidos demo
+                    const pedidosDemo = [
+                      {
+                        id: `pedido-${Date.now()}-1`,
+                        code: 'S9636',
+                        status: 'PENDING',
+                        customerName: 'Mesa 12',
+                        tableNumber: '12',
+                        waiterName: 'Juan Pérez',
+                        total: 65000,
+                        notes: 'Sin cebolla en el vacío',
+                        modalidad: 'salon',
+                        paymentMethod: 'efectivo',
+                        items: [
+                          { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 2, price: 14000 },
+                          { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+                          { id: '0107', name: 'Peceto al verdeo c/ puré', quantity: 1, price: 15000 },
+                          { id: 'bebida-1', name: 'Coca Cola 1.5L', quantity: 2, price: 3000 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-2`,
+                        code: 'S9637',
+                        status: 'READY',
+                        customerName: 'Mesa 8',
+                        tableNumber: '8',
+                        waiterName: 'Ana',
+                        total: 45000,
+                        notes: 'Bien cocido',
+                        modalidad: 'salon',
+                        paymentMethod: 'mp',
+                        items: [
+                          { id: '0104', name: 'Pechuga rellena c/ f. españolas', quantity: 1, price: 12000 },
+                          { id: '0103', name: 'Chupín de merluza c/ papa natural', quantity: 1, price: 10000 },
+                          { id: '0108', name: 'Correntinos caseros a la Vangoli', quantity: 1, price: 13000 },
+                          { id: 'bebida-2', name: 'Agua sin gas', quantity: 2, price: 3000 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-3`,
+                        code: 'S9638',
+                        status: 'READY',
+                        customerName: 'Mesa 5',
+                        tableNumber: '5',
+                        waiterName: 'Juan Pérez',
+                        total: 62000,
+                        notes: null,
+                        modalidad: 'salon',
+                        paymentMethod: 'efectivo',
+                        items: [
+                          { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 2, price: 14000 },
+                          { id: '0102', name: 'Croquetas de carne c/ ensalada', quantity: 1, price: 9000 },
+                          { id: '0101', name: 'Riñoncitos al jerez c/ puré', quantity: 1, price: 9000 },
+                          { id: 'bebida-3', name: 'Vino tinto copa', quantity: 2, price: 6500 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-4`,
+                        code: 'D9639',
+                        status: 'PENDING',
+                        customerName: 'María González',
+                        tableNumber: null,
+                        waiterName: null,
+                        total: 28000,
+                        notes: 'Timbre 3B',
+                        modalidad: 'delivery',
+                        paymentMethod: 'mp',
+                        items: [
+                          { id: '0107', name: 'Peceto al verdeo c/ puré', quantity: 1, price: 15000 },
+                          { id: 'bebida-4', name: 'Coca Cola 500ml', quantity: 2, price: 2000 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-5`,
+                        code: 'T9640',
+                        status: 'READY',
+                        customerName: 'Carlos Rodríguez',
+                        tableNumber: null,
+                        waiterName: null,
+                        total: 24000,
+                        notes: null,
+                        modalidad: 'retiro',
+                        paymentMethod: 'efectivo',
+                        items: [
+                          { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+                          { id: '0102', name: 'Croquetas de carne c/ ensalada', quantity: 1, price: 9000 },
+                          { id: 'bebida-5', name: 'Agua con gas', quantity: 1, price: 3000 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-6`,
+                        code: 'S9641',
+                        status: 'READY',
+                        customerName: 'Mesa 15',
+                        tableNumber: '15',
+                        waiterName: 'Ana',
+                        total: 55000,
+                        notes: 'Sin sal en el peceto',
+                        modalidad: 'salon',
+                        paymentMethod: 'mp',
+                        items: [
+                          { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 2, price: 14000 },
+                          { id: '0104', name: 'Pechuga rellena c/ f. españolas', quantity: 1, price: 12000 },
+                          { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+                          { id: 'bebida-6', name: 'Cerveza artesanal', quantity: 3, price: 3500 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-7`,
+                        code: 'S9642',
+                        status: 'PENDING',
+                        customerName: 'Mesa 3',
+                        tableNumber: '3',
+                        waiterName: 'Juan Pérez',
+                        total: 18500,
+                        notes: null,
+                        modalidad: 'salon',
+                        paymentMethod: 'efectivo',
+                        items: [
+                          { id: '0103', name: 'Chupín de merluza c/ papa natural', quantity: 1, price: 10000 },
+                          { id: 'bebida-7', name: 'Cerveza artesanal', quantity: 1, price: 3500 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString()
+                      },
+                      {
+                        id: `pedido-${Date.now()}-8`,
+                        code: 'D9643',
+                        status: 'DELIVERED',
+                        customerName: 'Laura Martínez',
+                        tableNumber: null,
+                        waiterName: null,
+                        total: 35000,
+                        notes: 'Entregar en puerta',
+                        modalidad: 'delivery',
+                        paymentMethod: 'efectivo',
+                        items: [
+                          { id: '0106', name: 'Vacío a la parrilla c/ fritas', quantity: 1, price: 14000 },
+                          { id: '0105', name: 'Mejillones c/ fettuccinis', quantity: 1, price: 12000 },
+                          { id: 'bebida-8', name: 'Coca Cola 1.5L', quantity: 1, price: 3000 }
+                        ],
+                        createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+                      }
+                    ];
+                    
+                    // Guardar en localStorage
+                    localStorage.setItem(ordersKey, JSON.stringify(pedidosDemo));
+                    
+                    // Recargar pedidos
+                    setOrders(pedidosDemo);
+                    
+                    alert(`✅ ${pedidosDemo.length} pedidos demo generados`);
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                  isDarkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400'
+                }`}
+                title="Generar pedidos demo"
+              >
+                🎲 Demo
+              </button>
               <button
                 onClick={toggleTheme}
                 className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg border ${
@@ -738,6 +923,26 @@ export default function PedidosPage() {
                       </span>
                     </div>
                   </div>
+                  {completedOrders.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (confirm('¿Eliminar todos los pedidos completados?')) {
+                          const ordersKey = `orders-${idUnico}`;
+                          const allOrders = orders.filter(o => o.status !== 'DELIVERED');
+                          localStorage.setItem(ordersKey, JSON.stringify(allOrders));
+                          setOrders(allOrders);
+                        }
+                      }}
+                      className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                        isDarkMode 
+                          ? 'bg-red-600 hover:bg-red-700 text-white' 
+                          : 'bg-red-500 hover:bg-red-600 text-white'
+                      }`}
+                      title="Limpiar pedidos completados"
+                    >
+                      🗑️ Limpiar
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="px-3 pb-3 pt-3">
@@ -759,15 +964,21 @@ export default function PedidosPage() {
                       // Dato según modalidad
                       let datoModalidad = '';
                       const modalidad = (order as any).modalidad;
-                      if (modalidad === 'salon') {
+                      const code = order.code || '';
+                      const prefix = code.charAt(0);
+                      
+                      if (prefix === 'S' || modalidad === 'salon') {
+                        // Salón: Mesa - Mesero/a
                         datoModalidad = order.tableNumber ? `Mesa ${order.tableNumber}` : '';
                         if (order.waiterName) {
                           datoModalidad += datoModalidad ? ` - ${order.waiterName}` : order.waiterName;
                         }
-                      } else if (modalidad === 'delivery') {
+                      } else if (prefix === 'T' || modalidad === 'retiro') {
+                        // Take Away: Nombre cliente
                         datoModalidad = order.customerName || '';
-                      } else if (modalidad === 'retiro') {
-                        datoModalidad = order.customerName || '';
+                      } else if (prefix === 'D' || modalidad === 'delivery') {
+                        // Delivery: Dirección
+                        datoModalidad = order.address || '';
                       }
                       
                       const paymentMethod = (order as any).paymentMethod;
@@ -782,7 +993,7 @@ export default function PedidosPage() {
                         >
                           <div className="flex items-center justify-between gap-4 text-sm">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                              <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                 {order.code}
                               </span>
                               <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -1010,6 +1221,7 @@ export default function PedidosPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

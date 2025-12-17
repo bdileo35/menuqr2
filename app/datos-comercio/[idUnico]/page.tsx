@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import NavBar from '../../components/NavBar';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function DatosComercio() {
   const router = useRouter();
@@ -236,9 +237,10 @@ export default function DatosComercio() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-    }`}>
+    <AuthGuard idUnico={idUnico}>
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
+      }`}>
       
       {/* Header - Simplificado sin buscador */}
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
@@ -248,11 +250,13 @@ export default function DatosComercio() {
           
           {/* Título y botones */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">📋 Datos del Comercio</h1>
+            {/* Izquierda: Icono + Título */}
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📋</span>
+              <h1 className="text-xl font-bold">Datos del Comercio</h1>
             </div>
 
-            {/* Botón modo claro/oscuro */}
+            {/* Derecha: Sol/Luna */}
             <button
               onClick={toggleTheme}
               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
@@ -683,6 +687,7 @@ export default function DatosComercio() {
       
       {/* NavBar fija en la parte inferior */}
       <NavBar idUnico={idUnico} />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

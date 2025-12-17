@@ -1,0 +1,122 @@
+diff --git a/app/editor/[idUnico]/page.tsx b/app/editor/[idUnico]/page.tsx
+index c5ac69a7..6fea1ac2 100644
+--- a/app/editor/[idUnico]/page.tsx
++++ b/app/editor/[idUnico]/page.tsx
+@@ -931,62 +931,54 @@ export default function Editor2() {
+   }
+ 
+   return (
+-    <div className={`min-h-screen transition-colors duration-300 ${
+-      isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
+-    }`}>
+-      
+-      
+-      {/* Header Reorganizado - 2 Líneas */}
+-      <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
+-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+-      }`}>
+-        <div className="max-w-4xl mx-auto px-4 pt-1 pb-2">
+-          
+-          {/* LÍNEA 1: Título Panel de Control */}
+-          <div className="flex items-center justify-between mb-3">
+-            <div className="flex items-center gap-4">
+-              <h1 className="text-xl font-bold">📝 Administrar Menú</h1>
+-            {saving && (
+-                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+-                  <span className="animate-pulse">●</span>
+-                  Guardando...
+-              </span>
+-            )}
+-          </div>
+-
+-            {/* Botones del lado derecho - Alineados horizontalmente */}
+-            <div className="flex items-center gap-2">
+-              {/* Botón Carta Menu - Icono + Texto */}
+-          <button 
+-            onClick={() => router.push(`/carta/${idUnico}`)}
+-                className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors border ${
+-                  isDarkMode 
+-                    ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-gray-300' 
+-                    : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
+-                }`}
+-                title="Ver Carta Menu"
+-              >
+-                <span className="text-lg">👁️</span>
+-                <span className="text-sm font-medium">Ver Carta</span>
+-          </button>
++    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
++      {/* Header Unificado - Igual que otras páginas */}
++      <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
++        <div className="max-w-4xl mx-auto px-4 py-3">
++          <div className="flex items-center justify-between">
++            {/* Izquierda: Icono + Título */}
++            <div className="flex items-center gap-3">
++              <span className="text-2xl">📝</span>
++              <h1 className="text-xl font-bold">Administrar Menú</h1>
++            </div>
+ 
+-              {/* Botón modo claro/oscuro */}
+-              <button
+-                onClick={toggleTheme}
+-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg border ${
+-                  isDarkMode 
+-                    ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-yellow-400' 
+-                    : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
+-                }`}
+-                title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+-              >
+-                {isDarkMode ? '☀️' : '🌙'}
+-              </button>
++            {/* Derecha: Sol/Luna */}
++            <button
++              onClick={toggleTheme}
++              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
++                isDarkMode 
++                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
++                  : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
++              }`}
++              title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
++            >
++              {isDarkMode ? '☀️' : '🌙'}
++            </button>
+           </div>
+         </div>
++      </div>
+ 
+-          {/* LÍNEA 2: Configuración de Categorías + Funciones */}
++      {/* Subheader: Ver Carta + Contadores (dentro del body) */}
++      <div className={`border-b transition-colors duration-300 ${
++        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
++      }`}>
++        <div className="max-w-4xl mx-auto px-4 py-2">
+           <div className="flex items-center justify-between">
++            {/* Botón Ver Carta - Solo icono */}
++            <button 
++              onClick={() => router.push(`/carta/${idUnico}`)}
++              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
++                isDarkMode 
++                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
++                  : 'bg-gray-300 hover:bg-gray-200 text-gray-700'
++              }`}
++              title="Ver Carta"
++            >
++              <span className="text-lg">👁️</span>
++            </button>
++
++            {/* LÍNEA 2: Configuración de Categorías + Funciones */}
++            <div className="flex items-center justify-between flex-1 ml-4">
+             {/* Info Categorías y Platos - Estilo TABS */}
+             <div className="flex items-center justify-between w-full gap-1">
+               {/* TAB Categorías - Izquierda */}
+@@ -1102,9 +1094,8 @@ export default function Editor2() {
+               </div>
+             </div>
+           </div>
+-                        </div>
+-                      </div>
+-                    </div>
++        </div>
++      </div>
+ 
+       {/* Contenido Principal */}
+       <div className="max-w-4xl mx-auto px-4 py-6 pb-24">

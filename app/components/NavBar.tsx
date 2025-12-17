@@ -26,7 +26,7 @@ export default function NavBar({ idUnico }: NavBarProps) {
   const borde = isDarkMode ? "#374151" : "#e5e7eb";
   const sombra = isDarkMode ? "0 -2px 8px rgba(0,0,0,0.3)" : "0 -2px 8px rgba(0,0,0,0.05)";
 
-  // Orden: Datos, Editor, QR, Pedidos, Config, Ayuda
+  // Orden: Datos, Editor, QR, Pedidos, Config (Ayuda oculto por ahora)
   const navItems = [
     { 
       label: "Datos", 
@@ -53,11 +53,11 @@ export default function NavBar({ idUnico }: NavBarProps) {
       path: `/configuracion/${idUnico}`, 
       icon: MdOutlineSettings 
     },
-    { 
-      label: "Ayuda", 
-      path: `/ayuda/${idUnico}`, 
-      icon: MdOutlineHelpOutline 
-    },
+    // { 
+    //   label: "Ayuda", 
+    //   path: `/ayuda/${idUnico}`, 
+    //   icon: MdOutlineHelpOutline 
+    // }, // Oculto por ahora
   ];
 
   const isActive = (path: string) => pathname === path;

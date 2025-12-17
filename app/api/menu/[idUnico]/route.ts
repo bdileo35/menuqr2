@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getDemoMenuData, getDemoMenuDataLosToritos } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 

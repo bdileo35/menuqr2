@@ -3,12 +3,13 @@ import { useParams, useRouter } from 'next/navigation';
 import NavBar from '@/components/NavBar';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useState } from 'react';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function ConfiguracionPage() {
   const params = useParams();
   const router = useRouter();
   const idUnico = params?.idUnico as string;
-  const { isDarkMode } = useAppTheme();
+  const { isDarkMode, toggleTheme } = useAppTheme();
   const [copied, setCopied] = useState<string | null>(null);
 
   if (!idUnico) {
@@ -106,11 +107,35 @@ WHERE NOT EXISTS (
 `;
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} pb-20`}>
-      <header className={`p-4 shadow-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <h1 className="text-2xl font-bold text-center">Configuración</h1>
-        <p className={`text-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>ID: {idUnico}</p>
-      </header>
+    <AuthGuard idUnico={idUnico}>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} pb-20`}>
+      {/* Header Unificado */}
+      <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
+        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Izquierda: Icono + Título */}
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚙️</span>
+              <h1 className="text-xl font-bold">Configuración</h1>
+            </div>
+
+            {/* Derecha: Sol/Luna */}
+            <button
+              onClick={toggleTheme}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                  : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
+              }`}
+              title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
+        </div>
+      </div>
 
       <main className="p-4 max-w-4xl mx-auto space-y-6">
         {/* Sección Backup */}
@@ -238,6 +263,7 @@ WHERE NOT EXISTS (
       </main>
 
       <NavBar idUnico={idUnico} />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

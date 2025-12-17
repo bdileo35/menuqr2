@@ -5,8 +5,6 @@ import { getDemoMenuData, getDemoMenuDataLosToritos } from '@/lib/demo-data';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useParams } from 'next/navigation';
 import NavBar from '@/components/NavBar';
-import { saveAdminToken, hasValidToken, isDemoIDU, requiresAuth } from '@/lib/auth';
-import { getDemoData, clearDemoData } from '@/lib/demo-helper';
 
 interface MenuItem {
   id?: string;
@@ -128,36 +126,6 @@ export default function Editor2() {
     if (!idUnico) {
       console.error('❌ Error: idUnico está vacío');
       return;
-    }
-    
-    // Si es IDU demo, cargar datos demo desde localStorage o datos por defecto
-    if (isDemoIDU(idUnico)) {
-      console.log('🔓 IDU Demo detectado - Cargando datos demo (sin BD)');
-      try {
-        // Intentar cargar desde localStorage primero
-        const savedMenu = localStorage.getItem(`editor-menu-data-${idUnico}`) || 
-                         localStorage.getItem('editor-menu-data');
-        
-        if (savedMenu) {
-          const menuData = JSON.parse(savedMenu);
-          setMenuData(menuData);
-          setLoading(false);
-          return;
-        }
-        
-        // Si no hay datos guardados, usar datos demo por defecto
-        const demoData = getDemoData(idUnico);
-        setMenuData(demoData);
-        setLoading(false);
-        return;
-      } catch (error) {
-        console.error('Error cargando datos demo:', error);
-        // Fallback a datos demo por defecto
-        const demoData = getDemoData(idUnico);
-        setMenuData(demoData);
-        setLoading(false);
-        return;
-      }
     }
     
     try {
@@ -305,23 +273,6 @@ export default function Editor2() {
     }
   };
 
-  // Generar token de autenticación al cargar el editor
-  useEffect(() => {
-    if (idUnico) {
-      // Si es IDU demo, no requiere token
-      if (isDemoIDU(idUnico)) {
-        console.log('🔓 IDU Demo - Acceso libre sin autenticación');
-        return;
-      }
-      
-      // Si el IDU requiere auth y no hay token válido, generar uno nuevo
-      if (requiresAuth(idUnico) && !hasValidToken(idUnico)) {
-        saveAdminToken(idUnico);
-        console.log('🔐 Token de autenticación generado para', idUnico);
-      }
-    }
-  }, [idUnico]);
-  
   // Cargar datos desde API al montar y cuando cambia idUnico
   useEffect(() => {
     loadMenuFromAPI();
@@ -452,68 +403,22 @@ export default function Editor2() {
         }
       }
       
-      // Si es IDU demo, guardar solo en localStorage (no en BD)
-      if (isDemoIDU(idUnico)) {
-        console.log('🔓 IDU Demo - Guardando en localStorage (no en BD)');
-        
-        // Actualizar datos en memoria
-        const updatedMenuData = { ...menuData };
-        const itemData: MenuItem = {
-          id: editingItem?.id || `item-${Date.now()}`,
-          name: item.name,
-          price: item.price,
-          description: item.description || '',
-          code: item.code || '',
-          isAvailable: item.isAvailable !== false,
-          imageUrl: finalImageUrl || undefined,
-          imageBase64: finalImageUrl?.startsWith('data:') ? finalImageUrl : undefined,
-          isPopular: item.isPopular || false,
-          isPromo: item.isPromo || false
-        };
-        
-        if (editingItem) {
-          // Actualizar item existente
-          updatedMenuData.categories.forEach(cat => {
-            const itemIndex = cat.items.findIndex(i => (i.id || i.name) === editingItem.id);
-            if (itemIndex >= 0) {
-              cat.items[itemIndex] = itemData;
-            }
-          });
-        } else {
-          // Agregar nuevo item
-          const targetCategory = updatedMenuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
-          if (targetCategory) {
-            targetCategory.items.push(itemData);
-          }
-        }
-        
-        // Guardar en localStorage
-        localStorage.setItem(`editor-menu-data-${idUnico}`, JSON.stringify(updatedMenuData));
-        localStorage.setItem('editor-menu-data', JSON.stringify(updatedMenuData));
-        
-        setMenuData(updatedMenuData);
-        setSaving(false);
-        setShowAddItem(false);
-        setEditingItem(null);
-        alert('✅ Item guardado (modo demo - solo en navegador)');
-        return;
-      }
-      
       // Guardar en base de datos
       // Si no hay categoryId o es string vacío, es un item sin categoría (discontinuado)
-      let categoryIdToSend: string | undefined = undefined;
+      let categoryIdToSend: string | null = null;
       if (modalData.categoryId && modalData.categoryId.trim() !== '' && modalData.categoryId !== '__SIN_CATEGORIA__') {
         const targetCategory = menuData.categories.find(cat => (cat.id || cat.name) === modalData.categoryId);
         if (!targetCategory) {
           alert('❌ Categoría no encontrada');
           return;
         }
-        const foundId = targetCategory.id || targetCategory.name;
-        if (foundId) {
-          categoryIdToSend = foundId;
+        categoryIdToSend = targetCategory.id || targetCategory.name;
+        if (!categoryIdToSend) {
+          alert('❌ ID de categoría inválido');
+          return;
         }
       }
-      // Si categoryId está vacío o es '__SIN_CATEGORIA__', categoryIdToSend queda como undefined
+      // Si categoryId está vacío o es '__SIN_CATEGORIA__', categoryIdToSend queda como null
 
       // Preparar datos para la API
       const priceValue = item.price.toString().replace(/[$,\s]/g, '');
@@ -522,7 +427,7 @@ export default function Editor2() {
         description: item.description || '',
         price: priceValue,
         code: item.code?.trim() || '',
-        categoryId: categoryIdToSend, // undefined para sin categoría
+        categoryId: categoryIdToSend, // null para sin categoría
         imageUrl: finalImageUrl || null,
         isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
         isPopular: item.isPopular || false,
@@ -1026,177 +931,176 @@ export default function Editor2() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-    }`}>
-      
-      
-      {/* Header Reorganizado - 2 Líneas */}
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+      {/* Header Unificado - Igual que otras páginas */}
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 pt-1 pb-2">
-          
-          {/* LÍNEA 1: Título Panel de Control */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">📝 Administrar Menú</h1>
-            {saving && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                  <span className="animate-pulse">●</span>
-                  Guardando...
-              </span>
-            )}
-          </div>
-
-            {/* Botones del lado derecho - Alineados horizontalmente */}
-            <div className="flex items-center gap-2">
-              {/* Botón modo claro/oscuro */}
-              <button
-                onClick={toggleTheme}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg border ${
-                  isDarkMode 
-                    ? 'bg-transparent border-gray-600 hover:bg-gray-700 text-yellow-400' 
-                    : 'bg-transparent border-gray-300 hover:bg-gray-100 text-gray-700'
-                }`}
-                title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Izquierda: Icono + Título */}
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📝</span>
+              <h1 className="text-xl font-bold">Administrar Menú</h1>
             </div>
+
+            {/* Derecha: Sol/Luna */}
+            <button
+              onClick={toggleTheme}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-lg ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                  : 'bg-gray-300 hover:bg-gray-200 text-gray-800'
+              }`}
+              title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Contenedores: Cat ----- Platos ----- Ojo */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="flex items-center gap-1">
-          {/* TAB Categorías - Izquierda, contenido compacto */}
-          <div className={`flex items-center gap-0.5 px-1 h-10 rounded-lg border flex-shrink-0 ${
-            isDarkMode 
-              ? 'bg-gray-700 border-gray-600 text-gray-200' 
-              : 'bg-gray-200 border-gray-300 text-gray-800'
-          }`}>
-            {/* Contador con ícono dentro */}
-            <span className={`flex items-center gap-0.5 text-sm px-1 py-1 rounded-full font-medium ${
-              isDarkMode 
-                ? 'bg-transparent text-white' 
-                : 'bg-transparent text-gray-800'
-            }`}>
-              <span className="text-base">📂</span>
-              <span>{menuData?.categories.length || 0}</span>
-            </span>
-            
-            {/* Botón Agregar Categoría */}
-            <button
-              onClick={() => setShowAddCategory(true)}
-              className="h-10 px-0.5 flex items-center justify-center transition-colors text-2xl font-bold text-gray-600 hover:text-blue-500"
-              title="Agregar categoría"
+      {/* Subheader: Ver Carta + Contadores (dentro del body) */}
+      <div className={`border-b transition-colors duration-300 ${
+        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <div className="max-w-4xl mx-auto px-4 py-2">
+          <div className="flex items-center justify-between">
+            {/* Botón Ver Carta - Solo icono */}
+            <button 
+              onClick={() => router.push(`/carta/${idUnico}`)}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                  : 'bg-gray-300 hover:bg-gray-200 text-gray-700'
+              }`}
+              title="Ver Carta"
             >
-              +
+              <span className="text-lg">👁️</span>
             </button>
 
-            {/* Botón Expandir/Contraer TODAS las categorías */}
-            <button
-              onClick={toggleAllCategories}
-              className="w-6 h-6 flex items-center justify-center transition-colors text-sm text-gray-400 hover:text-gray-300"
-              title={allCategoriesExpanded ? 'Contraer todas' : 'Expandir todas'}
-            >
-              {allCategoriesExpanded ? '▲' : '▼'}
-            </button>
-          </div>
-
-          {/* TAB Platos + Buscador - Centro, buscador expandible */}
-          <div className={`flex items-center gap-0.5 px-1 h-10 rounded-lg border flex-1 ${
-            isDarkMode 
-              ? 'bg-gray-700 border-gray-600 text-gray-200' 
-              : 'bg-gray-200 border-gray-300 text-gray-800'
-          }`}>
-            {/* Contador con ícono dentro */}
-            <span className={`flex items-center gap-0.5 text-sm px-1 py-1 rounded-full font-medium flex-shrink-0 ${
-              isDarkMode 
-                ? 'bg-transparent text-white' 
-                : 'bg-transparent text-gray-800'
-            }`}>
-              <span className="text-base">🍽️</span>
-              <span>{menuData?.categories.reduce((total, cat) => total + cat.items.length, 0) || 0}</span>
-            </span>
-            
-            {/* Botón Agregar Plato */}
-            <button
-              onClick={() => {
-                setEditingItem(null);
-                const firstCategory = menuData?.categories?.[0];
-                const selectedCategoryId = firstCategory ? (firstCategory.id || firstCategory.name) : '';
-                const categoryCode = firstCategory?.code || getCategoryCode(firstCategory?.name || '', 0);
-                const nextItemNumber = firstCategory ? String(firstCategory.items.length + 1).padStart(2, '0') : '01';
-                const generatedCode = `${categoryCode}${nextItemNumber}`;
-                setModalData({
-                  name: '',
-                  code: generatedCode,
-                  price: '',
-                  description: '',
-                  categoryId: selectedCategoryId,
-                  imageFile: null,
-                  imagePreview: '',
-                  isAvailable: true,
-                  removeImage: false
-                });
-                setShowAddItem(true);
-              }}
-              className="h-10 px-0.5 flex items-center justify-center transition-colors text-2xl font-bold text-gray-600 hover:text-blue-500 flex-shrink-0"
-              title="Agregar plato"
-            >
-              +
-            </button>
-
-            {/* Buscador integrado - Se expande */}
-            <div className="relative ml-0.5 flex-1 min-w-0">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar platos..."
-                className={`pl-1.5 pr-6 py-1 text-sm rounded-lg transition-colors duration-300 w-full ${
+            {/* LÍNEA 2: Configuración de Categorías + Funciones */}
+            <div className="flex items-center justify-between flex-1 ml-4">
+            {/* Info Categorías y Platos - Estilo TABS */}
+            <div className="flex items-center justify-between w-full gap-1">
+              {/* TAB Categorías - Izquierda */}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                  : 'bg-gray-200 border-gray-300 text-gray-800'
+              }`}>
+                {/* Contador con ícono dentro */}
+                <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
                   isDarkMode 
-                    ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
-                    : 'bg-gray-200 border border-gray-300 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-500'
-                }`}
-                autoFocus
-              />
-              {searchTerm && (
+                    ? 'bg-transparent border-gray-400 text-white' 
+                    : 'bg-transparent border-gray-300 text-gray-800'
+                }`}>
+                  <span className="text-base">📂</span>
+                  <span>{menuData?.categories.length || 0}</span>
+                </span>
+                
+                {/* Botón Agregar Categoría - Al lado del contador */}
                 <button
-                  onClick={() => setSearchTerm('')}
-                  className={`absolute right-1 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center transition-colors text-xs ${
-                    isDarkMode 
-                      ? 'text-gray-400 hover:text-gray-300' 
-                      : 'text-blue-600 hover:text-blue-700'
-                  }`}
-                  title="Limpiar búsqueda"
+                  onClick={() => setShowAddCategory(true)}
+                  className="w-10 h-10 flex items-center justify-center transition-colors text-2xl font-bold text-white hover:text-green-300 ml-2"
+                  title="Agregar categoría"
                 >
-                  ✕
+                  +
                 </button>
-              )}
+                
+
+                {/* Botón Expandir/Contraer TODAS las categorías */}
+                <button
+                  onClick={toggleAllCategories}
+                  className="w-6 h-6 flex items-center justify-center transition-colors text-sm text-gray-400 hover:text-gray-300 ml-1"
+                  title={allCategoriesExpanded ? 'Contraer todas' : 'Expandir todas'}
+                >
+                  {allCategoriesExpanded ? '▲' : '▼'}
+                </button>
+              </div>
+
+              {/* TAB Platos + Buscador - Derecha */}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-t-lg border-t border-l border-r ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                  : 'bg-gray-200 border-gray-300 text-gray-800'
+              }`}>
+                {/* Contador con ícono dentro */}
+                <span className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-medium border ${
+                  isDarkMode 
+                    ? 'bg-transparent border-gray-400 text-white' 
+                    : 'bg-transparent border-gray-300 text-gray-800'
+                }`}>
+                  <span className="text-base">🍽️</span>
+                  <span>{menuData?.categories.reduce((total, cat) => total + cat.items.length, 0) || 0}</span>
+                </span>
+                
+                {/* Botón Agregar Plato */}
+                <button
+                  onClick={() => {
+                    setEditingItem(null);
+                    // Prefijar categoría y generar código automáticamente
+                    const firstCategory = menuData?.categories?.[0];
+                    const selectedCategoryId = firstCategory ? (firstCategory.id || firstCategory.name) : '';
+                    const categoryCode = firstCategory?.code || getCategoryCode(firstCategory?.name || '', 0);
+                    const nextItemNumber = firstCategory ? String(firstCategory.items.length + 1).padStart(2, '0') : '01';
+                    const generatedCode = `${categoryCode}${nextItemNumber}`;
+                    setModalData({
+                      name: '',
+                      code: generatedCode,
+                      price: '',
+                      description: '',
+                      categoryId: selectedCategoryId,
+                      imageFile: null,
+                      imagePreview: '',
+                      isAvailable: true,
+                      removeImage: false
+                    });
+                    setShowAddItem(true);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center transition-colors text-2xl font-bold text-white hover:text-green-300 ml-2"
+                  title="Agregar plato"
+                >
+                  +
+                </button>
+                
+                {/* Botón Editar Platos */}
+
+                {/* Buscador integrado */}
+                <div className="relative ml-2">
+                <input
+                  type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar platos..."
+                    className={`pl-2 pr-8 py-1.5 text-sm rounded-lg transition-colors duration-300 w-36 ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' 
+                        : 'bg-gray-200 border border-gray-300 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-500'
+                    }`}
+                  autoFocus
+                />
+                  {searchTerm && (
+                  <button
+                      onClick={() => setSearchTerm('')}
+                      className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center transition-colors text-xs ${
+                        isDarkMode 
+                          ? 'text-gray-400 hover:text-gray-300' 
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                      title="Limpiar búsqueda"
+                    >
+                      ✕
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Botón Ver Carta - Ojo, fijo a la derecha */}
-          <button 
-            onClick={() => router.push(`/carta/${idUnico}`)}
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
-              isDarkMode 
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                : 'bg-gray-300 hover:bg-gray-200 text-gray-700'
-            }`}
-            title="Ver Carta"
-          >
-            <span className="text-lg">👁️</span>
-          </button>
         </div>
       </div>
 
       {/* Contenido Principal */}
-      <div className="max-w-4xl mx-auto px-4 pt-4 pb-24">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
 
         {/* Lista de Categorías */}
         {menuData.categories

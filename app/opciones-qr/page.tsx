@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
 import QRWithActions from '../components/QRWithActions';
 import NavBar from '../components/NavBar';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function OpcionesQR() {
   const router = useRouter();
@@ -61,9 +62,10 @@ export default function OpcionesQR() {
   }, [idUnico]);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-    }`}>
+    <AuthGuard idUnico={idUnico}>
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
+      }`}>
       
       {/* Header - Misma estructura que el editor */}
       <div className={`border-b sticky top-0 z-40 transition-colors duration-300 ${
@@ -79,20 +81,6 @@ export default function OpcionesQR() {
 
             {/* Botones del lado derecho */}
             <div className="flex items-center gap-2">
-              {/* Botón Carta Menu */}
-              <button 
-                onClick={() => router.push(`/carta/${idUnico}`)}
-                className={`h-10 px-3 rounded-lg flex items-center gap-2 transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                }`}
-                title="Ver Carta Menu"
-              >
-                <span className="text-lg">👁️</span>
-                <span className="text-sm font-medium">Ver Carta</span>
-              </button>
-
               {/* Botón modo claro/oscuro */}
               <button
                 onClick={toggleTheme}
@@ -105,14 +93,6 @@ export default function OpcionesQR() {
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
-            </div>
-          </div>
-
-          {/* LÍNEA 2: Solicito */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Solicito:</span>
-              <span className="text-sm font-medium text-gray-500">Configurar opciones de QR</span>
             </div>
           </div>
         </div>
@@ -218,6 +198,7 @@ export default function OpcionesQR() {
       
       {/* NavBar fija en la parte inferior */}
       <NavBar idUnico={idUnico} />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
