@@ -207,6 +207,34 @@ export async function GET(
                               error?.message?.includes('connection') ||
                               error?.code === 'P1001';
     
+    // FALLBACK: Si hay error de conexión, intentar servir datos demo para IDUs conocidos
+    if (isConnectionError) {
+      console.log(`⚠️ Error de conexión detectado. Intentando fallback con datos demo para ${idUnico}`);
+      
+      try {
+        // IDUs conocidos con datos demo disponibles
+        if (idUnico === '5XJ1J37F') {
+          console.log('📦 Usando datos demo de Esquina Pompeya');
+          const demoData = getDemoMenuData();
+          return NextResponse.json({
+            success: true,
+            menu: demoData,
+            fallback: true // Indicar que son datos de fallback
+          });
+        } else if (idUnico === '5XJ1J39E' || idUnico === 'LOS-TORITOS') {
+          console.log('📦 Usando datos demo de Los Toritos');
+          const demoData = getDemoMenuDataLosToritos();
+          return NextResponse.json({
+            success: true,
+            menu: demoData,
+            fallback: true // Indicar que son datos de fallback
+          });
+        }
+      } catch (fallbackError) {
+        console.error('❌ Error en fallback de datos demo:', fallbackError);
+      }
+    }
+    
     return NextResponse.json({
       success: false,
       error: isConnectionError 
