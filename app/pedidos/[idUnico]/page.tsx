@@ -789,8 +789,8 @@ export default function PedidosPage() {
                     // Guardar en localStorage
                     localStorage.setItem(ordersKey, JSON.stringify(pedidosDemo));
                     
-                    // Recargar pedidos
-                    setOrders(pedidosDemo);
+                    // Recargar pedidos (con type assertion para satisfacer TypeScript)
+                    setOrders(pedidosDemo as Order[]);
                     
                     alert(`✅ ${pedidosDemo.length} pedidos demo generados`);
                   }
