@@ -380,13 +380,29 @@ export default function CartaPage() {
             if (idUnico === '5XJ1J37F') {
               console.log('📦 Usando datos demo de Esquina Pompeya');
               const demoData = getDemoMenuData();
-              setMenuData(demoData);
+              // Agregar campos requeridos para RestaurantData
+              const restaurantInfo: RestaurantData = {
+                ...demoData,
+                address: 'Av. Fernández de la Cruz 1100',
+                phone: '+54 11 1234-5678',
+                logoUrl: null,
+                hasPro: true
+              };
+              setMenuData(restaurantInfo);
               setLoading(false);
               return;
             } else if (idUnico === '5XJ1J39E' || idUnico === 'LOS-TORITOS') {
               console.log('📦 Usando datos demo de Los Toritos');
               const demoData = getDemoMenuDataLosToritos();
-              setMenuData(demoData);
+              // Agregar campos requeridos para RestaurantData
+              const restaurantInfo: RestaurantData = {
+                ...demoData,
+                address: 'Dirección Los Toritos',
+                phone: '+54 11 1234-5678',
+                logoUrl: null,
+                hasPro: true
+              };
+              setMenuData(restaurantInfo);
               setLoading(false);
               return;
             }
