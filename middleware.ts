@@ -18,7 +18,7 @@ const adminRoutes = [
   '/opciones-qr',
   '/pedidos',
   '/configuracion',
-  '/ayuda',
+  // '/ayuda', // Removido - página en parking
 ];
 
 export function middleware(request: NextRequest) {
