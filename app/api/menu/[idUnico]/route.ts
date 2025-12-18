@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { withRetry } from '@/lib/prisma';
 import { getDemoMenuData, getDemoMenuDataLosToritos } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
@@ -13,23 +13,27 @@ export async function GET(
   try {
     console.log(`🔍 Cargando menú para ID único: ${idUnico}`);
     
-    // Debug: Verificar qué menús existen
-    const allMenus = await prisma.menu.findMany({
-      select: { restaurantId: true, restaurantName: true }
+    // Usar retry para queries críticas
+    const allMenus = await withRetry(async () => {
+      return await prisma.menu.findMany({
+        select: { restaurantId: true, restaurantName: true }
+      });
     });
     console.log(`📋 Menús disponibles en BD:`, allMenus.map(m => `${m.restaurantName} (${m.restaurantId})`));
 
-    const menu = await prisma.menu.findFirst({
-      where: { restaurantId: idUnico },
-      include: { 
-        owner: {
-          select: {
-            id: true,
-            hasPro: true,
-            restaurantName: true
+    const menu = await withRetry(async () => {
+      return await prisma.menu.findFirst({
+        where: { restaurantId: idUnico },
+        include: { 
+          owner: {
+            select: {
+              id: true,
+              hasPro: true,
+              restaurantName: true
+            }
           }
         }
-      }
+      });
     });
 
     if (!menu) {
@@ -44,22 +48,26 @@ export async function GET(
     console.log(`✅ Menú encontrado: ${menu.restaurantName}`);
     console.log(`🔍 Owner incluido:`, menu.owner ? `Sí (hasPro: ${menu.owner.hasPro})` : 'No');
 
-    const categories = await prisma.category.findMany({
-      where: { menuId: menu.id },
-      orderBy: { position: 'asc' }
+    const categories = await withRetry(async () => {
+      return await prisma.category.findMany({
+        where: { menuId: menu.id },
+        orderBy: { position: 'asc' }
+      });
     });
 
     console.log(`📋 Categorías: ${categories.length}`);
 
-    // ✅ CARGAR TODOS LOS ITEMS DE UNA VEZ (sin map async)
-    const allItems = await prisma.menuItem.findMany({
-      where: { 
-        OR: [
-          { categoryId: { in: categories.map(c => c.id) } },
-          { menuId: menu.id, categoryId: null }
-        ]
-      },
-      orderBy: { name: 'asc' }
+    // ✅ CARGAR TODOS LOS ITEMS DE UNA VEZ (sin map async) - con retry
+    const allItems = await withRetry(async () => {
+      return await prisma.menuItem.findMany({
+        where: { 
+          OR: [
+            { categoryId: { in: categories.map(c => c.id) } },
+            { menuId: menu.id, categoryId: null }
+          ]
+        },
+        orderBy: { name: 'asc' }
+      });
     });
 
     console.log(`📦 Items totales: ${allItems.length}`);
