@@ -11,18 +11,25 @@ export async function GET(
   const { idUnico } = params;
   
   try {
-    console.log(`🔍 Cargando menú para ID único: ${idUnico}`);
+    const startTime = Date.now();
+    console.log(`🔍 [${new Date().toISOString()}] Cargando menú para ID único: ${idUnico}`);
+    console.log(`🔍 [${new Date().toISOString()}] DATABASE_URL configurada: ${process.env.DATABASE_URL ? 'SÍ' : 'NO'}`);
+    console.log(`🔍 [${new Date().toISOString()}] DATABASE_URL preview: ${process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'NO CONFIGURADA'}`);
     
     // Usar retry para queries críticas
     const allMenus = await withRetry(async () => {
-      return await prisma.menu.findMany({
+      const queryStart = Date.now();
+      const result = await prisma.menu.findMany({
         select: { restaurantId: true, restaurantName: true }
       });
+      console.log(`⏱️ [${new Date().toISOString()}] Query findMany(menu) tomó ${Date.now() - queryStart}ms`);
+      return result;
     });
-    console.log(`📋 Menús disponibles en BD:`, allMenus.map(m => `${m.restaurantName} (${m.restaurantId})`));
+    console.log(`📋 [${new Date().toISOString()}] Menús disponibles en BD:`, allMenus.map(m => `${m.restaurantName} (${m.restaurantId})`));
 
     const menu = await withRetry(async () => {
-      return await prisma.menu.findFirst({
+      const queryStart = Date.now();
+      const result = await prisma.menu.findFirst({
         where: { restaurantId: idUnico },
         include: { 
           owner: {
@@ -34,6 +41,8 @@ export async function GET(
           }
         }
       });
+      console.log(`⏱️ [${new Date().toISOString()}] Query findFirst(menu) tomó ${Date.now() - queryStart}ms`);
+      return result;
     });
 
     if (!menu) {
@@ -45,8 +54,9 @@ export async function GET(
       }, { status: 404 });
     }
 
-    console.log(`✅ Menú encontrado: ${menu.restaurantName}`);
-    console.log(`🔍 Owner incluido:`, menu.owner ? `Sí (hasPro: ${menu.owner.hasPro})` : 'No');
+    console.log(`✅ [${new Date().toISOString()}] Menú encontrado: ${menu.restaurantName}`);
+    console.log(`🔍 [${new Date().toISOString()}] Owner incluido:`, menu.owner ? `Sí (hasPro: ${menu.owner.hasPro})` : 'No');
+    console.log(`⏱️ [${new Date().toISOString()}] Tiempo total hasta encontrar menú: ${Date.now() - startTime}ms`);
 
     const categories = await withRetry(async () => {
       return await prisma.category.findMany({
@@ -197,11 +207,17 @@ export async function GET(
     
     console.log(`🔍 hasPro para ${menu.restaurantName}:`, menu.owner?.hasPro, '→', formattedMenu.hasPro);
 
-    console.log(`✅ Menú cargado: ${categoriesWithItems.length} categorías, ${allItems.length} items`);
+    const totalTime = Date.now() - startTime;
+    console.log(`✅ [${new Date().toISOString()}] Menú cargado: ${categoriesWithItems.length} categorías, ${allItems.length} items`);
+    console.log(`⏱️ [${new Date().toISOString()}] Tiempo total de la request: ${totalTime}ms`);
     
     return NextResponse.json({
       success: true,
-      menu: formattedMenu
+      menu: formattedMenu,
+      _debug: {
+        loadTime: totalTime,
+        timestamp: new Date().toISOString()
+      }
     });
 
   } catch (error: any) {
