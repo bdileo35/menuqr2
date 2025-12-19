@@ -1,4 +1,5 @@
-// Schema para desarrollo local (SQLite) y producción (PostgreSQL/Supabase)
+// Schema para PostgreSQL/Supabase (Producción)
+// Para desarrollo local con SQLite, usar: node scripts/switch-db.js local
 // Uso: npx prisma generate
 
 generator client {
@@ -6,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"  // Cambiar a "postgresql" para producción
+  provider = "postgresql"  // PostgreSQL para producción (Vercel/Supabase)
   url      = env("DATABASE_URL")
 }
 
