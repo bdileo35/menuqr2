@@ -174,3 +174,4 @@ git push origin feature/nueva-funcionalidad  # ← Esto despliega a PREVIEW
 - ✅ O si quieres volver a desplegar sin hacer push
 
 
+

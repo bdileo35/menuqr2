@@ -97,6 +97,7 @@ export default function Editor2() {
   const [loading, setLoading] = useState(true);
   const [menuNotFound, setMenuNotFound] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Flag para evitar múltiples llamadas simultáneas
   const { isDarkMode, toggleTheme } = useAppTheme(); // ✅ USANDO HOOK
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [showAddItem, setShowAddItem] = useState(false);
@@ -120,13 +121,21 @@ export default function Editor2() {
     });
   };
 
-  // Función para cargar datos desde API
-  const loadMenuFromAPI = async () => {
-    console.log('🔍 Cargando menú desde la base de datos...');
+  // Función para cargar datos desde API con reintentos
+  const loadMenuFromAPI = async (retryCount = 0, maxRetries = 3) => {
+    // Evitar múltiples llamadas simultáneas
+    if (isLoading) {
+      console.log('⏸️ Ya hay una carga en progreso, ignorando llamada duplicada');
+      return;
+    }
+    
+    setIsLoading(true);
+    console.log(`🔍 [Intento ${retryCount + 1}/${maxRetries + 1}] Cargando menú desde la base de datos...`);
     console.log('🔍 ID Único usado en la petición:', idUnico);
     
     if (!idUnico) {
       console.error('❌ Error: idUnico está vacío');
+      setIsLoading(false);
       return;
     }
     
@@ -174,33 +183,27 @@ export default function Editor2() {
         return;
       }
       
-      // Si es 500, hay un error de conexión - intentar fallback con datos demo
+      // Si es 500, hay un error de conexión - REINTENTAR antes de usar fallback
       if (response.status === 500) {
-        console.log('⚠️ Error de conexión a la base de datos (500)');
-        console.log('📦 Intentando fallback con datos demo para', idUnico);
+        console.log(`⚠️ Error de conexión a la base de datos (500) - Intento ${retryCount + 1}/${maxRetries + 1}`);
         
-        // FALLBACK: Intentar cargar datos demo para IDUs conocidos
-        try {
-          if (idUnico === '5XJ1J37F') {
-            console.log('📦 Usando datos demo de Esquina Pompeya');
-            const demoData = getDemoMenuData();
-            setMenuData(demoData);
-            setLoading(false);
-            return;
-          } else if (idUnico === '5XJ1J39E' || idUnico === 'LOS-TORITOS') {
-            console.log('📦 Usando datos demo de Los Toritos');
-            const demoData = getDemoMenuDataLosToritos();
-            setMenuData(demoData);
-            setLoading(false);
-            return;
-          }
-        } catch (fallbackError) {
-          console.error('❌ Error en fallback de datos demo:', fallbackError);
+        // Si aún hay reintentos disponibles, esperar y reintentar
+        if (retryCount < maxRetries) {
+          const delay = (retryCount + 1) * 2000; // Delay progresivo: 2s, 4s, 6s
+          console.log(`⏳ Esperando ${delay}ms antes de reintentar...`);
+          setIsLoading(false);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return loadMenuFromAPI(retryCount + 1, maxRetries);
         }
         
-        // Si no hay fallback disponible, mostrar error
+        // Solo usar fallback después de agotar todos los reintentos
+        console.log('⚠️ Todos los reintentos agotados. Error de conexión persistente.');
+        console.log('❌ NO se usarán datos demo para evitar inconsistencias');
         setConnectionError(true);
-        throw new Error('Error de conexión a la base de datos');
+        setMenuData(null);
+        setLoading(false);
+        setIsLoading(false);
+        throw new Error('Error de conexión a la base de datos después de múltiples intentos');
       }
       
       const data = await response.json();
@@ -306,24 +309,39 @@ export default function Editor2() {
       } else {
           throw new Error('No se pudo cargar el menú');
       }
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ Error cargando menú desde API:', error);
         
-        // ⚠️ IMPORTANTE: NO mostrar datos demo a clientes en producción
-        // Solo mostrar error de conexión
+        // Si es un error de red/timeout y aún hay reintentos, reintentar
+        const isNetworkError = 
+          error?.message?.includes('fetch') ||
+          error?.message?.includes('network') ||
+          error?.message?.includes('timeout') ||
+          error?.name === 'TypeError';
+        
+        if (isNetworkError && retryCount < maxRetries) {
+          const delay = (retryCount + 1) * 2000;
+          console.log(`⏳ Error de red detectado. Reintentando en ${delay}ms... (${retryCount + 1}/${maxRetries})`);
+          setIsLoading(false);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return loadMenuFromAPI(retryCount + 1, maxRetries);
+        }
+        
+        // Si no es error de red o se agotaron los reintentos, mostrar error
         console.log('⚠️ Error de conexión a la base de datos');
         console.log(`❌ Error cargando menú para ${idUnico}:`, error);
+        console.log('❌ NO se usarán datos demo para evitar inconsistencias en precios');
         
-        // FALLBACK REMOVIDO: No mostrar datos demo a clientes
-        // Los datos demo solo deben usarse en desarrollo local
+        // NO usar fallback a demo - evitar inconsistencias
         setConnectionError(true);
-        setMenuData(null);
-        
-        // Código comentado - fallback removido por seguridad
-        // Los datos demo NO deben mostrarse a clientes en producción
+        // Mantener datos existentes si los hay, no limpiar
+        if (!menuData) {
+          setMenuData(null);
+        }
         
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -350,15 +368,28 @@ export default function Editor2() {
   }, [idUnico]);
   
   // Recargar datos cuando la página vuelve a estar visible o cuando se hace focus
+  // PERO solo si no hay datos válidos cargados (evitar reemplazar datos reales con demo)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        loadMenuFromAPI();
+        // Solo recargar si NO hay datos válidos (evitar reemplazar datos reales)
+        if (!menuData || connectionError) {
+          console.log('🔄 Página visible - Recargando datos (no hay datos válidos)');
+          loadMenuFromAPI();
+        } else {
+          console.log('✅ Página visible - Manteniendo datos existentes (evitar inconsistencias)');
+        }
       }
     };
     
     const handleFocus = () => {
-      loadMenuFromAPI();
+      // Solo recargar si NO hay datos válidos
+      if (!menuData || connectionError) {
+        console.log('🔄 Ventana con focus - Recargando datos (no hay datos válidos)');
+        loadMenuFromAPI();
+      } else {
+        console.log('✅ Ventana con focus - Manteniendo datos existentes (evitar inconsistencias)');
+      }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -368,7 +399,7 @@ export default function Editor2() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [idUnico]);
+  }, [idUnico, menuData, connectionError]);
 
   // Función para filtrar platos por término de búsqueda
   const filterItems = (items: MenuItem[]) => {

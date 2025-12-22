@@ -122,3 +122,4 @@ postgresql://postgres.vzcniaopxflpgrwarnvn:[PASSWORD]@aws-0-us-east-1.pooler.sup
 4. **Contacta soporte:**
    - Si nada funciona, contacta a Supabase Support
 
+
